@@ -134,7 +134,7 @@ class Upsonic_Remote:
                 if encryption_key is not None:
                     try:
                         response = self.decrypt(encryption_key, response)
-                    except TypeError:
+                    except:
                         pass                    
                 return response
             else:
@@ -165,7 +165,7 @@ class Upsonic_Remote:
             if encryption_key is not None:
                 try:
                     datas[each] = self.decrypt(encryption_key, datas[each])
-                except TypeError:
+                except:
                     pass
 
 
