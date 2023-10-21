@@ -3,36 +3,51 @@
 
 
 
+def encrypt(key, message):
+    from cryptography.fernet import Fernet
+    import base64
+    import hashlib
+    import pickle
+    fernet_key = base64.urlsafe_b64encode(hashlib.sha256(key.encode()).digest())
+    fernet = Fernet(fernet_key)
+    encrypted_message = fernet.encrypt(pickle.dumps(message))
+    return encrypted_message
+
+def decrypt(key, message):
+    from cryptography.fernet import Fernet
+    import base64
+    import hashlib    
+    import pickle
+    fernet = Fernet(base64.urlsafe_b64encode(hashlib.sha256(key.encode()).digest()))
+    decrypted_message = pickle.loads(fernet.decrypt(message))
+    return decrypted_message
+
+
+
 def Upsonic_Cloud(database_name):
-    from upsonic import Upsonic, Upsonic_Remote
+    from upsonic import Upsonic_Remote
     return Upsonic_Remote(
         database_name, "https://cloud_1.upsonic.co", "onuratakan", verify=False
     )  # pragma: no cover
 
 
 def Upsonic_Cloud_Pro(database_name, access_key):
-    from upsonic import Upsonic, Upsonic_Remote
+    from upsonic import Upsonic_Remote
     return Upsonic_Remote(
         database_name, "https://cloud_2.upsonic.co", access_key, verify=False
     )  # pragma: no cover
 
 
 def Upsonic_Cloud_Dedicated(database_name, password, dedicated_key):
-    from upsonic import Upsonic, Upsonic_Remote
+    from upsonic import Upsonic_Remote
     dedicated_key = dedicated_key.replace("dedicatedkey-", "")
     dedicated_key = dedicated_key.encode()
-    resolver = Upsonic("dedicate_resolver")
-    resolver.set(dedicated_key.decode(), dedicated_key)
-    host = resolver.get(dedicated_key.decode(), encryption_key="dedicatedkey")
+    host = decrypt("dedicatedkey", dedicated_key)
     return Upsonic_Remote(database_name, host, password, verify=False)  # pragma: no cover
 
 
 def Upsonic_Cloud_Dedicated_Prepare(host):
-    from upsonic import Upsonic, Upsonic_Remote, HASHES
-    resolver = Upsonic("dedicate_resolver")
-    the_hash = HASHES.get_hash(host)
-    resolver.set(the_hash, host, encryption_key="dedicatedkey")
-    host = resolver.get(the_hash)
+    host = encrypt("dedicatedkey", host)
     host = host.decode()
     host = "dedicatedkey-" + host
     return host
