@@ -1,8 +1,12 @@
-from .core import Upsonic
-from .core import console
-from .core import start_location, open_databases
-from .core import HASHES
-from .core import Upsonic_Serial
+try:
+    from .core import Upsonic
+    from .core import console
+    from .core import start_location, open_databases
+    from .core import HASHES
+    from .core import Upsonic_Serial
+
+except:
+    pass
 
 from .remote import Upsonic_Remote
 from .remote import Upsonic_Cloud
