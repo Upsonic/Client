@@ -132,7 +132,10 @@ class Upsonic_Remote:
             if not response == "null\n":
                 # Decrypt the received value
                 if encryption_key is not None:
-                    response = self.decrypt(encryption_key, response)
+                    try:
+                        response = self.decrypt(encryption_key, response)
+                    except TypeError:
+                        pass                    
                 return response
             else:
                 return None
@@ -160,7 +163,10 @@ class Upsonic_Remote:
 
         for each in datas:
             if encryption_key is not None:
-                datas[each] = self.decrypt(encryption_key, datas[each])
+                try:
+                    datas[each] = self.decrypt(encryption_key, datas[each])
+                except TypeError:
+                    pass
 
 
         return datas
