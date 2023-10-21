@@ -10,8 +10,8 @@ import threading
 
 
 
-from upsonic import Upsonic, HASHES, Upsonic_Serial, Upsonic_Cloud_Pro
-import upsonic
+from upsonic import Upsonic_Cloud_Pro
+
 
 
 class ptest_object:
