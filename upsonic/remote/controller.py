@@ -159,8 +159,8 @@ class Upsonic_Remote:
         datas = json.loads(datas)
 
         for each in datas:
-
-            datas[each] = self.decrypt(encryption_key, datas[each])
+            if encryption_key is not None:
+                datas[each] = self.decrypt(encryption_key, datas[each])
 
 
         return datas
