@@ -27,9 +27,8 @@ class Upsonic_Remote:
 
         self.verify = verify
 
-        from rich.console import Console
+        from upsonic import console
 
-        console = Console()
         self.console = console
 
 

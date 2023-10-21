@@ -18,6 +18,9 @@ from .remote import requires
 from .remote import encrypt
 from .remote import decrypt
 
+from rich.console import Console
+
+console = Console()
 
 open_databases = {}
 
