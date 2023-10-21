@@ -4,7 +4,7 @@
 import json
 import ast
 
-from upsonic import encrypt, decrypt
+
 
 class Upsonic_Remote:
     def _log(self, message):
@@ -42,7 +42,9 @@ class Upsonic_Remote:
             f"[{self.database_name[:5]}*] [bold white]Upsonic Cloud[bold white] initializing...",
         )
 
-
+        from upsonic import encrypt, decrypt
+        self.encrypt = encrypt
+        self.decrypt = decrypt
 
 
         self.api_url = api_url
@@ -107,7 +109,7 @@ class Upsonic_Remote:
 
         if encryption_key is not None:
 
-            value = encrypt(value, encryption_key)
+            value = self.encrypt(encryption_key, value)
 
         data = {
             "database_name": self.database_name,
@@ -130,7 +132,7 @@ class Upsonic_Remote:
             if not response == "null\n":
                 # Decrypt the received value
                 if encryption_key is not None:
-                    response = decrypt(response, encryption_key)
+                    response = self.decrypt(encryption_key, response)
                 return response
             else:
                 return None
@@ -158,7 +160,7 @@ class Upsonic_Remote:
 
         for each in datas:
 
-            datas[each] = decrypt(datas[each], encryption_key)
+            datas[each] = self.decrypt(encryption_key, datas[each])
 
 
         return datas
