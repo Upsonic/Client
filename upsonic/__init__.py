@@ -1,7 +1,7 @@
 try:
     from .core import Upsonic
     from .core import console
-    from .core import start_location, open_databases
+    from .core import start_location
     from .core import HASHES
     from .core import Upsonic_Serial
 
@@ -17,6 +17,9 @@ from .remote import no_exception
 from .remote import requires
 from .remote import encrypt
 from .remote import decrypt
+
+
+open_databases = {}
 
 __version__ = '0.4.5'
 
