@@ -1,0 +1,63 @@
+name: Codecov
+
+on: 
+  push:
+    paths:
+      - '.github/workflows/codecov.yml'
+      - 'upsonic/**'
+      - 'setups/**'
+      - 'tests/**'
+      - '.coveragerc'
+  pull_request:
+    paths:
+      - '.github/workflows/codecov.yml'
+      - 'upsonic/**'
+      - 'setups/**'
+      - 'tests/**'
+      - '.coveragerc'
+  workflow_dispatch:
+
+concurrency: 
+  group: ${{ github.workflow }}-${{ github.ref }}-${{ github.event }}
+  cancel-in-progress: true
+jobs:
+  run:
+    runs-on: ${{ matrix.os }}
+    environment: Codecov 
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    env:
+      OS: ${{ matrix.os }}
+      PYTHON: '3.8'
+    steps:
+    - uses: actions/checkout@master
+    - name: Setup Python
+      uses: actions/setup-python@master
+      with:
+        python-version: 3.8
+    - uses: actions/cache@v2
+      with:
+        path: ${{ env.pythonLocation }}
+        key: ${{ runner.os }}-${{ env.pythonLocation }}-${{ hashFiles('requirements.txt') }}-${{ hashFiles('setups/api/requirements.txt') }}-${{ hashFiles('setups/web/requirements.txt') }}-${{ hashFiles('setups/gui/requirements.txt') }}-pytest-coverage
+    - name: Install dependencies
+      run: |
+        pip3 install -r requirements.txt
+
+        pip install pytest
+        pip install coverage
+    - name: Generate coverage report
+      run: |
+        coverage run -m pytest tests/standards && coverage xml
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v2
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        directory: ./
+        env_vars: OS,PYTHON
+        fail_ci_if_error: true
+        files: ./coverage.xml
+        flags: unittests
+        name: codecov-umbrella
+        path_to_write_report: ./codecov_report.txt
+        verbose: true

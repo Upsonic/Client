@@ -1,0 +1,124 @@
+name: Deploys
+
+on:
+  workflow_run:
+    workflows: ["Release Generator"]
+    types:
+      - completed  
+
+permissions:
+  packages: write      
+
+
+concurrency: 
+  group: ${{ github.workflow }}-${{ github.ref }}-${{ github.event }}
+  cancel-in-progress: true
+jobs:
+
+  tagext:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+    env:
+      OS: ${{ matrix.os }}
+      PYTHON: '3.8'
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Getting Tag
+        id: tag_extractor
+        run: echo "latest_tag=$(git describe --tags --abbrev=0)" >> "$GITHUB_OUTPUT"
+
+      - name: Getting Tag 2
+        id: tag_extractor_2
+        run: |
+          TAG=${{ steps.tag_extractor.outputs.latest_tag }}   
+          echo "latest_tag_2=${TAG:1} " >> "$GITHUB_OUTPUT"
+      
+      - name: Discord Webhook Action
+        uses: tsickert/discord-webhook@v5.3.0
+        with:
+          webhook-url: ${{ secrets.DEPLOY_WEBHOOK_URL }}
+          content: "Requested <@&1163402741394178162> ${{ steps.tag_extractor.outputs.latest_tag }}"
+
+
+  pypi:
+    needs: tagext
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    environment: Deploys
+    strategy:
+      matrix:
+        python-version: [3.8]
+
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+
+
+    - name: Build and Publish Python Packages
+      env:
+        TWINE_USERNAME: __token__
+        TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
+      run: |
+        python -m pip install --upgrade pip
+        pip install setuptools wheel twine      
+        python setup.py sdist
+        twine upload dist/*
+
+
+  sleep:
+    needs: [pypi]
+    runs-on: ubuntu-latest
+    steps:
+    - name: Sleep for 300 seconds
+      uses: jakejarvis/wait-action@master
+      with:
+        time: '300s'        
+
+
+
+  success:
+    needs: [pypi, sleep]
+    runs-on: ubuntu-latest
+    if: ${{ (needs.pypi.result == 'success' || needs.sleep.result == 'success') }}
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Getting Tag
+        id: tag_extractor
+        run: echo "latest_tag=$(git describe --tags --abbrev=0)" >> "$GITHUB_OUTPUT"
+  
+      - name: Discord Webhook Action
+        uses: tsickert/discord-webhook@v5.3.0
+        with:
+          webhook-url: ${{ secrets.DEPLOY_WEBHOOK_URL }}
+          content: "success <@&1163402741394178162> ${{ steps.tag_extractor.outputs.latest_tag }}"           
+
+
+
+  failure:
+    needs: [pypi, sleep]
+    runs-on: ubuntu-latest
+    if: ${{ (needs.pypi.result == 'failure' || needs.sleep.result == 'failure') }}
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Getting Tag
+        id: tag_extractor
+        run: echo "latest_tag=$(git describe --tags --abbrev=0)" >> "$GITHUB_OUTPUT"
+
+      - name: Discord Webhook Action
+        uses: tsickert/discord-webhook@v5.3.0
+        with:
+          webhook-url: ${{ secrets.DEPLOY_WEBHOOK_URL }}
+          content: "failure <@&1163402741394178162> ${{ steps.tag_extractor.outputs.latest_tag }}"           
