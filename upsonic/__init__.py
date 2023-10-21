@@ -18,6 +18,6 @@ from .remote import requires
 from .remote import encrypt
 from .remote import decrypt
 
-__version__ = '0.4.4'
+__version__ = '0.4.5'
 
 
