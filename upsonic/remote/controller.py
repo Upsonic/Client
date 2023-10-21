@@ -4,7 +4,7 @@
 import json
 import ast
 
-
+from upsonic import encrypt, decrypt
 
 class Upsonic_Remote:
     def _log(self, message):
@@ -19,7 +19,6 @@ class Upsonic_Remote:
     def __init__(self, database_name, api_url, password=None, enable_hashing:bool=False, verify=True):
         import requests
         from requests.auth import HTTPBasicAuth
-        from upsonic import console, Upsonic, Upsonic_Serial
 
 
         self.force_compress = False
@@ -28,10 +27,11 @@ class Upsonic_Remote:
 
         self.verify = verify
 
+        from rich.console import Console
 
+        console = Console()
         self.console = console
-        self.Upsonic = Upsonic
-        self.Upsonic_Serial = Upsonic_Serial
+
 
         self.requests = requests
         self.HTTPBasicAuth = HTTPBasicAuth
@@ -106,10 +106,8 @@ class Upsonic_Remote:
         )
 
         if encryption_key is not None:
-            db = self.Upsonic_Serial(self.database_name, log=False, enable_hashing=self.enable_hashing)
-            db.set(key, value, encryption_key=encryption_key)
-            value = db.get(key)
-            db.delete(key)
+
+            value = encrypt(value, encryption_key)
 
         data = {
             "database_name": self.database_name,
@@ -132,11 +130,7 @@ class Upsonic_Remote:
             if not response == "null\n":
                 # Decrypt the received value
                 if encryption_key is not None:
-                    db = self.Upsonic_Serial(self.database_name, log=False, enable_hashing=self.enable_hashing)
-                    db.set(key, response)
-                    response = db.get(key, encryption_key=encryption_key)
-                    db.delete(key)
-
+                    response = decrypt(response, encryption_key)
                 return response
             else:
                 return None
@@ -161,11 +155,12 @@ class Upsonic_Remote:
         datas = self._send_request("POST", "/controller/get_all", data)
 
         datas = json.loads(datas)
-        db = self.Upsonic_Serial(self.database_name, log=False, enable_hashing=self.enable_hashing)
+
         for each in datas:
-            db.set(each, datas[each])
-            datas[each] = db.get(each, encryption_key=encryption_key)
-            db.delete(each)
+
+            datas[each] = decrypt(datas[each], encryption_key)
+
+
         return datas
 
     def delete(self, key):

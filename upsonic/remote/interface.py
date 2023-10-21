@@ -7,19 +7,19 @@ def encrypt(key, message):
     from cryptography.fernet import Fernet
     import base64
     import hashlib
-    import pickle
+    import dill
     fernet_key = base64.urlsafe_b64encode(hashlib.sha256(key.encode()).digest())
     fernet = Fernet(fernet_key)
-    encrypted_message = fernet.encrypt(pickle.dumps(message))
+    encrypted_message = fernet.encrypt(dill.dumps(message))
     return encrypted_message
 
 def decrypt(key, message):
     from cryptography.fernet import Fernet
     import base64
     import hashlib    
-    import pickle
+    import dill
     fernet = Fernet(base64.urlsafe_b64encode(hashlib.sha256(key.encode()).digest()))
-    decrypted_message = pickle.loads(fernet.decrypt(message))
+    decrypted_message = dill.loads(fernet.decrypt(message))
     return decrypted_message
 
 

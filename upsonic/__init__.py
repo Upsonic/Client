@@ -15,6 +15,8 @@ from .remote import Upsonic_Cloud_Dedicated
 from .remote import Upsonic_Cloud_Dedicated_Prepare
 from .remote import no_exception
 from .remote import requires
+from .remote import encrypt
+from .remote import decrypt
 
 __version__ = '0.4.3'
 
