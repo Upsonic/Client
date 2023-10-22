@@ -25,6 +25,6 @@ console = Console()
 
 open_databases = {}
 
-__version__ = '0.4.10'
+__version__ = '0.4.11'
 
 
