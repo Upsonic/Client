@@ -2,7 +2,6 @@ import traceback
 
 try:
     from .core import Upsonic
-    from .core import console
     from .core import start_location
     from .core import HASHES
     from .core import Upsonic_Serial
