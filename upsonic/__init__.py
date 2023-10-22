@@ -1,3 +1,5 @@
+import traceback
+
 try:
     from .core import Upsonic
     from .core import console
@@ -6,7 +8,7 @@ try:
     from .core import Upsonic_Serial
 
 except:
-    pass
+    traceback.print_exc()
 
 from .remote import Upsonic_Remote
 from .remote import Upsonic_Cloud
