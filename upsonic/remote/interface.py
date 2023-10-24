@@ -24,30 +24,22 @@ def decrypt(key, message):
 
 
 
-def Upsonic_Cloud(database_name):
+def Upsonic_Cloud_Free(database_name, access_key):
     from upsonic import Upsonic_Remote
     return Upsonic_Remote(
-        database_name, "https://cloud_1.upsonic.co", "onuratakan", verify=False
+        database_name, "https://cloud_1.upsonic.co", access_key, verify=True
     )  # pragma: no cover
 
 
 def Upsonic_Cloud_Pro(database_name, access_key):
     from upsonic import Upsonic_Remote
     return Upsonic_Remote(
-        database_name, "https://cloud_2.upsonic.co", access_key, verify=False
+        database_name, "https://cloud_2.upsonic.co", access_key, verify=True
     )  # pragma: no cover
 
 
-def Upsonic_Cloud_Dedicated(database_name, password, dedicated_key):
+def Upsonic_Cloud_Premium(database_name, access_key):
     from upsonic import Upsonic_Remote
-    dedicated_key = dedicated_key.replace("dedicatedkey-", "")
-    dedicated_key = dedicated_key.encode()
-    host = decrypt("dedicatedkey", dedicated_key)
-    return Upsonic_Remote(database_name, host, password, verify=False)  # pragma: no cover
-
-
-def Upsonic_Cloud_Dedicated_Prepare(host):
-    host = encrypt("dedicatedkey", host)
-    host = host.decode()
-    host = "dedicatedkey-" + host
-    return host
+    return Upsonic_Remote(
+        database_name, "https://cloud_5.upsonic.co", access_key, verify=True
+    )  # pragma: no cover
