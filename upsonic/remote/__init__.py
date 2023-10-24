@@ -1,5 +1,5 @@
 from .controller import Upsonic_Remote
-from .interface import Upsonic_Cloud
+from .interface import Upsonic_Cloud_Free
 from .interface import Upsonic_Cloud_Pro
 from .interface import Upsonic_Cloud_Premium
 from .interface import Upsonic_Cloud_Readonly

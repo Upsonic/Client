@@ -10,7 +10,7 @@ except:
     traceback.print_exc()
 
 from .remote import Upsonic_Remote
-from .remote import Upsonic_Cloud
+from .remote import Upsonic_Cloud_Free
 from .remote import Upsonic_Cloud_Pro
 from .remote import Upsonic_Cloud_Premium
 from .remote import Upsonic_Cloud_Readonly
