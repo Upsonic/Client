@@ -12,8 +12,8 @@ except:
 from .remote import Upsonic_Remote
 from .remote import Upsonic_Cloud
 from .remote import Upsonic_Cloud_Pro
-from .remote import Upsonic_Cloud_Dedicated
-from .remote import Upsonic_Cloud_Dedicated_Prepare
+from .remote import Upsonic_Cloud_Premium
+from .remote import Upsonic_Cloud_Readonly
 from .remote import no_exception
 from .remote import requires
 from .remote import encrypt

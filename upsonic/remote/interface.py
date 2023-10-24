@@ -41,5 +41,13 @@ def Upsonic_Cloud_Pro(database_name, access_key):
 def Upsonic_Cloud_Premium(database_name, access_key):
     from upsonic import Upsonic_Remote
     return Upsonic_Remote(
-        database_name, "https://cloud_5.upsonic.co", access_key, verify=True
+        database_name, "https://cloud_3.upsonic.co", access_key, verify=True
+    )  # pragma: no cover
+
+
+
+def Upsonic_Cloud_Readonly(database_name, access_key):
+    from upsonic import Upsonic_Remote
+    return Upsonic_Remote(
+        database_name, "https://cloud_0.upsonic.co", access_key, verify=True
     )  # pragma: no cover
