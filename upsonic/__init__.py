@@ -7,7 +7,7 @@ try:
     from .core import Upsonic_Serial
 
 except:
-    traceback.print_exc()
+    pass
 
 from .remote import Upsonic_Remote
 from .remote import Upsonic_Cloud_Free
