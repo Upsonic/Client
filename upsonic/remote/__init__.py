@@ -2,6 +2,7 @@ from .controller import Upsonic_Remote
 from .interface import Upsonic_Cloud_Free
 from .interface import Upsonic_Cloud_Pro
 from .interface import Upsonic_Cloud_Premium
+from .interface import Upsonic_Cloud_Startup
 from .interface import Upsonic_Cloud_Readonly
 from .helper import no_exception
 from .helper import requires

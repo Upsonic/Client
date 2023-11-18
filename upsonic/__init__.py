@@ -13,6 +13,7 @@ from .remote import Upsonic_Remote
 from .remote import Upsonic_Cloud_Free
 from .remote import Upsonic_Cloud_Pro
 from .remote import Upsonic_Cloud_Premium
+from .remote import Upsonic_Cloud_Startup
 from .remote import Upsonic_Cloud_Readonly
 from .remote import no_exception
 from .remote import requires
