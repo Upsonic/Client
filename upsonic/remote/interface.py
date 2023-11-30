@@ -32,9 +32,9 @@ def decrypt(key, message):
 
 def Upsonic_Cloud_Free(database_name=None, access_key=None, locking=None):
     if database_name == None:
-        database_name = os.environ.get("database_free")
+        database_name = os.environ.get("database_Free")
     if access_key == None:
-        access_key = os.environ.get("access_key_free")
+        access_key = os.environ.get("access_key_Free")
 
 
     if locking == None:
