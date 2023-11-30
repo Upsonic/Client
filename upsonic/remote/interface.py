@@ -2,6 +2,12 @@
 # -*- coding: utf-8 -*-
 
 
+from dotenv import load_dotenv
+load_dotenv(dotenv_path=".env")
+import os
+
+
+
 
 def encrypt(key, message):
     from cryptography.fernet import Fernet
@@ -24,37 +30,124 @@ def decrypt(key, message):
 
 
 
-def Upsonic_Cloud_Free(database_name, access_key):
+def Upsonic_Cloud_Free(database_name=None, access_key=None, locking=False):
+    if database_name == None:
+        database_name = os.environ.get("database_free")
+    if access_key == None:
+        access_key = os.environ.get("access_key_free")
+
+
     from upsonic import Upsonic_Remote
     return Upsonic_Remote(
-        database_name, "https://cloud_1.upsonic.co", access_key, verify=True
+        database_name, "https://cloud_1.upsonic.co", access_key, verify=True, locking=locking
     )  # pragma: no cover
 
 
-def Upsonic_Cloud_Pro(database_name, access_key):
+def Upsonic_Cloud_Pro(database_name=None, access_key=None, locking=False):
+    if database_name == None:
+        database_name = os.environ.get("database_Pro")
+    if access_key == None:
+        access_key = os.environ.get("access_key_Pro")
+
     from upsonic import Upsonic_Remote
     return Upsonic_Remote(
-        database_name, "https://cloud_2.upsonic.co", access_key, verify=True
+        database_name, "https://cloud_2.upsonic.co", access_key, verify=True, locking=locking
     )  # pragma: no cover
 
 
-def Upsonic_Cloud_Premium(database_name, access_key):
+def Upsonic_Cloud_Premium(database_name=None, access_key=None, locking=False):
+    if database_name == None:
+        database_name = os.environ.get("database_Premium")
+    if access_key == None:
+        access_key = os.environ.get("access_key_Premium")
+
     from upsonic import Upsonic_Remote
     return Upsonic_Remote(
-        database_name, "https://cloud_3.upsonic.co", access_key, verify=True
+        database_name, "https://cloud_3.upsonic.co", access_key, verify=True, locking=locking
     )  # pragma: no cover
 
-def Upsonic_Cloud_Startup(database_name, access_key):
+def Upsonic_Cloud_Startup(database_name=None, access_key=None, locking=False):
+    if database_name == None:
+        database_name = os.environ.get("database_Startup")
+    if access_key == None:
+        access_key = os.environ.get("access_key_Startup")
+
     from upsonic import Upsonic_Remote
     return Upsonic_Remote(
-        database_name, "https://cloud_4.upsonic.co", access_key, verify=True
+        database_name, "https://cloud_4.upsonic.co", access_key, verify=True, locking=locking
     )  # pragma: no cover
 
 
 
 
-def Upsonic_Cloud_Readonly(database_name, access_key):
+def Upsonic_Cloud_Readonly(database_name=None, access_key=None, locking=False):
+    if database_name == None:
+        database_name = os.environ.get("database_Readonly")
+    if access_key == None:
+        access_key = os.environ.get("access_key_Readonly")
+
     from upsonic import Upsonic_Remote
     return Upsonic_Remote(
-        database_name, "https://cloud_0.upsonic.co", access_key, verify=True
+        database_name, "https://cloud_0.upsonic.co", access_key, verify=True, locking=locking
     )  # pragma: no cover
+
+
+
+
+class _Upsonic_CLI:
+    def __init__(self, type, database_name=None, access_key=None) -> None:
+        self.type = type
+
+        if self.type == "free":
+            if database_name == None:
+               database_name = os.environ.get("database_free")
+            if access_key == None:
+                access_key = os.environ.get("access_key_free")
+            
+            self.cloud = Upsonic_Cloud_Free(database_name, access_key)
+        elif self.type == "pro":
+            if database_name == None:
+               database_name = os.environ.get("database_Pro")
+            if access_key == None:
+                access_key = os.environ.get("access_key_Pro")
+            
+            self.cloud = Upsonic_Cloud_Pro(database_name, access_key)
+
+        elif self.type == "premium":
+            if database_name == None:
+               database_name = os.environ.get("database_Premium")
+            if access_key == None:
+                access_key = os.environ.get("access_key_Premium")
+            
+            self.cloud = Upsonic_Cloud_Premium(database_name, access_key)
+
+        elif self.type == "startup":
+            if database_name == None:
+               database_name = os.environ.get("database_Startup")
+            if access_key == None:
+                access_key = os.environ.get("access_key_Startup")
+            
+            self.cloud = Upsonic_Cloud_Startup(database_name, access_key)
+
+        elif self.type == "readonly":
+            if database_name == None:
+               database_name = os.environ.get("database_Readonly")
+            if access_key == None:
+                access_key = os.environ.get("access_key_Readonly")
+            
+            self.cloud = Upsonic_Cloud_Readonly(database_name, access_key)
+
+        else:
+            raise Exception("Invalid type")
+       
+
+    def lock(self, key):
+        return self.cloud.lock_key(key)
+        
+    def unlock(self, key):
+        return self.cloud.unlock_key(key)
+               
+
+def Upsonic_CLI():
+    import fire
+    fire.Fire(_Upsonic_CLI)

@@ -17,6 +17,9 @@ setup(
     license="MIT",
     packages=["upsonic", "upsonic.remote"],
     install_requires=install_requires,
+    entry_points={
+        "console_scripts": ["upsonic=upsonic.remote.interface:Upsonic_CLI"],
+    },    
     python_requires=">= 3",
     zip_safe=False,
 )

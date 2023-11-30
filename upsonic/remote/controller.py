@@ -16,13 +16,14 @@ class Upsonic_Remote:
     def __exit__(self, exc_type, exc_val, exc_tb):
         pass  # pragma: no cover
 
-    def __init__(self, database_name, api_url, password=None, enable_hashing:bool=False, verify=True):
+    def __init__(self, database_name, api_url, password=None, enable_hashing:bool=False, verify=True, locking=False):
         import requests
         from requests.auth import HTTPBasicAuth
 
 
         self.force_compress = False
         self.force_encrypt = False
+        self.locking = locking
         self.enable_hashing = enable_hashing
 
         self.verify = verify
@@ -57,6 +58,7 @@ class Upsonic_Remote:
         self._log(
             f"[{self.database_name[:5]}*] [bold green]Upsonic Cloud[bold green] active",
         )
+        self._log("---------------------------------------------")
 
     def _informations(self):
         return self._send_request("GET", "/informations", make_json=True)
@@ -100,7 +102,47 @@ class Upsonic_Remote:
             print("Error: Remote is down")
             return None
 
-    def set(self, key, value, encryption_key="a", compress=None, cache_policy=0):
+
+    def _lock_control(self, key):
+
+        return True if self.get(key+"_lock") == True else False
+  
+
+    def lock_control(self, key):
+        if self.locking:
+            return self._lock_control(key)
+        else:
+            return False
+
+    def lock_key(self, key):
+        if self._lock_control(key):
+            self.console.log(f"[bold red] '{key}' is already locked")
+            return False
+
+        if self.set(key+"_lock", True, locking_operation=True) == "Data set successfully":
+            self.console.log(f"[bold green] '{key}' is locked")
+            return True
+        else:
+            return False
+
+    def unlock_key(self, key):
+        if not self._lock_control(key):
+            self.console.log(f"[bold red] '{key}' is already unlocked")
+            return False
+
+        if self.delete(key+"_lock") == "Data deleted successfully":
+            self.console.log(f"[bold green] '{key}' is unlocked")
+            return True
+        else:         
+            return False
+
+    def set(self, key, value, encryption_key="a", compress=None, cache_policy=0, locking_operation=False):
+        if not locking_operation:
+            if self.lock_control(key):
+                self.console.log(f"[bold red] '{key}' is locked")
+                return None
+
+
         compress = True if self.force_compress else compress
         encryption_key = (
             self.force_encrypt if self.force_encrypt != False else encryption_key
