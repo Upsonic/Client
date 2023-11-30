@@ -121,14 +121,14 @@ class _Upsonic_CLI:
         if locking == None:
             self.locking = os.environ.get("locking", "false").lower() == "true"
 
-        if self.type == "free":
+        if self.type.lower() == "free":
             if database_name == None:
                database_name = os.environ.get("database_free")
             if access_key == None:
                 access_key = os.environ.get("access_key_free")
             
             self.cloud = Upsonic_Cloud_Free(database_name, access_key, locking=self.locking)
-        elif self.type == "pro":
+        elif self.type.lower() == "pro":
             if database_name == None:
                database_name = os.environ.get("database_Pro")
             if access_key == None:
@@ -136,7 +136,7 @@ class _Upsonic_CLI:
             
             self.cloud = Upsonic_Cloud_Pro(database_name, access_key, locking=self.locking)
 
-        elif self.type == "premium":
+        elif self.type.lower() == "premium":
             if database_name == None:
                database_name = os.environ.get("database_Premium")
             if access_key == None:
@@ -144,7 +144,7 @@ class _Upsonic_CLI:
             
             self.cloud = Upsonic_Cloud_Premium(database_name, access_key, locking=self.locking)
 
-        elif self.type == "startup":
+        elif self.type.lower() == "startup":
             if database_name == None:
                database_name = os.environ.get("database_Startup")
             if access_key == None:
@@ -152,7 +152,7 @@ class _Upsonic_CLI:
             
             self.cloud = Upsonic_Cloud_Startup(database_name, access_key, locking=self.locking)
 
-        elif self.type == "readonly":
+        elif self.type.lower() == "readonly":
             if database_name == None:
                database_name = os.environ.get("database_Readonly")
             if access_key == None:
