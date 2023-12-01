@@ -4,8 +4,12 @@
 import json
 import ast
 
+from hashlib import sha256
 
+import time
 
+import pickle
+import os
 class Upsonic_Remote:
     def _log(self, message):
         self.console.log(message)
@@ -16,7 +20,7 @@ class Upsonic_Remote:
     def __exit__(self, exc_type, exc_val, exc_tb):
         pass  # pragma: no cover
 
-    def __init__(self, database_name, api_url, password=None, enable_hashing:bool=False, verify=True, locking=False, client_id=None):
+    def __init__(self, database_name, api_url, password=None, enable_hashing:bool=False, verify=True, locking=False, client_id=None, cache=False, cache_counter=None):
         import requests
         from requests.auth import HTTPBasicAuth
 
@@ -25,6 +29,18 @@ class Upsonic_Remote:
         self.force_encrypt = False
         self.locking = locking
         self.enable_hashing = enable_hashing
+        self.cache = cache
+        self.cache_counter = cache_counter
+        self._cache_counter = {}
+
+        self.local_cache = {}
+        
+        if self.cache:
+           
+            self.cache_dir = os.path.join(os.getcwd(), "upsonic_cache")
+            if not os.path.exists(self.cache_dir):
+                os.mkdir(self.cache_dir)
+
 
         self.client_id = client_id
 
@@ -63,6 +79,39 @@ class Upsonic_Remote:
             f"[{self.database_name[:5]}*] [bold green]Upsonic Cloud[bold green] active",
         )
         self._log("---------------------------------------------")
+
+        if self.cache:
+            self.cache_hash_load()
+            if self._cache_hash is None:
+                self._cache_hash = {}
+                self.cache_hash_save()
+
+    def cache_hash_save(self):
+        
+        # Save the cache_hash to workdir/upsonic_cache_hash
+        with open(os.path.join(self.cache_dir, "upsonic_cache_hash"), "wb") as f:
+            pickle.dump(self._cache_hash, f)
+    def cache_hash_load(self):
+        # Load the cache_hash from workdir/upsonic_cache_hash
+        try:
+            with open(os.path.join(self.cache_dir, "upsonic_cache_hash"), "rb") as f:
+                self._cache_hash = pickle.load(f)
+        except FileNotFoundError:
+            self._cache_hash = None
+        
+
+    def cache_set(self, key, value):
+        self.local_cache[key] = value
+        with open(f"{self.cache_dir}/{sha256(key.encode()).hexdigest()}", "wb") as f:
+            pickle.dump(value, f)
+    def cache_get(self, key):
+        if key in self.local_cache:
+            return self.local_cache[key]
+        with open(f"{self.cache_dir}/{sha256(key.encode()).hexdigest()}", "rb") as f:
+            return pickle.load(f)
+    def cache_pop(self, key):
+        os.remove(f"{self.cache_dir}/{sha256(key.encode()).hexdigest()}")
+
 
     def _informations(self):
         return self._send_request("GET", "/informations", make_json=True)
@@ -151,11 +200,14 @@ class Upsonic_Remote:
         else:         
             return False
 
-    def set(self, key, value, encryption_key="a", compress=None, cache_policy=0, locking_operation=False):
+    def set(self, key, value, encryption_key="a", compress=None, cache_policy=0, locking_operation=False, update_operation=False):
         if not locking_operation:
             if self.lock_control(key):
                 self.console.log(f"[bold red] '{key}' is locked")
                 return None
+            
+        if not update_operation and self.cache:
+            self.set(key+"upsonic_updated", sha256(str(time.time()).encode()).hexdigest(), update_operation=True)
 
 
         compress = True if self.force_compress else compress
@@ -167,6 +219,8 @@ class Upsonic_Remote:
 
             value = self.encrypt(encryption_key, value)
 
+
+
         data = {
             "database_name": self.database_name,
             "key": key,
@@ -176,13 +230,57 @@ class Upsonic_Remote:
         }
         return self._send_request("POST", "/controller/set", data)
 
-    def get(self, key, encryption_key="a"):
+    def get(self, key, encryption_key="a", no_cache=False):
+    
+        response = None
+        if self.cache and not no_cache:
+              
+                if key not in self._cache_counter:
+            
+                    self._cache_counter[key] = 0
+                self._cache_counter[key] = self._cache_counter[key] + 1
+   
+                if self._cache_counter[key] < self.cache_counter and self._cache_counter[key] != 1:
+                    try:
+          
+                        response = self.cache_get(key)
+          
+                    except FileNotFoundError:
+  
+                        pass
+                else:
+                    if self._cache_counter[key] >= self.cache_counter:
+                        self._cache_counter[key] = 1
+                    the_hash = self.get(key+"upsonic_updated", no_cache=True)
+                    if key not in self._cache_hash:
+                        self._cache_hash[key] = None
+                    if the_hash != self._cache_hash[key]:
+                        self._cache_hash[key] = the_hash
+                        self.cache_hash_save()
+                        self.console.log("Cache is updated")
+                        self.cache_pop(key)
+                    else:
+                        try:
+                 
+                            response = self.cache_get(key)
+                 
+                        except FileNotFoundError:
+            
+                            pass
+                   
+
         encryption_key = (
             self.force_encrypt if self.force_encrypt != False else encryption_key
         )
 
         data = {"database_name": self.database_name, "key": key}
-        response = self._send_request("POST", "/controller/get", data)
+        if response is None:
+    
+            response = self._send_request("POST", "/controller/get", data)
+
+
+        if self.cache:
+            self.cache_set(key, response)
 
         if response is not None:
             if not response == "null\n":
