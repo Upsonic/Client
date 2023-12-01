@@ -16,7 +16,7 @@ class Upsonic_Remote:
     def __exit__(self, exc_type, exc_val, exc_tb):
         pass  # pragma: no cover
 
-    def __init__(self, database_name, api_url, password=None, enable_hashing:bool=False, verify=True, locking=False):
+    def __init__(self, database_name, api_url, password=None, enable_hashing:bool=False, verify=True, locking=False, client_id=None):
         import requests
         from requests.auth import HTTPBasicAuth
 
@@ -25,6 +25,8 @@ class Upsonic_Remote:
         self.force_encrypt = False
         self.locking = locking
         self.enable_hashing = enable_hashing
+
+        self.client_id = client_id
 
         self.verify = verify
 
@@ -41,7 +43,9 @@ class Upsonic_Remote:
         self._log(
             f"[{self.database_name[:5]}*] [bold white]Upsonic Cloud[bold white] initializing...",
         )
-
+        
+        if self.client_id is not None:
+            self._log(f"[{self.database_name[:5]}*] [bold white]Client ID[bold white]: {self.client_id}")
         from upsonic import encrypt, decrypt
         self.encrypt = encrypt
         self.decrypt = decrypt
@@ -103,9 +107,13 @@ class Upsonic_Remote:
             return None
 
 
-    def _lock_control(self, key):
-
-        return True if self.get(key+"_lock") == True else False
+    def _lock_control(self, key, locking_operation=False):
+        result = self.get(key+"_lock")
+        if result is not None:
+            if result == self.client_id and not locking_operation:
+                return False
+            return True
+        return False
   
 
     def lock_control(self, key):
@@ -115,20 +123,27 @@ class Upsonic_Remote:
             return False
 
     def lock_key(self, key):
-        if self._lock_control(key):
+        if self._lock_control(key, locking_operation=True):
             self.console.log(f"[bold red] '{key}' is already locked")
             return False
 
-        if self.set(key+"_lock", True, locking_operation=True) == "Data set successfully":
+        if self.set(key+"_lock", self.client_id, locking_operation=True) == "Data set successfully":
             self.console.log(f"[bold green] '{key}' is locked")
             return True
         else:
             return False
 
     def unlock_key(self, key):
-        if not self._lock_control(key):
+        result = self._lock_control(key, locking_operation=True)
+        if not result:
             self.console.log(f"[bold red] '{key}' is already unlocked")
             return False
+        
+        if self._lock_control(key):
+            self.console.log(f"[bold red] '{key}' is locked by another client")
+            return False
+
+    
 
         if self.delete(key+"_lock") == "Data deleted successfully":
             self.console.log(f"[bold green] '{key}' is unlocked")
