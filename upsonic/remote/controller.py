@@ -254,7 +254,7 @@ class Upsonic_Remote:
                     the_hash = self.get(key+"upsonic_updated", no_cache=True)
                     if key not in self._cache_hash:
                         self._cache_hash[key] = None
-                    if the_hash != self._cache_hash[key]:
+                    if the_hash != self._cache_hash[key] and the_hash is not None:
                         self._cache_hash[key] = the_hash
                         self.cache_hash_save()
                         self.console.log("Cache is updated")
