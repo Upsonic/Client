@@ -258,7 +258,10 @@ class Upsonic_Remote:
                         self._cache_hash[key] = the_hash
                         self.cache_hash_save()
                         self.console.log("Cache is updated")
-                        self.cache_pop(key)
+                        try:
+                            self.cache_pop(key)
+                        except FileNotFoundError:
+                            pass
                     else:
                         try:
                  
