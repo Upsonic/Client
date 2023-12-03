@@ -247,16 +247,19 @@ class _Upsonic_CLI:
                
 
     def set_set_version(self, version, client_id=None):
-
+        self.cloud._log("Setting set version to " + str(version))
         return self.cloud.set_set_version(version, client_id=client_id)
 
     def set_get_version(self, version, client_id=None):
-
+        self.cloud._log("Setting get version to " + str(version))
+        if client_id == None:
+            self.cloud._log("Client ID is None, setting global version")
+        else:
+            self.cloud._log("Client ID is " + str(client_id) + ", setting client version")
         return self.cloud.set_get_version(version, client_id=client_id)
 
 
     def print_set_version(self, client_id=None):
-
         return self.cloud.get_set_version_tag(client_id=client_id)
 
     def print_get_version(self, client_id=None):
