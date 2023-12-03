@@ -30,7 +30,7 @@ def decrypt(key, message):
 
 
 
-def Upsonic_Cloud_Free(database_name=None, access_key=None, locking=None, client_id=None, cache=None, cache_counter=None):
+def Upsonic_Cloud_Free(database_name=None, access_key=None, locking=None, client_id=None, cache=None, cache_counter=None, version=None, client_version=None):
     if database_name == None:
         database_name = os.environ.get("database_key")
     if access_key == None:
@@ -50,13 +50,20 @@ def Upsonic_Cloud_Free(database_name=None, access_key=None, locking=None, client
         cache_counter = int(os.environ.get("cache_counter", "5"))
 
 
+
+    if version == None:
+        version = os.environ.get("version", "false").lower() == "true"
+
+    if client_version == None:
+        client_version = os.environ.get("client_version", "false").lower() == "true"
+
     from upsonic import Upsonic_Remote
     return Upsonic_Remote(
-        database_name, "https://cloud_1.upsonic.co", access_key, verify=True, locking=locking, client_id=client_id, cache=cache, cache_counter=cache_counter
+        database_name, "https://cloud_1.upsonic.co", access_key, verify=True, locking=locking, client_id=client_id, cache=cache, cache_counter=cache_counter, version=version, client_version=client_version
     )  # pragma: no cover
 
 
-def Upsonic_Cloud_Pro(database_name=None, access_key=None, locking=None, client_id=None, cache=None, cache_counter=None):
+def Upsonic_Cloud_Pro(database_name=None, access_key=None, locking=None, client_id=None, cache=None, cache_counter=None, client_version=None):
     if database_name == None:
         database_name = os.environ.get("database_key")
     if access_key == None:
@@ -75,13 +82,21 @@ def Upsonic_Cloud_Pro(database_name=None, access_key=None, locking=None, client_
     if cache_counter == None:
         cache_counter = int(os.environ.get("cache_counter", "5"))
 
+
+    if version == None:
+        version = os.environ.get("version", "false").lower() == "true"
+
+    if client_version == None:
+        client_version = os.environ.get("client_version", "false").lower() == "true"
+
+
     from upsonic import Upsonic_Remote
     return Upsonic_Remote(
-        database_name, "https://cloud_2.upsonic.co", access_key, verify=True, locking=locking, client_id=client_id, cache=cache, cache_counter=cache_counter
+        database_name, "https://cloud_2.upsonic.co", access_key, verify=True, locking=locking, client_id=client_id, cache=cache, cache_counter=cache_counter, version=version, client_version=client_version
     )  # pragma: no cover
 
 
-def Upsonic_Cloud_Premium(database_name=None, access_key=None, locking=None, client_id=None, cache=None, cache_counter=None):
+def Upsonic_Cloud_Premium(database_name=None, access_key=None, locking=None, client_id=None, cache=None, cache_counter=None, client_version=None):
     if database_name == None:
         database_name = os.environ.get("database_key")
     if access_key == None:
@@ -99,12 +114,20 @@ def Upsonic_Cloud_Premium(database_name=None, access_key=None, locking=None, cli
     if cache_counter == None:
         cache_counter = int(os.environ.get("cache_counter", "5"))
 
+
+    if version == None:
+        version = os.environ.get("version", "false").lower() == "true"
+
+    if client_version == None:
+        client_version = os.environ.get("client_version", "false").lower() == "true"
+
+
     from upsonic import Upsonic_Remote
     return Upsonic_Remote(
-        database_name, "https://cloud_3.upsonic.co", access_key, verify=True, locking=locking, client_id=client_id, cache=cache, cache_counter=cache_counter
+        database_name, "https://cloud_3.upsonic.co", access_key, verify=True, locking=locking, client_id=client_id, cache=cache, cache_counter=cache_counter, version=version, client_version=client_version
     )  # pragma: no cover
 
-def Upsonic_Cloud_Startup(database_name=None, access_key=None, locking=None, client_id=None, cache=None, cache_counter=None):
+def Upsonic_Cloud_Startup(database_name=None, access_key=None, locking=None, client_id=None, cache=None, cache_counter=None, client_version=None):
     if database_name == None:
         database_name = os.environ.get("database_key")
     if access_key == None:
@@ -123,15 +146,23 @@ def Upsonic_Cloud_Startup(database_name=None, access_key=None, locking=None, cli
     if cache_counter == None:
         cache_counter = int(os.environ.get("cache_counter", "5"))
 
+
+    if version == None:
+        version = os.environ.get("version", "false").lower() == "true"
+
+    if client_version == None:
+        client_version = os.environ.get("client_version", "false").lower() == "true"
+
+
     from upsonic import Upsonic_Remote
     return Upsonic_Remote(
-        database_name, "https://cloud_4.upsonic.co", access_key, verify=True, locking=locking, client_id=client_id, cache=cache, cache_counter=cache_counter
+        database_name, "https://cloud_4.upsonic.co", access_key, verify=True, locking=locking, client_id=client_id, cache=cache, cache_counter=cache_counter, version=version, client_version=client_version
     )  # pragma: no cover
 
 
 
 
-def Upsonic_Cloud_Readonly(database_name=None, access_key=None, locking=None, client_id=None, cache=None, cache_counter=None):
+def Upsonic_Cloud_Readonly(database_name=None, access_key=None, locking=None, client_id=None, cache=None, cache_counter=None, client_version=None):
     if database_name == None:
         database_name = os.environ.get("database_key")
     if access_key == None:
@@ -150,9 +181,17 @@ def Upsonic_Cloud_Readonly(database_name=None, access_key=None, locking=None, cl
         cache_counter = int(os.environ.get("cache_counter", "5"))
 
 
+
+    if version == None:
+        version = os.environ.get("version", "false").lower() == "true"
+
+    if client_version == None:
+        client_version = os.environ.get("client_version", "false").lower() == "true"
+
+
     from upsonic import Upsonic_Remote
     return Upsonic_Remote(
-        database_name, "https://cloud_0.upsonic.co", access_key, verify=True, locking=locking, client_id=client_id, cache=cache, cache_counter=cache_counter
+        database_name, "https://cloud_0.upsonic.co", access_key, verify=True, locking=locking, client_id=client_id, cache=cache, cache_counter=cache_counter, version=version, client_version=client_version
     )  # pragma: no cover
 
 
@@ -206,6 +245,22 @@ class _Upsonic_CLI:
     def unlock(self, key):
         return self.cloud.unlock_key(key)
                
+
+    def set_set_version(self, version, client_id=None):
+
+        return self.cloud.set_set_version(version, client_id=client_id)
+
+    def set_get_version(self, version, client_id=None):
+
+        return self.cloud.set_get_version(version, client_id=client_id)
+
+
+    def print_set_version(self, client_id=None):
+
+        return self.cloud.get_set_version_tag(client_id=client_id)
+
+    def print_get_version(self, client_id=None):
+        return self.cloud.get_get_version_tag(client_id=client_id)
 
 def Upsonic_CLI():
     import fire

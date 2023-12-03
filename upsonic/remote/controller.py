@@ -10,6 +10,9 @@ import time
 
 import pickle
 import os
+
+import copy
+
 class Upsonic_Remote:
     def _log(self, message):
         self.console.log(message)
@@ -20,7 +23,7 @@ class Upsonic_Remote:
     def __exit__(self, exc_type, exc_val, exc_tb):
         pass  # pragma: no cover
 
-    def __init__(self, database_name, api_url, password=None, enable_hashing:bool=False, verify=True, locking=False, client_id=None, cache=False, cache_counter=None):
+    def __init__(self, database_name, api_url, password=None, enable_hashing:bool=False, verify=True, locking=False, client_id=None, cache=False, cache_counter=None, version=False, client_version=False):
         import requests
         from requests.auth import HTTPBasicAuth
 
@@ -85,6 +88,84 @@ class Upsonic_Remote:
             if self._cache_hash is None:
                 self._cache_hash = {}
                 self.cache_hash_save()
+
+
+
+        self.version = version
+        self.client_version = client_version
+    
+    
+    def get_set_version_tag(self, client_id=None):
+        the_key = "set_version_number"
+
+
+        
+        if client_id is not None:
+            the_key = the_key + f"_{client_id}"
+
+        else:
+            if self.client_version:
+                the_key = the_key + f"_{self.client_id}"            
+
+        the_version = self.get(the_key, no_version=True)
+        if the_version is None:
+            return None
+        if the_version == "latest":
+            return None
+        return the_version
+
+
+
+    def get_get_version_tag(self, client_id=None):
+        
+        the_key = "get_version_number"
+
+
+        
+        if client_id is not None:
+            the_key = the_key + f"_{client_id}"
+
+        else:
+            if self.client_version:
+                the_key = the_key + f"_{self.client_id}"    
+
+
+        the_version = self.get(the_key, no_version=True)
+        if the_version is None:
+            return None
+        if the_version == "latest":
+            return None
+        return the_version
+
+
+    def set_set_version(self, version_tag, client_id=None):
+        the_key = "set_version_number"
+
+        
+        if client_id is not None:
+            the_key = the_key + f"_{client_id}"
+
+        else:
+            if self.client_version:
+                the_key = the_key + f"_{self.client_id}"    
+
+
+        return self.set(the_key, version_tag, no_version=True)
+
+    def set_get_version(self, version_tag, client_id=None):
+        the_key = "get_version_number"
+
+        
+        if client_id is not None:
+            the_key = the_key + f"_{client_id}"
+
+        else:
+            if self.client_version:
+                the_key = the_key + f"_{self.client_id}"    
+
+
+        return self.set(the_key, version_tag, no_version=True)
+
 
     def cache_hash_save(self):
         
@@ -200,7 +281,7 @@ class Upsonic_Remote:
         else:         
             return False
 
-    def set(self, key, value, encryption_key="a", compress=None, cache_policy=0, locking_operation=False, update_operation=False):
+    def set(self, key, value, encryption_key="a", compress=None, cache_policy=0, locking_operation=False, update_operation=False, version_tag=None, no_version=False):
         if not locking_operation:
             if self.lock_control(key):
                 self.console.log(f"[bold red] '{key}' is locked")
@@ -220,7 +301,6 @@ class Upsonic_Remote:
             value = self.encrypt(encryption_key, value)
 
 
-
         data = {
             "database_name": self.database_name,
             "key": key,
@@ -228,10 +308,32 @@ class Upsonic_Remote:
             "compress": compress,
             "cache_policy": cache_policy,
         }
+
+        if version_tag is not None:
+            copy_data = copy.copy(data)
+            copy_data["key"] = copy_data["key"] + f"upsonic_version_{version_tag}"
+            self._send_request("POST", "/controller/set", copy_data)
+        elif self.version and not no_version:
+            the_version_ = self.get_set_version_tag()
+            if the_version_ is not None:
+                copy_data = copy.copy(data)
+                copy_data["key"] = copy_data["key"] + f"upsonic_version_{the_version_}"
+                self._send_request("POST", "/controller/set", copy_data)                
+
+       
+
         return self._send_request("POST", "/controller/set", data)
 
-    def get(self, key, encryption_key="a", no_cache=False):
+    def get(self, key, encryption_key="a", no_cache=False, version_tag=None, no_version=False):
     
+
+        if version_tag is not None:
+            key = key + f"upsonic_version_{version_tag}"
+        elif self.version and not no_version:
+            the_version_ = self.get_get_version_tag()
+            if the_version_ is not None:
+                key = key + f"upsonic_version_{the_version_}"
+
         response = None
         if self.cache and not no_cache:
               
@@ -277,6 +379,7 @@ class Upsonic_Remote:
         )
 
         data = {"database_name": self.database_name, "key": key}
+
         if response is None:
     
             response = self._send_request("POST", "/controller/get", data)
