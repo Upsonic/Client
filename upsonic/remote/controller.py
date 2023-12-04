@@ -281,14 +281,18 @@ class Upsonic_Remote:
         else:         
             return False
 
+
+    def _update_set(self, key):
+        self.set(key+"upsonic_updated", sha256(str(time.time()).encode()).hexdigest(), update_operation=True)
+
     def set(self, key, value, encryption_key="a", compress=None, cache_policy=0, locking_operation=False, update_operation=False, version_tag=None, no_version=False):
         if not locking_operation:
             if self.lock_control(key):
                 self.console.log(f"[bold red] '{key}' is locked")
                 return None
             
-        if not update_operation and self.cache:
-            self.set(key+"upsonic_updated", sha256(str(time.time()).encode()).hexdigest(), update_operation=True)
+        if not update_operation:
+            self._update_set(key)
 
 
         compress = True if self.force_compress else compress
@@ -313,12 +317,18 @@ class Upsonic_Remote:
             copy_data = copy.copy(data)
             copy_data["key"] = copy_data["key"] + f"_upsonic_version_{version_tag}"
             self._send_request("POST", "/controller/set", copy_data)
+            if not update_operation:
+                self._update_set(copy_data["key"])                     
         elif self.version and not no_version:
             the_version_ = self.get_set_version_tag()
+
             if the_version_ is not None:
                 copy_data = copy.copy(data)
                 copy_data["key"] = copy_data["key"] + f"_upsonic_version_{the_version_}"
-                self._send_request("POST", "/controller/set", copy_data)                
+ 
+                self._send_request("POST", "/controller/set", copy_data)   
+                if not update_operation:
+                    self._update_set(copy_data["key"])                             
 
        
 
@@ -353,7 +363,7 @@ class Upsonic_Remote:
                 else:
                     if self._cache_counter[key] >= self.cache_counter:
                         self._cache_counter[key] = 1
-                    the_hash = self.get(key+"upsonic_updated", no_cache=True)
+                    the_hash = self.get(key+"upsonic_updated", no_cache=True, no_version=True)
                     if key not in self._cache_hash:
                         self._cache_hash[key] = None
                     if the_hash != self._cache_hash[key] and the_hash is not None:
