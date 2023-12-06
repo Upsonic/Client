@@ -30,7 +30,7 @@ def decrypt(key, message):
 
 
 
-def Upsonic_Cloud_Free(database_name=None, access_key=None, locking=None, client_id=None, cache=True, cache_counter=2, version=None, client_version=None):
+def Upsonic_Cloud_Free(database_name=None, access_key=None, locking=None, client_id=None, cache=None, cache_counter=5, version=None, client_version=None):
     if database_name == None:
         database_name = os.environ.get("database_key")
     if access_key == None:
@@ -45,7 +45,7 @@ def Upsonic_Cloud_Free(database_name=None, access_key=None, locking=None, client
         client_id = os.environ.get("client_id", None)
 
     if cache == None:
-        cache = os.environ.get("cache", "false").lower() == "true"
+        cache = os.environ.get("cache", "true").lower() == "true"
     if cache_counter == None:
         cache_counter = int(os.environ.get("cache_counter", "5"))
 
@@ -63,7 +63,7 @@ def Upsonic_Cloud_Free(database_name=None, access_key=None, locking=None, client
     )  # pragma: no cover
 
 
-def Upsonic_Cloud_Pro(database_name=None, access_key=None, locking=None, client_id=None, cache=True, cache_counter=2, version=None, client_version=None):
+def Upsonic_Cloud_Pro(database_name=None, access_key=None, locking=None, client_id=None, cache=None, cache_counter=5, version=None, client_version=None):
     if database_name == None:
         database_name = os.environ.get("database_key")
     if access_key == None:
@@ -78,7 +78,7 @@ def Upsonic_Cloud_Pro(database_name=None, access_key=None, locking=None, client_
         client_id = os.environ.get("client_id", None)
 
     if cache == None:
-        cache = os.environ.get("cache", "false").lower() == "true"
+        cache = os.environ.get("cache", "true").lower() == "true"
     if cache_counter == None:
         cache_counter = int(os.environ.get("cache_counter", "5"))
 
@@ -96,7 +96,7 @@ def Upsonic_Cloud_Pro(database_name=None, access_key=None, locking=None, client_
     )  # pragma: no cover
 
 
-def Upsonic_Cloud_Premium(database_name=None, access_key=None, locking=None, client_id=None, cache=True, cache_counter=2, version=None, client_version=None):
+def Upsonic_Cloud_Premium(database_name=None, access_key=None, locking=None, client_id=None, cache=None, cache_counter=5, version=None, client_version=None):
     if database_name == None:
         database_name = os.environ.get("database_key")
     if access_key == None:
@@ -110,7 +110,7 @@ def Upsonic_Cloud_Premium(database_name=None, access_key=None, locking=None, cli
         client_id = os.environ.get("client_id", None)
 
     if cache == None:
-        cache = os.environ.get("cache", "false").lower() == "true"
+        cache = os.environ.get("cache", "true").lower() == "true"
     if cache_counter == None:
         cache_counter = int(os.environ.get("cache_counter", "5"))
 
@@ -127,7 +127,7 @@ def Upsonic_Cloud_Premium(database_name=None, access_key=None, locking=None, cli
         database_name, "https://cloud_3.upsonic.co", access_key, verify=True, locking=locking, client_id=client_id, cache=cache, cache_counter=cache_counter, version=version, client_version=client_version
     )  # pragma: no cover
 
-def Upsonic_Cloud_Startup(database_name=None, access_key=None, locking=None, client_id=None, cache=True, cache_counter=2, version=None, client_version=None):
+def Upsonic_Cloud_Startup(database_name=None, access_key=None, locking=None, client_id=None, cache=None, cache_counter=5, version=None, client_version=None):
     if database_name == None:
         database_name = os.environ.get("database_key")
     if access_key == None:
@@ -142,7 +142,7 @@ def Upsonic_Cloud_Startup(database_name=None, access_key=None, locking=None, cli
         client_id = os.environ.get("client_id", None)
 
     if cache == None:
-        cache = os.environ.get("cache", "false").lower() == "true"
+        cache = os.environ.get("cache", "true").lower() == "true"
     if cache_counter == None:
         cache_counter = int(os.environ.get("cache_counter", "5"))
 
@@ -162,7 +162,7 @@ def Upsonic_Cloud_Startup(database_name=None, access_key=None, locking=None, cli
 
 
 
-def Upsonic_Cloud_Readonly(database_name=None, access_key=None, locking=None, client_id=None, cache=True, cache_counter=2, version=None, client_version=None):
+def Upsonic_Cloud_Readonly(database_name=None, access_key=None, locking=None, client_id=None, cache=None, cache_counter=5, version=None, client_version=None):
     if database_name == None:
         database_name = os.environ.get("database_key")
     if access_key == None:
@@ -176,7 +176,7 @@ def Upsonic_Cloud_Readonly(database_name=None, access_key=None, locking=None, cl
         client_id = os.environ.get("client_id", None)
 
     if cache == None:
-        cache = os.environ.get("cache", "false").lower() == "true"
+        cache = os.environ.get("cache", "true").lower() == "true"
     if cache_counter == None:
         cache_counter = int(os.environ.get("cache_counter", "5"))
 
