@@ -23,13 +23,14 @@ class Upsonic_Remote:
     def __exit__(self, exc_type, exc_val, exc_tb):
         pass  # pragma: no cover
 
-    def __init__(self, database_name, api_url, password=None, enable_hashing:bool=False, verify=True, locking=False, client_id=None, cache=False, cache_counter=None, version=False, client_version=False):
+    def __init__(self, database_name, api_url, password=None, enable_hashing:bool=False, verify=True, locking=False, client_id=None, cache=False, cache_counter=None, version=False, client_version=False, key_encyption=False):
         import requests
         from requests.auth import HTTPBasicAuth
 
 
         self.force_compress = False
         self.force_encrypt = False
+        self.key_encyption = key_encyption
         self.locking = locking
         self.enable_hashing = enable_hashing
         self.cache = cache
@@ -301,7 +302,7 @@ class Upsonic_Remote:
         )
 
         if encryption_key is not None:
-
+            key = sha256(key.encode()).hexdigest() if self.key_encyption else key
             value = self.encrypt(encryption_key, value)
 
 
@@ -335,7 +336,8 @@ class Upsonic_Remote:
         return self._send_request("POST", "/controller/set", data)
 
     def get(self, key, encryption_key="a", no_cache=False, version_tag=None, no_version=False):
-    
+        if encryption_key is not None:
+            key = sha256(key.encode()).hexdigest() if self.key_encyption else key
 
         if version_tag is not None:
             key = key + f"_upsonic_version_{version_tag}"
