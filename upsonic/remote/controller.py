@@ -13,6 +13,9 @@ import os
 
 import copy
 
+import inspect
+
+
 class Upsonic_Remote:
     def _log(self, message):
         self.console.log(message)
@@ -95,6 +98,20 @@ class Upsonic_Remote:
         self.version = version
         self.client_version = client_version
     
+
+
+    def active_module(self, module, encryption_key="a", compress=None):
+
+        functions = [obj for name, obj in inspect.getmembers(module)
+                    if inspect.isfunction(obj)]
+
+        classes = [obj for name, obj in inspect.getmembers(module)
+                if inspect.isclass(obj)]
+        
+        for element in functions + classes:
+            name = element.__module__ +"." + element.__name__
+            self.set(name, element, encryption_key=encryption_key, compress=compress)
+
     
     def get_set_version_tag(self, client_id=None):
         the_key = "set_version_number"
@@ -417,7 +434,7 @@ class Upsonic_Remote:
 
     def active(self, value=None, encryption_key="a", compress=None):
         def decorate(value):
-            key = value.__name__
+            key = value.__module__+value.__name__
             self.set(key, value, encryption_key=encryption_key, compress=compress)
 
         if value == None:
