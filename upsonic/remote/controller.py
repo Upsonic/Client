@@ -301,10 +301,13 @@ class Upsonic_Remote:
             self.force_encrypt if self.force_encrypt != False else encryption_key
         )
 
+        
+
         if encryption_key is not None:
-            key = sha256(key.encode()).hexdigest() if self.key_encyption else key
             value = self.encrypt(encryption_key, value)
 
+
+        key = sha256(key.encode()).hexdigest() if self.key_encyption else key
 
         data = {
             "database_name": self.database_name,
@@ -336,8 +339,8 @@ class Upsonic_Remote:
         return self._send_request("POST", "/controller/set", data)
 
     def get(self, key, encryption_key="a", no_cache=False, version_tag=None, no_version=False):
-        if encryption_key is not None:
-            key = sha256(key.encode()).hexdigest() if self.key_encyption else key
+       
+        key = sha256(key.encode()).hexdigest() if self.key_encyption else key
 
         if version_tag is not None:
             key = key + f"_upsonic_version_{version_tag}"
