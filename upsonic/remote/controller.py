@@ -110,6 +110,9 @@ class Upsonic_Remote:
         
         for element in functions + classes:
             name = element.__module__ +"." + element.__name__
+            first_element = name.split(".")[0]
+            if module.__name__ not in first_element:
+                name = module.__name__ + "." + name      
             self.set(name, element, encryption_key=encryption_key, compress=compress)
 
     
@@ -434,7 +437,9 @@ class Upsonic_Remote:
 
     def active(self, value=None, encryption_key="a", compress=None):
         def decorate(value):
-            key = value.__module__+value.__name__ if value.__module__ != "__main__" else value.__name__
+            key = value.__name__ 
+            if value.__module__ != "__main__" and value.__module__ != None:
+                key = value.__module__ + "." + key
             self.set(key, value, encryption_key=encryption_key, compress=compress)
 
         if value == None:
