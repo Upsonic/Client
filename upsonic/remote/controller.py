@@ -284,7 +284,7 @@ class Upsonic_Remote:
 
 
     def _update_set(self, key):
-        self.set(key+"upsonic_updated", sha256(str(time.time()).encode()).hexdigest(), update_operation=True)
+        self.set(key+"_upsonic_updated", sha256(str(time.time()).encode()).hexdigest(), update_operation=True)
 
     def set(self, key, value, encryption_key="a", compress=None, cache_policy=0, locking_operation=False, update_operation=False, version_tag=None, no_version=False):
         if not locking_operation:
@@ -368,7 +368,7 @@ class Upsonic_Remote:
                 else:
                     if self._cache_counter[key] >= self.cache_counter:
                         self._cache_counter[key] = 1
-                    the_hash = self.get(key+"upsonic_updated", no_cache=True, no_version=True)
+                    the_hash = self.get(key+"_upsonic_updated", no_cache=True, no_version=True)
                     if key not in self._cache_hash:
                         self._cache_hash[key] = None
                     if the_hash != self._cache_hash[key] and the_hash is not None:
