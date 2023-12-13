@@ -26,10 +26,12 @@ class Upsonic_Remote:
     def __exit__(self, exc_type, exc_val, exc_tb):
         pass  # pragma: no cover
 
-    def __init__(self, database_name, api_url, password=None, enable_hashing:bool=False, verify=True, locking=False, client_id=None, cache=False, cache_counter=None, version=False, client_version=False, key_encyption=False):
+    def __init__(self, database_name, api_url, password=None, enable_hashing:bool=False, verify=True, locking=False, client_id=None, cache=False, cache_counter=None, version=False, client_version=False, key_encyption=False, meta_datas = True):
         import requests
         from requests.auth import HTTPBasicAuth
 
+
+        self.meta_datas = meta_datas
 
         self.force_compress = False
         self.force_encrypt = False
@@ -303,11 +305,25 @@ class Upsonic_Remote:
             return False
 
 
+    def _update_set(self, key, meta):
+        if self.meta_datas:
+            return self.set(key+"_upsonic_meta", meta, update_operation=True, encryption_key=None)
+
+
+
+
     def set(self, key, value, encryption_key="a", compress=None, cache_policy=0, locking_operation=False, update_operation=False, version_tag=None, no_version=False):
         if not locking_operation:
             if self.lock_control(key):
                 self.console.log(f"[bold red] '{key}' is locked")
                 return None
+
+        the_type = type(value).__name__
+        if the_type == "type":
+            the_type = "class"
+
+        meta = {'type_of_value': the_type}
+        meta = json.dumps(meta)
 
 
 
@@ -336,7 +352,8 @@ class Upsonic_Remote:
             copy_data = copy.copy(data)
             copy_data["key"] = copy_data["key"] + f"_upsonic_version_{version_tag}"
             self._send_request("POST", "/controller/set", copy_data)
-                  
+            if not update_operation:
+                self._update_set(copy_data["key"], meta)                   
         elif self.version and not no_version:
             the_version_ = self.get_set_version_tag()
 
@@ -346,10 +363,11 @@ class Upsonic_Remote:
  
                 self._send_request("POST", "/controller/set", copy_data)   
                 if not update_operation:
-                    self._update_set(copy_data["key"])                             
+                    self._update_set(copy_data["key"], meta)                             
 
        
-
+        if not update_operation:
+            self._update_set(key, meta)
         return self._send_request("POST", "/controller/set", data)
 
     def get(self, key, encryption_key="a", no_cache=False, version_tag=None, no_version=False):
