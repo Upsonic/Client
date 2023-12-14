@@ -447,10 +447,10 @@ class Upsonic_Remote:
             else:
                 return None
 
-    def active(self, value=None, encryption_key="a", compress=None):
+    def active(self, value=None, encryption_key="a", compress=None, just_name=False):
         def decorate(value):
             key = value.__name__ 
-            if value.__module__ != "__main__" and value.__module__ != None:
+            if value.__module__ != "__main__" and value.__module__ != None and not just_name:
                 key = value.__module__ + "." + key
             self.set(key, value, encryption_key=encryption_key, compress=compress)
 
