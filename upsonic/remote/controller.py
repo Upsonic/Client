@@ -214,6 +214,8 @@ class Upsonic_Remote:
         with open(f"{self.cache_dir}/{sha256(key.encode()).hexdigest()}", "rb") as f:
             return pickle.load(f)
     def cache_pop(self, key):
+        if key in self.local_cache:
+            self.local_cache.pop(key)
         os.remove(f"{self.cache_dir}/{sha256(key.encode()).hexdigest()}")
 
 
@@ -261,10 +263,17 @@ class Upsonic_Remote:
 
 
     def _lock_control(self, key, locking_operation=False):
-        result = self.get(key+"_lock")
+        the_client_id = self.client_id
+        if the_client_id is None:
+            the_client_id = "Unknown"
+
+        result = self.get(key+"_lock", encryption_key=None)
         if result is not None:
-            if result == self.client_id and not locking_operation:
+            result = result[1:]
+            result = result[:-2]
+            if result == the_client_id and not locking_operation:
                 return False
+
             return True
         return False
   
@@ -280,7 +289,11 @@ class Upsonic_Remote:
             self.console.log(f"[bold red] '{key}' is already locked")
             return False
 
-        if self.set(key+"_lock", self.client_id, locking_operation=True) == "Data set successfully":
+        the_client_id = self.client_id
+        if the_client_id is None:
+            the_client_id = "Unknown"
+
+        if self.set(key+"_lock", the_client_id, locking_operation=True, encryption_key=None) == "Data set successfully":
             self.console.log(f"[bold green] '{key}' is locked")
             return True
         else:
@@ -482,6 +495,7 @@ class Upsonic_Remote:
 
     def delete(self, key):
         data = {"database_name": self.database_name, "key": key}
+        self.cache_pop(key)
         return self._send_request("POST", "/controller/delete", data)
 
     def database_list(self):
