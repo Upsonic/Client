@@ -114,7 +114,8 @@ class Upsonic_Remote:
             name = element.__module__ +"." + element.__name__
             first_element = name.split(".")[0]
             if module.__name__ not in first_element:
-                name = module.__name__ + "." + name      
+                name = module.__name__ + "." + name  
+            element.__module__ = "__main__"    
             self.set(name, element, encryption_key=encryption_key, compress=compress)
 
     
@@ -216,7 +217,11 @@ class Upsonic_Remote:
     def cache_pop(self, key):
         if key in self.local_cache:
             self.local_cache.pop(key)
-        os.remove(f"{self.cache_dir}/{sha256(key.encode()).hexdigest()}")
+        try:
+            os.remove(f"{self.cache_dir}/{sha256(key.encode()).hexdigest()}")
+        except AttributeError:
+            pass
+
 
 
     def _informations(self):
