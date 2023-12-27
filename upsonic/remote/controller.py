@@ -305,7 +305,7 @@ class Upsonic_Remote:
         if the_client_id is None:
             the_client_id = "Unknown"
 
-        result = self.get(key+"_lock", encryption_key=None)
+        result = self.get(key+"_upsonic_lock", encryption_key=None, no_cache=True)
         if result is not None:
             result = result[1:]
             result = result[:-2]
@@ -331,7 +331,7 @@ class Upsonic_Remote:
         if the_client_id is None:
             the_client_id = "Unknown"
 
-        if self.set(key+"_lock", the_client_id, locking_operation=True, encryption_key=None) == "Data set successfully":
+        if self.set(key+"_upsonic_lock", the_client_id, locking_operation=True, encryption_key=None, no_cache=True) == "Data set successfully":
             self._log(f"[bold green] '{key}' is locked")
             return True
         else:
@@ -349,7 +349,7 @@ class Upsonic_Remote:
 
     
 
-        if self.delete(key+"_lock") == "Data deleted successfully":
+        if self.delete(key+"_upsonic_lock") == "Data deleted successfully":
             self._log(f"[bold green] '{key}' is unlocked")
             return True
         else:         
