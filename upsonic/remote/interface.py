@@ -17,7 +17,7 @@ def encrypt(key, message):
         resolver = f"""
 def the_function(*args, **kwargs):
 {new}
-    {message.__name__}(*args, **kwargs)
+    return {message.__name__}(*args, **kwargs)
 message = the_function
 """
 
