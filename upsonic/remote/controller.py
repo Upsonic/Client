@@ -115,8 +115,18 @@ class Upsonic_Remote:
             first_element = name.split(".")[0]
             if module.__name__ not in first_element:
                 name = module.__name__ + "." + name  
-            element.__module__ = "__main__"    
-            self.set(name, element, encryption_key=encryption_key, compress=compress)
+ 
+ 
+    
+            
+            try:
+                self.set(name, element, encryption_key=encryption_key, compress=compress)
+            except:
+                import traceback
+                traceback.print_exc()
+                self._log(f"[bold red]Error on '{name}'")
+                self.delete(name)
+                
 
     
     def get_set_version_tag(self, client_id=None):
