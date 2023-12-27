@@ -6,7 +6,7 @@ import ast
 
 from hashlib import sha256
 
-import time
+
 
 import pickle
 import os
@@ -14,11 +14,14 @@ import os
 import copy
 
 import inspect
+import threading
+import time
 
 
 class Upsonic_Remote:
     def _log(self, message):
-        self.console.log(message)
+        if not self.quiet:
+            self.console.log(message)
 
     def __enter__(self):
         return self  # pragma: no cover
@@ -26,10 +29,13 @@ class Upsonic_Remote:
     def __exit__(self, exc_type, exc_val, exc_tb):
         pass  # pragma: no cover
 
-    def __init__(self, database_name, api_url, password=None, enable_hashing:bool=False, verify=True, locking=False, client_id=None, cache=False, cache_counter=None, version=False, client_version=False, key_encyption=False, meta_datas = True):
+    def __init__(self, database_name, api_url, password=None, enable_hashing:bool=False, verify=True, locking=False, client_id=None, cache=False, cache_counter=None, version=False, client_version=False, key_encyption=False, meta_datas = True, quiet=False, thread_number=1):
         import requests
         from requests.auth import HTTPBasicAuth
 
+        self.thread_number = thread_number
+
+        self.quiet = quiet
 
         self.meta_datas = meta_datas
 
@@ -109,7 +115,9 @@ class Upsonic_Remote:
 
         classes = [obj for name, obj in inspect.getmembers(module)
                 if inspect.isclass(obj)]
-        
+
+        threads = []
+
         for element in functions + classes:
             name = element.__module__ +"." + element.__name__
             first_element = name.split(".")[0]
@@ -120,13 +128,28 @@ class Upsonic_Remote:
     
             
             try:
-                self.set(name, element, encryption_key=encryption_key, compress=compress)
+                while len(threads) >= self.thread_number:
+                    for each in threads:
+                        if not each.is_alive():
+                            threads.remove(each)
+                    time.sleep(0.1)
+
+                print("Thread_submitted", len(threads))
+                the_thread = threading.Thread(target=self.set, args=(name, element), kwargs={"encryption_key": encryption_key, "compress": compress})
+                the_thread.start()
+
+                thread = the_thread
+                threads.append(thread)
             except:
                 import traceback
                 traceback.print_exc()
                 self._log(f"[bold red]Error on '{name}'")
                 self.delete(name)
                 
+
+        for each in threads:
+            each.join()
+
 
     
     def get_set_version_tag(self, client_id=None):
@@ -301,7 +324,7 @@ class Upsonic_Remote:
 
     def lock_key(self, key):
         if self._lock_control(key, locking_operation=True):
-            self.console.log(f"[bold red] '{key}' is already locked")
+            self._log(f"[bold red] '{key}' is already locked")
             return False
 
         the_client_id = self.client_id
@@ -309,7 +332,7 @@ class Upsonic_Remote:
             the_client_id = "Unknown"
 
         if self.set(key+"_lock", the_client_id, locking_operation=True, encryption_key=None) == "Data set successfully":
-            self.console.log(f"[bold green] '{key}' is locked")
+            self._log(f"[bold green] '{key}' is locked")
             return True
         else:
             return False
@@ -317,17 +340,17 @@ class Upsonic_Remote:
     def unlock_key(self, key):
         result = self._lock_control(key, locking_operation=True)
         if not result:
-            self.console.log(f"[bold red] '{key}' is already unlocked")
+            self._log(f"[bold red] '{key}' is already unlocked")
             return False
         
         if self._lock_control(key):
-            self.console.log(f"[bold red] '{key}' is locked by another client")
+            self._log(f"[bold red] '{key}' is locked by another client")
             return False
 
     
 
         if self.delete(key+"_lock") == "Data deleted successfully":
-            self.console.log(f"[bold green] '{key}' is unlocked")
+            self._log(f"[bold green] '{key}' is unlocked")
             return True
         else:         
             return False
@@ -340,10 +363,11 @@ class Upsonic_Remote:
 
 
 
+
     def set(self, key, value, encryption_key="a", compress=None, cache_policy=0, locking_operation=False, update_operation=False, version_tag=None, no_version=False):
         if not locking_operation:
             if self.lock_control(key):
-                self.console.log(f"[bold red] '{key}' is locked")
+                self._log(f"[bold red] '{key}' is locked")
                 return None
 
         the_type = type(value).__name__
@@ -434,7 +458,7 @@ class Upsonic_Remote:
                     if the_hash != self._cache_hash[key] and the_hash is not None:
                         self._cache_hash[key] = the_hash
                         self.cache_hash_save()
-                        self.console.log("Cache is updated")
+                        self._log("Cache is updated")
                         try:
                             self.cache_pop(key)
                         except FileNotFoundError:

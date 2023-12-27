@@ -47,7 +47,7 @@ def decrypt(key, message):
 
 
 
-def Upsonic_Cloud_Free(database_name=None, access_key=None, locking=None, client_id=None, cache=None, cache_counter=5, version=None, client_version=None, key_encyption=None, meta_datas=None):
+def Upsonic_Cloud_Free(database_name=None, access_key=None, locking=None, client_id=None, cache=None, cache_counter=5, version=None, client_version=None, key_encyption=None, meta_datas=None, quiet=False, thread_number=None):
     if database_name == None:
         database_name = os.environ.get("database_key")
     if access_key == None:
@@ -84,14 +84,17 @@ def Upsonic_Cloud_Free(database_name=None, access_key=None, locking=None, client
         meta_datas = os.environ.get("meta_datas", "true").lower() == "true"
 
 
+    if thread_number == None:
+        thread_number = int(os.environ.get("thread_number", "1"))
+
 
     from upsonic import Upsonic_Remote
     return Upsonic_Remote(
-        database_name, "https://cloud_1.upsonic.co", access_key, verify=True, locking=locking, client_id=client_id, cache=cache, cache_counter=cache_counter, version=version, client_version=client_version, key_encyption=key_encyption, meta_datas=meta_datas
+        database_name, "https://cloud_1.upsonic.co", access_key, verify=True, locking=locking, client_id=client_id, cache=cache, cache_counter=cache_counter, version=version, client_version=client_version, key_encyption=key_encyption, meta_datas=meta_datas, quiet=quiet, thread_number=thread_number
     )  # pragma: no cover
 
 
-def Upsonic_Cloud_Pro(database_name=None, access_key=None, locking=None, client_id=None, cache=None, cache_counter=5, version=None, client_version=None, key_encyption=None, meta_datas=None):
+def Upsonic_Cloud_Pro(database_name=None, access_key=None, locking=None, client_id=None, cache=None, cache_counter=5, version=None, client_version=None, key_encyption=None, meta_datas=None, quiet=False, thread_number=None):
     if database_name == None:
         database_name = os.environ.get("database_key")
     if access_key == None:
@@ -124,15 +127,16 @@ def Upsonic_Cloud_Pro(database_name=None, access_key=None, locking=None, client_
     if meta_datas == None:
         meta_datas = os.environ.get("meta_datas", "true").lower() == "true"
 
-
+    if thread_number == None:
+        thread_number = int(os.environ.get("thread_number", "1"))
 
     from upsonic import Upsonic_Remote
     return Upsonic_Remote(
-        database_name, "https://cloud_2.upsonic.co", access_key, verify=True, locking=locking, client_id=client_id, cache=cache, cache_counter=cache_counter, version=version, client_version=client_version, key_encyption=key_encyption, meta_datas=meta_datas
+        database_name, "https://cloud_2.upsonic.co", access_key, verify=True, locking=locking, client_id=client_id, cache=cache, cache_counter=cache_counter, version=version, client_version=client_version, key_encyption=key_encyption, meta_datas=meta_datas, quiet=quiet, thread_number=thread_number
     )  # pragma: no cover
 
 
-def Upsonic_Cloud_Premium(database_name=None, access_key=None, locking=None, client_id=None, cache=None, cache_counter=5, version=None, client_version=None, key_encyption=None, meta_datas=None):
+def Upsonic_Cloud_Premium(database_name=None, access_key=None, locking=None, client_id=None, cache=None, cache_counter=5, version=None, client_version=None, key_encyption=None, meta_datas=None, quiet=False, thread_number=None):
     if database_name == None:
         database_name = os.environ.get("database_key")
     if access_key == None:
@@ -165,14 +169,15 @@ def Upsonic_Cloud_Premium(database_name=None, access_key=None, locking=None, cli
     if meta_datas == None:
         meta_datas = os.environ.get("meta_datas", "true").lower() == "true"
 
-
+    if thread_number == None:
+        thread_number = int(os.environ.get("thread_number", "1"))
 
     from upsonic import Upsonic_Remote
     return Upsonic_Remote(
-        database_name, "https://cloud_3.upsonic.co", access_key, verify=True, locking=locking, client_id=client_id, cache=cache, cache_counter=cache_counter, version=version, client_version=client_version, key_encyption=key_encyption, meta_datas=meta_datas
+        database_name, "https://cloud_3.upsonic.co", access_key, verify=True, locking=locking, client_id=client_id, cache=cache, cache_counter=cache_counter, version=version, client_version=client_version, key_encyption=key_encyption, meta_datas=meta_datas, quiet=quiet, thread_number=thread_number
     )  # pragma: no cover
 
-def Upsonic_Cloud_Startup(database_name=None, access_key=None, locking=None, client_id=None, cache=None, cache_counter=5, version=None, client_version=None, key_encyption=None, meta_datas=None):
+def Upsonic_Cloud_Startup(database_name=None, access_key=None, locking=None, client_id=None, cache=None, cache_counter=5, version=None, client_version=None, key_encyption=None, meta_datas=None, quiet=False, thread_number=None):
     if database_name == None:
         database_name = os.environ.get("database_key")
     if access_key == None:
@@ -206,17 +211,18 @@ def Upsonic_Cloud_Startup(database_name=None, access_key=None, locking=None, cli
     if meta_datas == None:
         meta_datas = os.environ.get("meta_datas", "true").lower() == "true"
 
-
+    if thread_number == None:
+        thread_number = int(os.environ.get("thread_number", "1"))
 
     from upsonic import Upsonic_Remote
     return Upsonic_Remote(
-        database_name, "https://cloud_4.upsonic.co", access_key, verify=True, locking=locking, client_id=client_id, cache=cache, cache_counter=cache_counter, version=version, client_version=client_version, key_encyption=key_encyption, meta_datas=meta_datas
+        database_name, "https://cloud_4.upsonic.co", access_key, verify=True, locking=locking, client_id=client_id, cache=cache, cache_counter=cache_counter, version=version, client_version=client_version, key_encyption=key_encyption, meta_datas=meta_datas, quiet=quiet, thread_number=thread_number
     )  # pragma: no cover
 
 
 
 
-def Upsonic_Cloud_Readonly(database_name=None, access_key=None, locking=None, client_id=None, cache=None, cache_counter=5, version=None, client_version=None, key_encyption=None, meta_datas=None):
+def Upsonic_Cloud_Readonly(database_name=None, access_key=None, locking=None, client_id=None, cache=None, cache_counter=5, version=None, client_version=None, key_encyption=None, meta_datas=None, quiet=False, thread_number=None):
     if database_name == None:
         database_name = os.environ.get("database_key")
     if access_key == None:
@@ -250,11 +256,12 @@ def Upsonic_Cloud_Readonly(database_name=None, access_key=None, locking=None, cl
     if meta_datas == None:
         meta_datas = os.environ.get("meta_datas", "true").lower() == "true"
 
-
+    if thread_number == None:
+        thread_number = int(os.environ.get("thread_number", "1"))
 
     from upsonic import Upsonic_Remote
     return Upsonic_Remote(
-        database_name, "https://cloud_0.upsonic.co", access_key, verify=True, locking=locking, client_id=client_id, cache=cache, cache_counter=cache_counter, version=version, client_version=client_version, key_encyption=key_encyption, meta_datas=meta_datas
+        database_name, "https://cloud_0.upsonic.co", access_key, verify=True, locking=locking, client_id=client_id, cache=cache, cache_counter=cache_counter, version=version, client_version=client_version, key_encyption=key_encyption, meta_datas=meta_datas, quiet=quiet, thread_number=thread_number
     )  # pragma: no cover
 
 
