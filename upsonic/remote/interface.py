@@ -10,7 +10,7 @@ import inspect
 
 
 def encrypt(key, message):
-    if inspect.isclass(message) or inspect.ismethod(message) or inspect.isfunction(message):
+    if inspect.ismethod(message) or inspect.isfunction(message):
         new = inspect.getsource(message)
                 # Add space to every line of element
         new = "\n".join(["    " + line for line in new.split("\n")])
