@@ -21,6 +21,7 @@ def the_function(*args, **kwargs):
 message = the_function
 """
 
+        resolver = resolver.replace("@cloud.active", "")
         ldict = {}
         exec(resolver, globals(),ldict)
         message = ldict['message']
