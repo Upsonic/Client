@@ -7,12 +7,13 @@ load_dotenv(dotenv_path=".env")
 import os
 import inspect
 
-
+import textwrap
 
 def encrypt(key, message):
     if inspect.ismethod(message) or inspect.isfunction(message):
         new = inspect.getsource(message)
                 # Add space to every line of element
+        new = textwrap.dedent(new)
         new = "\n".join(["    " + line for line in new.split("\n")])
         resolver = f"""
 def the_function(*args, **kwargs):
