@@ -34,3 +34,26 @@ def requires(name, custom_import=None):
         return wrapper
 
     return decorator
+
+
+"""
+
+def durable(func):
+    @wraps(func)
+    def runner(*args, **kwargs):
+        import random
+        result = None
+        run_id = random.randint(10000, 99999)
+        while result is None:
+            try:
+                result = func(*args, **kwargs)
+       
+            except Exception as e:
+                import time
+                print(f"Exception occurred in function and frozed the statement, waiting for update: {e}")
+                cloud.set(func.__name__+"_upsonic_durable"+str(run_id), str(e))
+                time.sleep(5)
+        return result
+    return runner
+
+"""
