@@ -269,6 +269,37 @@ def Upsonic_Cloud_Readonly(database_name=None, access_key=None, locking=None, cl
 
 
 
+def Upsonic_Cloud_Generic(*args, **kwargs):
+        _type = os.environ.get("type", "free")
+
+
+
+        if _type.lower() == "free":
+
+            
+            return Upsonic_Cloud_Free(*args, **kwargs)
+        elif _type.lower() == "pro":
+            
+            return Upsonic_Cloud_Pro(*args, **kwargs)
+
+        elif _type.lower() == "premium":
+            
+            return Upsonic_Cloud_Premium(*args, **kwargs)
+
+        elif _type.lower() == "startup":
+            
+            return Upsonic_Cloud_Startup(*args, **kwargs)
+
+        elif _type.lower() == "readonly":
+            
+            return Upsonic_Cloud_Readonly(*args, **kwargs)
+
+        else:
+            raise Exception("Invalid type")
+
+
+
+
 class _Upsonic_CLI:
     def __init__(self, type=None, database_name=None, access_key=None, locking=None, client_id=None) -> None:
         if type == None:
@@ -351,7 +382,9 @@ class _Upsonic_CLI:
         import os
         import sys
         # add current directory to path
-        sys.path.append(os.getcwd())
+        top = os.getcwd()
+        #Add top to sys.path top not last
+        sys.path.insert(0, top)
 
 
         module = __import__(module)

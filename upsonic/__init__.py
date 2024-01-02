@@ -15,6 +15,7 @@ from .remote import Upsonic_Cloud_Pro
 from .remote import Upsonic_Cloud_Premium
 from .remote import Upsonic_Cloud_Startup
 from .remote import Upsonic_Cloud_Readonly
+from .remote import Upsonic_Cloud_Generic
 from .remote import no_exception
 from .remote import requires
 from .remote import encrypt
