@@ -20,6 +20,7 @@ import time
 
 class Upsonic_Remote:
     prevent_enable = False
+    quiet_startup = False
     def _log(self, message):
         if not self.quiet:
             self.console.log(message)
@@ -37,6 +38,8 @@ class Upsonic_Remote:
         self.thread_number = thread_number
 
         self.quiet = quiet
+
+
 
         self.meta_datas = meta_datas
 
@@ -72,12 +75,14 @@ class Upsonic_Remote:
 
 
         self.database_name = database_name
-        self._log(
-            f"[{self.database_name[:5]}*] [bold white]Upsonic Cloud[bold white] initializing...",
-        )
-        
+        if not Upsonic_Remote.quiet_startup:
+            self._log(
+                f"[{self.database_name[:5]}*] [bold white]Upsonic Cloud[bold white] initializing...",
+            )
+            
         if self.client_id is not None:
-            self._log(f"[{self.database_name[:5]}*] [bold white]Client ID[bold white]: {self.client_id}")
+            if not Upsonic_Remote.quiet_startup:                
+                self._log(f"[{self.database_name[:5]}*] [bold white]Client ID[bold white]: {self.client_id}")
         from upsonic import encrypt, decrypt
         self.encrypt = encrypt
         self.decrypt = decrypt
@@ -90,11 +95,11 @@ class Upsonic_Remote:
             self.informations = self._informations()
         except TypeError:
             self.informations = None
-
-        self._log(
-            f"[{self.database_name[:5]}*] [bold green]Upsonic Cloud[bold green] active",
-        )
-        self._log("---------------------------------------------")
+        if not Upsonic_Remote.quiet_startup:
+            self._log(
+                f"[{self.database_name[:5]}*] [bold green]Upsonic Cloud[bold green] active",
+            )
+            self._log("---------------------------------------------")
 
         if self.cache:
             self.cache_hash_load()

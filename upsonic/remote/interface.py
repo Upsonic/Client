@@ -336,6 +336,36 @@ class _Upsonic_CLI:
 
     def print_get_version(self, client_id=None):
         return self.cloud.get_get_version_tag(client_id=client_id)
+    
+
+
+
+
+
+    def update(self, module):
+        backup = self.cloud.cache
+        self.cloud.cache=False
+        from upsonic_update import Upsonic_Update
+        update = Upsonic_Update(self.cloud, pre_update_all=True, clear_olds=True) 
+
+        import os
+        import sys
+        # add current directory to path
+        sys.path.append(os.getcwd())
+
+
+        module = __import__(module)
+
+        self.cloud.active_module(module)
+
+        update.update()
+        self.cloud.cache=backup
+
+
+
+
+
+
 
 def Upsonic_CLI():
     import fire
