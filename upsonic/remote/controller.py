@@ -239,8 +239,8 @@ message = the_{original_key_without_dow}
                         if not each.is_alive():
                             threads.remove(each)
                     time.sleep(0.1)
-
-                if not "upsonic.remote" in name:
+             
+                if not "upsonic.remote" in name and not "upsonic_updater" in name and name != f"{module.__name__}.threading.Thread":
                     the_thread = threading.Thread(target=self.set, args=(name, element), kwargs={"encryption_key": encryption_key, "compress": compress, "liberty": liberty})
                     the_thread.start()
 
