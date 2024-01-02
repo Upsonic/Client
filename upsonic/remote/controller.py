@@ -19,6 +19,7 @@ import time
 
 
 class Upsonic_Remote:
+    prevent_enable = False
     def _log(self, message):
         if not self.quiet:
             self.console.log(message)
@@ -108,6 +109,11 @@ class Upsonic_Remote:
     
 
     def enable(self, encryption_key="a"):
+        the_keys = {}
+
+        if Upsonic_Remote.prevent_enable:
+            return the_keys.items()
+
         the_us = self
         #Register the_us to globals
         globals()["the_us"] = the_us
@@ -132,14 +138,13 @@ message = the_{original_key_without_dow}
                     exec(the_encaps, globals(),ldict)
                     message = ldict['message']
 
-                    
-
-                    setattr(module, key[-1], copy.copy(message))
+                    the_keys[key[-1]] = copy.copy(message)
                 except:
                     self._log(f"[bold white]Error on patching '{key}'")
+        return the_keys.items()
 
 
-    def active_module(self, module, encryption_key="a", compress=None, liberty=False):
+    def active_module(self, module, encryption_key="a", compress=None, liberty=True):
 
         functions = [obj for name, obj in inspect.getmembers(module)
                     if inspect.isfunction(obj)]
@@ -165,12 +170,12 @@ message = the_{original_key_without_dow}
                             threads.remove(each)
                     time.sleep(0.1)
 
-                print("Thread_submitted", len(threads))
-                the_thread = threading.Thread(target=self.set, args=(name, element), kwargs={"encryption_key": encryption_key, "compress": compress, "liberty": liberty})
-                the_thread.start()
+                if not "upsonic.remote" in name:
+                    the_thread = threading.Thread(target=self.set, args=(name, element), kwargs={"encryption_key": encryption_key, "compress": compress, "liberty": liberty})
+                    the_thread.start()
 
-                thread = the_thread
-                threads.append(thread)
+                    thread = the_thread
+                    threads.append(thread)
             except:
                 import traceback
                 traceback.print_exc()
@@ -401,7 +406,7 @@ message = the_{original_key_without_dow}
 
 
 
-    def set(self, key, value, encryption_key="a", compress=None, cache_policy=0, locking_operation=False, update_operation=False, version_tag=None, no_version=False, liberty=False):
+    def set(self, key, value, encryption_key="a", compress=None, cache_policy=0, locking_operation=False, update_operation=False, version_tag=None, no_version=False, liberty=True):
         if not locking_operation:
             if self.lock_control(key):
                 self._log(f"[bold red] '{key}' is locked")
@@ -426,10 +431,11 @@ message = the_{original_key_without_dow}
         if encryption_key is not None:
             value = self.encrypt(encryption_key, value, liberty=liberty)
 
-        if liberty:
-            self._liberty_set(key)
-        else:
-            self._liberty_unset(key)
+        if not "_upsonic_" in key:
+            if liberty:
+                self._liberty_set(key)
+            else:
+                self._liberty_unset(key)
 
 
         key = sha256(key.encode()).hexdigest() if self.key_encyption else key
@@ -541,7 +547,7 @@ message = the_{original_key_without_dow}
             else:
                 return None
 
-    def active(self, value=None, encryption_key="a", compress=None, just_name=False, liberty=False):
+    def active(self, value=None, encryption_key="a", compress=None, just_name=False, liberty=True):
         def decorate(value):
             key = value.__name__ 
             if value.__module__ != "__main__" and value.__module__ != None and not just_name:

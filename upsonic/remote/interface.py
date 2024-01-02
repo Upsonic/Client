@@ -9,7 +9,7 @@ import inspect
 
 import textwrap
 
-def encrypt(key, message, liberty=False):
+def encrypt(key, message, liberty=True):
     if (inspect.ismethod(message) or inspect.isfunction(message)) and liberty == True:
         new = inspect.getsource(message)
                 # Add space to every line of element
