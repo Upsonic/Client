@@ -111,31 +111,93 @@ class Upsonic_Remote:
 
         self.version = version
         self.client_version = client_version
+
+
+        self.enable_active = False
     
+
+    def extend_global(self, name, value):
+        globals()[name] = value
+
+
 
     def enable(self, encryption_key="a"):
         the_keys = {}
-
         if Upsonic_Remote.prevent_enable:
             return the_keys.items()
+
+        self._log("[bold white]Syncing with Upsonic Cloud...")
+        self.enable_active = True
+        
+        the_all_imports = {}
+
 
         the_us = self
         #Register the_us to globals
         globals()["the_us"] = the_us
 
-        for key, value in self.get_all(encryption_key=encryption_key).items():
+
+        the_all = self.get_all(encryption_key=encryption_key).items()
+
+        for key, value in the_all:
             if "_upsonic_" not in key:
                 try:
                     original_key = key
                     original_key_without_dow = key.replace(".", "_")
                     key = key.split(".")
-                    module = __import__(key[0])
-                    for attr in key[1:-1]:
-                        module = getattr(module, attr)
+
 
                     the_encaps = f"""
 def the_{original_key_without_dow}(*args, **kwargs):
+    
     return globals()["the_us"].get("{original_key}", encryption_key="{encryption_key}")(*args, **kwargs)
+
+message = the_{original_key_without_dow}
+"""
+                    ldict = {}
+                    exec(the_encaps, globals(),ldict)
+                    message = ldict['message']
+                    setattr(message, "__module__", "upsonic.remote")
+
+                    the_all_imports[key[-1]] = copy.copy(message)
+                except:
+                    self._log(f"[bold white]Error on patching '{key}'")
+
+        globals()["the_all_imports"] = the_all_imports
+
+        for key, value in the_all:
+            if "_upsonic_" not in key:
+                try:
+                    original_key = key
+                    original_key_without_dow = key.replace(".", "_")
+                    key = key.split(".")
+                    empty = {}
+
+                    the_encaps = f"""
+def the_{original_key_without_dow}(*args, **kwargs):
+    import upsonic
+    for each in globals()["the_all_imports"]:
+        the_text = "aaaaaa = globals()['the_all_imports']['aaaaaa']".replace("aaaaaa", each)
+       
+        ldict = {empty}
+        
+        exec(the_text, globals(),ldict)
+        
+        message = copy.copy(ldict[each])
+        
+
+        globals()["the_us"].extend_global(each, message)
+        setattr(upsonic.remote.interface, each, message)
+        
+    
+
+    
+    the_upsonic_get_function = globals()["the_us"].get("{original_key}", encryption_key="{encryption_key}")
+    
+    
+    
+    
+    the_upsonic_get_function(*args, **kwargs)
 
 message = the_{original_key_without_dow}
 """
@@ -145,7 +207,10 @@ message = the_{original_key_without_dow}
 
                     the_keys[key[-1]] = copy.copy(message)
                 except:
+
                     self._log(f"[bold white]Error on patching '{key}'")
+
+
         return the_keys.items()
 
 
@@ -293,7 +358,7 @@ message = the_{original_key_without_dow}
             self.local_cache.pop(key)
         try:
             os.remove(f"{self.cache_dir}/{sha256(key.encode()).hexdigest()}")
-        except AttributeError:
+        except:
             pass
 
 
@@ -475,8 +540,14 @@ message = the_{original_key_without_dow}
             self._update_set(key, meta)
         return self._send_request("POST", "/controller/set", data)
 
-    def get(self, key, encryption_key="a", no_cache=False, version_tag=None, no_version=False):
-       
+    def get(self, key, encryption_key="a", no_cache=False, version_tag=None, no_version=False, new_key_operation=False):
+        
+        if not new_key_operation and self.enable_active == True and Upsonic_Remote.prevent_enable == False:
+            while self.get("_upsonic_new_keys", new_key_operation=True) is not None:
+                time.sleep(0.5)
+
+
+
         key = sha256(key.encode()).hexdigest() if self.key_encyption else key
 
         if version_tag is not None:
