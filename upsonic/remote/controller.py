@@ -16,7 +16,7 @@ import copy
 import inspect
 import threading
 import time
-
+import textwrap
 
 class Upsonic_Remote:
     prevent_enable = False
@@ -121,10 +121,17 @@ class Upsonic_Remote:
 
 
 
-    def enable(self, encryption_key="a"):
+    def enable(self, encryption_key="a", the_globals={}):
         the_keys = {}
         if Upsonic_Remote.prevent_enable:
             return the_keys.items()
+
+
+        from upsonic import interface
+        for key, value in the_globals.items():
+            setattr(interface, key, value)
+            globals()[key] = value
+
 
         self._log("[bold white]Syncing with Upsonic Cloud...")
         self.enable_active = True
@@ -137,80 +144,28 @@ class Upsonic_Remote:
         globals()["the_us"] = the_us
 
 
-        the_all = self.get_all(encryption_key=encryption_key).items()
+        the_all = self.get_all(encryption_key=encryption_key)
 
-        for key, value in the_all:
+        for key, value in the_all.items():
             if "_upsonic_" not in key:
                 try:
                     original_key = key
                     original_key_without_dow = key.replace(".", "_")
+                    
+         
                     key = key.split(".")
+                    message = value
 
-
-                    the_encaps = f"""
-def the_{original_key_without_dow}(*args, **kwargs):
-    
-    return globals()["the_us"].get("{original_key}", encryption_key="{encryption_key}")(*args, **kwargs)
-
-message = the_{original_key_without_dow}
-"""
-                    ldict = {}
-                    exec(the_encaps, globals(),ldict)
-                    message = ldict['message']
-                    setattr(message, "__module__", "upsonic.remote")
-
-                    the_all_imports[key[-1]] = copy.copy(message)
-                except:
-                    self._log(f"[bold white]Error on patching '{key}'")
-
-        globals()["the_all_imports"] = the_all_imports
-
-        for key, value in the_all:
-            if "_upsonic_" not in key:
-                try:
-                    original_key = key
-                    original_key_without_dow = key.replace(".", "_")
-                    key = key.split(".")
-                    empty = {}
-
-                    the_encaps = f"""
-def the_{original_key_without_dow}(*args, **kwargs):
-    import upsonic
-    for each in globals()["the_all_imports"]:
-        the_text = "aaaaaa = globals()['the_all_imports']['aaaaaa']".replace("aaaaaa", each)
-       
-        ldict = {empty}
-        
-        exec(the_text, globals(),ldict)
-        
-        message = copy.copy(ldict[each])
-        
-
-        globals()["the_us"].extend_global(each, message)
-        setattr(upsonic.remote.interface, each, message)
-        
-    
-
-    
-    the_upsonic_get_function = globals()["the_us"].get("{original_key}", encryption_key="{encryption_key}")
-    
-    
-    
-    
-    the_upsonic_get_function(*args, **kwargs)
-
-message = the_{original_key_without_dow}
-"""
-                    ldict = {}
-                    exec(the_encaps, globals(),ldict)
-                    message = ldict['message']
-
+                    from upsonic import interface
+                    setattr(interface, key[-1], copy.copy(message))
                     the_keys[key[-1]] = copy.copy(message)
+             
                 except:
-
+                    import traceback
+                    traceback.print_exc()
                     self._log(f"[bold white]Error on patching '{key}'")
 
-
+  
         return the_keys.items()
 
 
@@ -467,11 +422,15 @@ message = the_{original_key_without_dow}
             return self.set(key+"_upsonic_meta", meta, update_operation=True, encryption_key=None)
 
 
-    def _liberty_set(self, key):
+    def _liberty_set(self, key, liberty_class):
+        if liberty_class:
+            self.set(key+"_upsonic_liberty_class", True, update_operation=True, encryption_key=None)
         return self.set(key+"_upsonic_liberty", True, update_operation=True, encryption_key=None)
 
 
-    def _liberty_unset(self, key):
+    def _liberty_unset(self, key, liberty_class):
+        if liberty_class:
+            self.delete(key+"_upsonic_liberty_class")
         self.delete(key+"_upsonic_liberty")
 
 
@@ -497,15 +456,15 @@ message = the_{original_key_without_dow}
         )
 
         
-
+        liberty_class = inspect.isclass(value)
         if encryption_key is not None:
             value = self.encrypt(encryption_key, value, liberty=liberty)
 
         if not "_upsonic_" in key:
             if liberty:
-                self._liberty_set(key)
+                self._liberty_set(key, liberty_class)
             else:
-                self._liberty_unset(key)
+                self._liberty_unset(key, liberty_class)
 
 
         key = sha256(key.encode()).hexdigest() if self.key_encyption else key
@@ -540,11 +499,9 @@ message = the_{original_key_without_dow}
             self._update_set(key, meta)
         return self._send_request("POST", "/controller/set", data)
 
-    def get(self, key, encryption_key="a", no_cache=False, version_tag=None, no_version=False, new_key_operation=False):
+    def get(self, key, encryption_key="a", no_cache=False, version_tag=None, no_version=False):
         
-        if not new_key_operation and self.enable_active == True and Upsonic_Remote.prevent_enable == False:
-            while self.get("_upsonic_new_keys", new_key_operation=True) is not None:
-                time.sleep(0.5)
+
 
 
 
@@ -616,7 +573,7 @@ message = the_{original_key_without_dow}
                 # Decrypt the received value
                 if encryption_key is not None:
                     try:
-                        response = self.decrypt(encryption_key, response)
+                        response = self.decrypt(encryption_key, response, cloud=self, name=key)
                     except:
                         pass                    
                 return response
@@ -649,7 +606,7 @@ message = the_{original_key_without_dow}
         for each in datas:
             if encryption_key is not None:
                 try:
-                    datas[each] = self.decrypt(encryption_key, datas[each])
+                    datas[each] = self.decrypt(encryption_key, datas[each], cloud=self, name=each)
                 except:
                     pass
 

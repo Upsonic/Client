@@ -10,7 +10,7 @@ import inspect
 import textwrap
 
 def encrypt(key, message, liberty=True):
-    if (inspect.ismethod(message) or inspect.isfunction(message)) and liberty == True:
+    if (inspect.ismethod(message) or inspect.isfunction(message) or inspect.isclass(message)) and liberty == True:
         new = inspect.getsource(message)
                 # Add space to every line of element
         new = textwrap.dedent(new)
@@ -21,6 +21,14 @@ def the_function(*args, **kwargs):
     return {message.__name__}(*args, **kwargs)
 message = the_function
 """
+        if inspect.isclass(message):
+            resolver = f"""
+def the_function():
+{new}
+    return {message.__name__}
+message = the_function
+"""            
+
 
         resolver = resolver.replace("@cloud.active", "")
         ldict = {}
@@ -38,13 +46,18 @@ message = the_function
     encrypted_message = fernet.encrypt(dill.dumps(message))
     return encrypted_message
 
-def decrypt(key, message):
+def decrypt(key, message, cloud=None, name=None):
     from cryptography.fernet import Fernet
     import base64
     import hashlib    
     import dill
     fernet = Fernet(base64.urlsafe_b64encode(hashlib.sha256(key.encode()).digest()))
     decrypted_message = dill.loads(fernet.decrypt(message))
+
+    if cloud is not None and name is not None:
+        if cloud.get(name+"_upsonic_liberty_class", encryption_key=key) is not None:
+            decrypted_message = decrypted_message()
+
     return decrypted_message
 
 

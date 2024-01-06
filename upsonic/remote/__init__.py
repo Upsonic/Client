@@ -9,3 +9,4 @@ from .helper import no_exception
 from .helper import requires
 from .interface import encrypt
 from .interface import decrypt
+from . import interface
