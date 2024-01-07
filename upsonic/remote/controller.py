@@ -19,7 +19,7 @@ import time
 import textwrap
 
 class Upsonic_Remote:
-    prevent_enable = False
+    prevent_enable = True
     quiet_startup = False
     def _log(self, message):
         if not self.quiet:
@@ -156,10 +156,60 @@ class Upsonic_Remote:
                     key = key.split(".")
                     message = value
 
+
+                    if inspect.isfunction(message):
+                        # Create a function that will call the self.get(original_key, encryption_key=encryption_key) function and return the result
+                        the_function = f"""
+def function(*args, **kwargs):
+    return the_us.get('{original_key}', encryption_key='{encryption_key}')(*args, **kwargs)
+message = function
+"""
+                        print(the_function)
+                        ldict = {}
+                        exec(the_function, globals(), ldict)
+                        message = ldict["message"]
+
+
+                    if inspect.isclass(message):
+                        # Create a class and
+
+                        the_class = f"""
+class the_class:
+    pass
+message = the_class
+"""
+
+
+
+
                     from upsonic import interface
                     setattr(interface, key[-1], copy.copy(message))
                     the_keys[key[-1]] = copy.copy(message)
-             
+
+                    if inspect.isclass(message):
+                        for name, obj in inspect.getmembers(value):
+                            if name == "__class__" or name == "__dict__":
+                                continue
+                            if inspect.isfunction(obj):
+                                the_function = f"""
+def function(*args, **kwargs):
+    print("somethink happeded")
+    the_data = the_us.get('{original_key}', encryption_key='{encryption_key}')
+    print("end")
+    print(the_data.{name}(*args, **kwargs))
+    return the_data.{name}(*args, **kwargs)
+    
+
+message = function
+    """
+                            
+                                ldict = {}
+                                exec(the_function, globals(), ldict)
+                                obj = ldict["message"]
+                            print(name, obj)
+                            setattr(the_keys[key[-1]], name, obj)
+
+
                 except:
                     import traceback
                     traceback.print_exc()
@@ -575,6 +625,8 @@ class Upsonic_Remote:
                     try:
                         response = self.decrypt(encryption_key, response, cloud=self, name=key)
                     except:
+                        import traceback
+                        traceback.print_exc()
                         pass                    
                 return response
             else:
