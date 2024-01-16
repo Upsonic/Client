@@ -9,54 +9,30 @@ import inspect
 
 import textwrap
 
+import cloudpickle
+import dill
+
 def encrypt(key, message, liberty=True):
-    if (inspect.ismethod(message) or inspect.isfunction(message) or inspect.isclass(message)) and liberty == True:
-        new = inspect.getsource(message)
-                # Add space to every line of element
-        new = textwrap.dedent(new)
-        new = "\n".join(["    " + line for line in new.split("\n")])
-        resolver = f"""
-def the_function(*args, **kwargs):
-{new}
-    return {message.__name__}(*args, **kwargs)
-message = the_function
-"""
-        if inspect.isclass(message):
-            resolver = f"""
-def the_function():
-{new}
-    return {message.__name__}
-message = the_function
-"""            
-
-
-        resolver = resolver.replace("@cloud.active", "")
-        ldict = {}
-        exec(resolver, globals(),ldict)
-        message = ldict['message']
-
+    the_module = dill.detect.getmodule(message)
+    if the_module is not None:
+        cloudpickle.register_pickle_by_value(the_module)
 
 
     from cryptography.fernet import Fernet
     import base64
     import hashlib
-    import dill
+    
     fernet_key = base64.urlsafe_b64encode(hashlib.sha256(key.encode()).digest())
     fernet = Fernet(fernet_key)
-    encrypted_message = fernet.encrypt(dill.dumps(message))
+    encrypted_message = fernet.encrypt(cloudpickle.dumps(message))
     return encrypted_message
 
-def decrypt(key, message, cloud=None, name=None):
+def decrypt(key, message):
     from cryptography.fernet import Fernet
     import base64
     import hashlib    
-    import dill
     fernet = Fernet(base64.urlsafe_b64encode(hashlib.sha256(key.encode()).digest()))
-    decrypted_message = dill.loads(fernet.decrypt(message))
-
-    if cloud is not None and name is not None:
-        if cloud.get(name+"_upsonic_liberty_class", encryption_key=key) is not None:
-            decrypted_message = decrypted_message()
+    decrypted_message = cloudpickle.loads(fernet.decrypt(message))
 
     return decrypted_message
 
@@ -385,7 +361,6 @@ class _Upsonic_CLI:
 
 
 
-
     def update(self, module):
         backup = self.cloud.cache
         self.cloud.cache=False
@@ -400,12 +375,13 @@ class _Upsonic_CLI:
         sys.path.insert(0, top)
 
 
-        module = __import__(module)
+        module_the = __import__(module)
 
-        self.cloud.active_module(module)
+        self.cloud.dump_module(module, module_the)
 
         update.update()
         self.cloud.cache=backup
+
 
 
 

@@ -14,12 +14,22 @@ import os
 import copy
 
 import inspect
+import pkgutil
 import threading
 import time
 import textwrap
 
+import cloudpickle
+
+
+from contextlib import contextmanager
+
+import sys
+
+from rich.progress import Progress
+
 class Upsonic_Remote:
-    prevent_enable = True
+    prevent_enable = False
     quiet_startup = False
     def _log(self, message):
         if not self.quiet:
@@ -54,11 +64,10 @@ class Upsonic_Remote:
 
         self.local_cache = {}
         
-        if self.cache:
-           
-            self.cache_dir = os.path.join(os.getcwd(), "upsonic_cache")
-            if not os.path.exists(self.cache_dir):
-                os.mkdir(self.cache_dir)
+  
+        self.cache_dir = os.path.join(os.getcwd(), "upsonic_cache")
+        if not os.path.exists(self.cache_dir):
+            os.mkdir(self.cache_dir)
 
 
         self.client_id = client_id
@@ -95,6 +104,12 @@ class Upsonic_Remote:
             self.informations = self._informations()
         except TypeError:
             self.informations = None
+        if self.informations is not None:
+            rate_limits = self.informations["rate_limit"][1]
+            rate_limits = rate_limits.split(" ")
+            self.rate_limit = int(rate_limits[1])
+            self.thread_number = 10
+
         if not Upsonic_Remote.quiet_startup:
             self._log(
                 f"[{self.database_name[:5]}*] [bold green]Upsonic Cloud[bold green] active",
@@ -114,10 +129,93 @@ class Upsonic_Remote:
 
 
         self.enable_active = False
+
+
+
+
+    def install_package(self, package):
+        from pip._internal import main as pip
+
+        package_name = package.split("==")[0]
+        package_version = package.split("==")[1] if len(package.split("==")) > 1 else "Latest"
+
+        the_dir = os.path.abspath(os.path.join(self.cache_dir, package_name, package_version))
+        if not os.path.exists(the_dir):
+            os.makedirs(the_dir)
+        
+
+        pip(["install", package, "--target", the_dir])
+
+
+
+
+
+
+    @contextmanager
+    def import_package(self, package):
+        """
+import sys
+for a in list(sys.modules):
+    if a.startswith("numpy"):
+        del sys.modules[a]        
+        """        
+
+
+        package_name = package.split("==")[0]
+        package_version = package.split("==")[1] if len(package.split("==")) > 1 else "Latest"
+
+        the_dir = os.path.abspath(os.path.join(self.cache_dir, package_name, package_version))
+
+
+
+        if not os.path.exists(the_dir):
+            self.install_package(package)
+        
+        sys_path_backup = sys.path.copy()
+        
+        sys.path.insert(0, the_dir)
+
+        try:
+            yield
+        finally:
+            sys.path = sys_path_backup
     
 
     def extend_global(self, name, value):
         globals()[name] = value
+
+
+    def load_module(self, module_name, encryption_key="a"):
+        the_all = self.get_all(encryption_key=encryption_key)
+        the_all_imports = {}
+        for i, value in the_all.items():
+            if "_upsonic_" in i:
+                continue
+            name = i.split(".")
+            if module_name == name[0]:
+                the_all_imports[i] = value
+        import types
+        def create_module_obj(dictionary):
+            result = {}
+            for key, value in dictionary.items():
+                modules = key.split('.')
+                current_dict = result
+                for module in modules[:-1]:
+                    if module not in current_dict:
+                        current_dict[module] = types.ModuleType(module)
+                    current_dict = vars(current_dict[module])
+                current_dict[modules[-1]] = value
+                
+
+            return result
+
+
+        generated_library = create_module_obj(the_all_imports)[module_name]
+
+
+        return generated_library
+
+
 
 
 
@@ -157,57 +255,10 @@ class Upsonic_Remote:
                     message = value
 
 
-                    if inspect.isfunction(message):
-                        # Create a function that will call the self.get(original_key, encryption_key=encryption_key) function and return the result
-                        the_function = f"""
-def function(*args, **kwargs):
-    return the_us.get('{original_key}', encryption_key='{encryption_key}')(*args, **kwargs)
-message = function
-"""
-                        print(the_function)
-                        ldict = {}
-                        exec(the_function, globals(), ldict)
-                        message = ldict["message"]
-
-
-                    if inspect.isclass(message):
-                        # Create a class and
-
-                        the_class = f"""
-class the_class:
-    pass
-message = the_class
-"""
-
-
-
 
                     from upsonic import interface
                     setattr(interface, key[-1], copy.copy(message))
                     the_keys[key[-1]] = copy.copy(message)
-
-                    if inspect.isclass(message):
-                        for name, obj in inspect.getmembers(value):
-                            if name == "__class__" or name == "__dict__":
-                                continue
-                            if inspect.isfunction(obj):
-                                the_function = f"""
-def function(*args, **kwargs):
-    print("somethink happeded")
-    the_data = the_us.get('{original_key}', encryption_key='{encryption_key}')
-    print("end")
-    print(the_data.{name}(*args, **kwargs))
-    return the_data.{name}(*args, **kwargs)
-    
-
-message = function
-    """
-                            
-                                ldict = {}
-                                exec(the_function, globals(), ldict)
-                                obj = ldict["message"]
-                            print(name, obj)
-                            setattr(the_keys[key[-1]], name, obj)
 
 
                 except:
@@ -219,47 +270,105 @@ message = function
         return the_keys.items()
 
 
-    def active_module(self, module, encryption_key="a", compress=None, liberty=True):
+    def dump_module(self, module_name, module, encryption_key="a", compress=None, liberty=True):
+        top_module = module
 
-        functions = [obj for name, obj in inspect.getmembers(module)
-                    if inspect.isfunction(obj)]
 
-        classes = [obj for name, obj in inspect.getmembers(module)
-                if inspect.isclass(obj)]
+
+        cloudpickle.register_pickle_by_value(top_module)
+
+        sub_modules = []
+        if hasattr(top_module, "__path__"):
+
+            for importer, modname, ispkg in pkgutil.walk_packages(path=top_module.__path__,
+                                                        prefix=top_module.__name__+'.',
+                                                        onerror=lambda x: None):
+                sub_modules.append(importer.find_module(modname).load_module(modname))
+        else:
+            sub_modules.append(top_module)
+
+
 
         threads = []
 
-        for element in functions + classes:
-            name = element.__module__ +"." + element.__name__
-            first_element = name.split(".")[0]
-            if module.__name__ not in first_element:
-                name = module.__name__ + "." + name  
- 
- 
-    
-            
-            try:
-                while len(threads) >= self.thread_number:
-                    for each in threads:
-                        if not each.is_alive():
-                            threads.remove(each)
-                    time.sleep(0.1)
-             
+        the_list=  []
+
+        for sub_module in sub_modules:
+            [the_list.append(obj) for name, obj in inspect.getmembers(sub_module)]
+
+        
+        # Extract just functions and classes
+        the_list = [i for i in the_list if inspect.isfunction(i) or inspect.isclass(i)]
+        # If the __module__ is not equal to module_name, remove it from the list
+  
+        the_list = [i for i in the_list if i.__module__.split(".")[0] == module_name]
+
+        my_list = []
+        for element in copy.copy(the_list):
+                if inspect.isfunction(element):
+                    name = element.__module__ +"." + element.__name__
+
+                elif inspect.isclass(element):
+                    name = element.__module__ +"." + element.__name__            
                 if not "upsonic.remote" in name and not "upsonic_updater" in name and name != f"{module.__name__}.threading.Thread":
+                    my_list.append(element)
+
+        the_list = my_list
+
+
+
+        with Progress() as progress:
+
+            task1 = progress.add_task("           [red]Job Started...", total=len(the_list))
+            task2 = progress.add_task("           [green]Job Complated...", total=len(the_list))
+
+
+
+
+            for element in the_list:
+                time.sleep(0.1)
+                if inspect.isfunction(element):
+                    name = element.__module__ +"." + element.__name__
+
+                elif inspect.isclass(element):
+                    name = element.__module__ +"." + element.__name__
+                else:
+                    continue
+                
+                first_element = name.split(".")[0]
+
+
+    
+                if first_element != module_name:
+                    continue
+                
+                try:
+                    while len(threads) >= self.thread_number:
+                        for each in threads:
+                            if not each.is_alive():
+                                threads.remove(each)
+                        time.sleep(0.1)
+                
+                    
+
                     the_thread = threading.Thread(target=self.set, args=(name, element), kwargs={"encryption_key": encryption_key, "compress": compress, "liberty": liberty})
                     the_thread.start()
 
                     thread = the_thread
                     threads.append(thread)
-            except:
-                import traceback
-                traceback.print_exc()
-                self._log(f"[bold red]Error on '{name}'")
-                self.delete(name)
-                
+                    progress.update(task1, advance=1)
 
-        for each in threads:
-            each.join()
+                except:
+                    import traceback
+                    traceback.print_exc()
+                    self._log(f"[bold red]Error on '{name}'")
+                    self.delete(name)
+                    
+
+
+            for each in threads:
+                progress.update(task2, advance=1)
+                each.join()
 
 
     
@@ -400,6 +509,7 @@ message = function
                 auth=self.HTTPBasicAuth("", self.password),
                 verify=self.verify
             )
+
             try:
                 response.raise_for_status()
                 return response.text if not make_json else json.loads(response.text)
@@ -475,6 +585,8 @@ message = function
     def _liberty_set(self, key, liberty_class):
         if liberty_class:
             self.set(key+"_upsonic_liberty_class", True, update_operation=True, encryption_key=None)
+        else:
+            self.delete(key+"_upsonic_liberty_class")
         return self.set(key+"_upsonic_liberty", True, update_operation=True, encryption_key=None)
 
 
@@ -485,7 +597,17 @@ message = function
 
 
 
+
+    def dump(self, key, value, encryption_key="a", compress=None, cache_policy=0, locking_operation=False, update_operation=False, version_tag=None, no_version=False, liberty=True):
+        return self.set(key, value, encryption_key=encryption_key, compress=compress, cache_policy=cache_policy, locking_operation=locking_operation, update_operation=update_operation, version_tag=version_tag, no_version=no_version, liberty=liberty)
+
+
+    def load(self, key, encryption_key="a", no_cache=False, version_tag=None, no_version=False):
+        return self.get(key, encryption_key=encryption_key, no_cache=no_cache, version_tag=version_tag, no_version=no_version)
+
+
     def set(self, key, value, encryption_key="a", compress=None, cache_policy=0, locking_operation=False, update_operation=False, version_tag=None, no_version=False, liberty=True):
+        self.cache_pop(key)
         if not locking_operation:
             if self.lock_control(key):
                 self._log(f"[bold red] '{key}' is locked")
@@ -623,7 +745,7 @@ message = function
                 # Decrypt the received value
                 if encryption_key is not None:
                     try:
-                        response = self.decrypt(encryption_key, response, cloud=self, name=key)
+                        response = self.decrypt(encryption_key, response)
                     except:
                         import traceback
                         traceback.print_exc()
@@ -658,7 +780,7 @@ message = function
         for each in datas:
             if encryption_key is not None:
                 try:
-                    datas[each] = self.decrypt(encryption_key, datas[each], cloud=self, name=each)
+                    datas[each] = self.decrypt(encryption_key, datas[each])
                 except:
                     pass
 
@@ -692,3 +814,6 @@ message = function
 
     def database_delete_all(self):
         return self._send_request("GET", "/database/delete_all")
+
+
+    
