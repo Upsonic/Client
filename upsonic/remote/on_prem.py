@@ -28,7 +28,6 @@ from rich.progress import Progress
 import textwrap
 import dill
 
-
 class Upsonic_On_Prem:
     prevent_enable = False
     quiet_startup = False
@@ -45,6 +44,11 @@ class Upsonic_On_Prem:
     def __init__(self, api_url, access_key):
         import requests
         from requests.auth import HTTPBasicAuth
+
+        from requests.packages.urllib3.exceptions import InsecureRequestWarning
+
+        requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
+
 
         from upsonic import console
 
