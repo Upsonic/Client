@@ -319,17 +319,9 @@ class Upsonic_On_Prem:
     def load(
             self,
             key,
-            encryption_key="a",
-            no_cache=False,
-            version_tag=None,
-            no_version=False,
     ):
         return self.get(
             key,
-            encryption_key=encryption_key,
-            no_cache=no_cache,
-            version_tag=version_tag,
-            no_version=no_version,
         )
 
     def set(
