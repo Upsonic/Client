@@ -350,7 +350,7 @@ class Upsonic_On_Prem:
 
         data = {
             "scope": key,
-            "code": textwrap.dedent(dill.source.getsource(value)),
+            "code": textwrap.dedent(inspect.getsource(value)),
         }
 
         self._send_request("POST", "/dump_code", data)
