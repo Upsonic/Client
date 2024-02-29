@@ -27,10 +27,21 @@ from rich.progress import Progress
 
 import textwrap
 import dill
+import sys
+
+from pip._internal.operations import freeze
 
 class Upsonic_On_Prem:
     prevent_enable = False
     quiet_startup = False
+
+    @staticmethod
+    def export_requirement():
+        the_list = list(freeze.freeze())
+        the_string = ""
+        for item in the_list:
+            the_string += item + ", "
+        return the_string[:-2]
 
     def _log(self, message):
         self.console.log(message)
@@ -358,6 +369,24 @@ class Upsonic_On_Prem:
         }
 
         self._send_request("POST", "/dump_code", data)
+
+
+        data = {
+            "scope": key,
+            "requirements": Upsonic_On_Prem.export_requirement(),
+        }
+
+        self._send_request("POST", "/dump_requirements", data)
+
+
+
+        data = {
+            "scope": key,
+            "python_version": sys.version,
+        }
+
+        self._send_request("POST", "/dump_python_version", data)
+
 
         return True
 
