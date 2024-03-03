@@ -176,17 +176,26 @@ class Upsonic_On_Prem:
     def extend_global(self, name, value):
         globals()[name] = value
 
+
     def load_module(self, module_name, ):
         encryption_key = "u"
         the_all = self.get_all()
+        original_name = module_name
+        sub_module_name = False
+        if "." in module_name:
+            sub_module_name = module_name.replace(".", "_")
+            module_name = sub_module_name
 
         the_all_imports = {}
         for i in the_all:
+            original_i = i
             if "_upsonic_" in i:
                 continue
+            if sub_module_name != False:
+                i = i.replace(original_name, module_name)
             name = i.split(".")
             if module_name == name[0]:
-                the_all_imports[i] = self.get(i)
+                the_all_imports[i] = self.get(original_i)
         import types
 
         def create_module_obj(dictionary):
