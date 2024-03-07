@@ -42,10 +42,10 @@ upsonic = Upsonic_On_Prem('https://your-server-address:5000', 'ACK_*************
 # Dump a function into the library
 def sum(a, b):
     return a + b
-dump("math.basics.sum", sum)
+upsonic.dump("math.basics.sum", sum)
 
 # Load a module or a function from the library
-math = client.load_module("math")
+math = upsonic.load_module("math")
 
 math.basics.sum(5, 2)
 
