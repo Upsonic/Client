@@ -1,153 +1,83 @@
-# Upsonic | [![Tests](https://github.com/Upsonic/Upsonic/actions/workflows/tests.yml/badge.svg)](https://github.com/Upsonic/Upsonic/actions/workflows/tests.yml) | [![codecov](https://codecov.io/gh/Upsonic/Upsonic/branch/master/graph/badge.svg?token=0VC6JJNX9Z)](https://codecov.io/gh/Upsonic/Upsonic) | [![After Deploy Test Every 15 Minute](https://github.com/Upsonic/Upsonic/actions/workflows/after_deploy_test.yml/badge.svg)](https://github.com/Upsonic/Upsonic/actions/workflows/after_deploy_test.yml)
+# Upsonic | Python Client Library
 
-The Upsonic is a Flexible, secure and scalable database and your python cloud that supports multiple data formats. It comes with built-in features for compressing and encrypting data, and is compatible with all operating systems. With easy-to-use commands, the Upsonic is an excellent choice for developers seeking an efficient and reliable storage solution for their data.
-
+The Upsonic Python Client Library is designed to help data scientists and ML engineers efficiently manage and automate maintenance-free utility library creation. It provides a simple, easy-to-use Python interface to interact with the Upsonic platform.
 [Website](https://upsonic.co/) | [Discord](https://discord.gg/) | [Twitter](https://twitter.com/upsonicco)
 
 
 
-
-## Installation
-You can install Upsonic by pip3:
-
-```console
-pip3 install upsonic
-```
-
-
-
-## 🎉 Upsonic Cloud is published ! | [![Cloud Test Every - 15 Minute](https://github.com/Upsonic/Upsonic/actions/workflows/cloud_test.yml/badge.svg)](https://github.com/Upsonic/Upsonic/actions/workflows/cloud_test.yml) | [Go to Docs](https://Upsonic.github.io/Upsonic/upsonic_cloud.html)
-Upsonic Cloud: the ultimate, free cloud database for all Python developers. Experience reliability, efficiency, and top-notch security in one powerful solution. Start your seamless development journey with Upsonic Cloud today!
-
-- "Save your Python Things to the Cloud: Code Unrestricted, Scale Limitless with Upsonic Cloud!"
-
-![Upsonic Cloud](https://github.com/Upsonic/Upsonic/assets/41792982/a45e58cf-3403-4cd5-a9b5-dc9b84e4746c)
-
-
-
-### Creating Your Free Cloud Key
-```console
-Upsonic cloud_key
-```
-
-### Using Your Cloud | Setting
-
-```python
-from upsonic import Upsonic_Cloud
-cloud = Upsonic_Cloud("YOUR_CLOUD_KEY")
-
-@cloud.active
-def get_address():
-    return "Hello World I am from Upsonic Cloud"
-```
-
-### Using Your Cloud | Getting
-
-```python
-from upsonic import Upsonic_Cloud
-cloud = Upsonic_Cloud("YOUR_CLOUD_KEY")
-
-
-print(cloud.get("get_address")())
-```
-
-## Demo
-
-```python
-from upsonic import Upsonic
-
-# Creating databases
-db = Upsonic("My_New_DB")
-
-
-# Flexible
-db.set("Key", "String")
-db.set("Key", 123)
-db.set("Key", 123.213)
-db.set("Key", Object())
-db.set("Key", ["Alist"])
-db.set("Key", {"a": "dict"})
-db.set("Key", (1,"Atuple"))
-db.set("Key", file="onur.jpg")
-db.set("Key", file="onur.anytype")
-
-
-# Secure
-db.set("Key", "String",        encryption_key="my_encryption_key")
-db.set("Key", 123,             encryption_key="my_encryption_key")
-db.set("Key", 123.213,         encryption_key="my_encryption_key")
-db.set("Key", Object(),        encryption_key="my_encryption_key")
-db.set("Key", ["Alist"],       encryption_key="my_encryption_key")
-db.set("Key", {"a": "dict"},   encryption_key="my_encryption_key")
-db.set("Key", (1,"Atuple"),    encryption_key="my_encryption_key")
-db.set("Key", file="onur.jpg", encryption_key="my_encryption_key")
-
-
-
-# Scalable
-db.get("Key") #Instant, no waiting and no searching
-
-
-```
-
 ## Features
 
-- **Flexibility**: Save data in any format, including objects and files, providing great flexibility and adaptability to different use cases and data structures.
-- **Compressing**: Compress data to minimize storage space while enabling faster data retrieval and processing.
-- **Encryption**: Keep sensitive information secure and private with the included encryption feature.
-- **Scalability**: Offers stable processing times of set, get, and delete commands, regardless of the dataset's size.
-- **Fault Tolerance**: By the design of the Upsonic, it is fully fault-tolerant because each datas are designed to be independent of each other on the disk.
-- **Memory Friendly**: The Upsonic is designed to use as little memory as possible. It only loads the data you want to access into memory.
-- **Cross-Platform Compatibility**: Compatible with all operating systems, making it easier to integrate into any project.
-- **Transactional and Asynchronous Operations**: Perform multiple operations in a single transaction or perform operations asynchronously for improved performance.
+- Easy serialization of functions and classes, making them readily available for reuse across different projects.
+- Automatic documentation generation for effortless maintenance and readability.
+- Support for both direct and modular function importation from the library.
+- Streamlined version control and collaboration features, allowing teams to work together seamlessly.
 
 
-```mermaid
-graph TD;
-    A[Upsonic];
+  
+## Installation
 
-    A --> P[CLI];
-    O --> N[Interfaces];
-    P --> N[Interfaces];
-    Q --> N[Interfaces];
-    R --> N[Interfaces];
+You need to install the Upsonic container.
 
-    N --> J[Functions];
+Once the container is up and running, you can install the Upsonic Python Client Library on your local system using the pip package manager:
+```console
+pip install upsonic
+```
 
 
-    J --> B[Features];
-    B --> C[Multi-threaded Writing];
-    B --> D[Compression];
-    B --> E[Encryption];
-    B --> F[Scalability];
-    B --> G[Fault Tolerance];
-    B --> H[Memory Friendly];
-    B --> I[Cross-Platform Compatibility];
 
+## Usage
+
+Here's an updated quickstart guide to get you up and running with your container:
+
+```python
+# Install the Upsonic library using pip
+!pip3 install upsonic
+
+# Import the Upsonic client
+from upsonic import Upsonic
+
+# Initialize the client by providing the Upsonic container URL and AccessKey
+upsonic = Upsonic_On_Prem('https://your-server-address:5000', 'ACK_****************')
+
+# This is assuming your Upsonic container is running locally on port 5000.
+
+
+# Import the Upsonic client
+import upsonic
+
+# Dump a function into the library
+def sum(a, b):
+    return a + b
+client.dump("math.basics.sum", sum)
+
+# Load a module or a function from the library
+math = client.load_module("math")
+
+result = math.basics.sum(5, 2)
 
 ```
 
+
+
 ## Documentation
-You can find the documentation [here](https://Upsonic.github.io/Upsonic/).
+
+You can find detailed documentation, including advanced usage and API reference, in the official [Upsonic Documentation](https://docs.upsonic.co/home) .
+
 
 
 ## Contributing
-Contributions to Upsonic are welcome! If you have any suggestions or find a bug, please open an issue on the GitHub repository. If you want to contribute code, please fork the repository and create a pull request.
+
+We welcome contributions to the Upsonic Python Client Library! 
+
+
+
+## Support & Questions
+
+For any questions or if you encounter an issue, please reach out to our support team at support@upsonic.co or open an issue on the project's GitHub page.
+
+
 
 ## License
 Upsonic is released under the MIT License.
 
-<h2 align="center">
-    Contributors
-</h2>
-<p align="center">
-    Thank you for your contribution!
-</p>
-<p align="center">
-    <a href="https://github.com/Upsonic/Upsonic/graphs/contributors">
-      <img src="https://contrib.rocks/image?repo=Upsonic/Upsonic" />
-    </a>
-</p>
-<p align="center">
-    and <a href="https://sweep.dev/">Sweep !</a>
-</p>
+We hope you enjoy using Upsonic to streamline your utility library creation process, and we look forward to hearing your feedback and suggestions!
