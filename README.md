@@ -20,7 +20,7 @@ You need to install the Upsonic container.
 
 Once the container is up and running, you can install the Upsonic Python Client Library on your local system using the pip package manager:
 ```console
-pip install upsonic
+# pip install upsonic
 ```
 
 
@@ -30,30 +30,24 @@ pip install upsonic
 Here's an updated quickstart guide to get you up and running with your container:
 
 ```python
-# Install the Upsonic library using pip
-!pip3 install upsonic
 
 # Import the Upsonic client
-from upsonic import Upsonic
+from upsonic import Upsonic_On_Prem
 
 # Initialize the client by providing the Upsonic container URL and AccessKey
 upsonic = Upsonic_On_Prem('https://your-server-address:5000', 'ACK_****************')
 
 # This is assuming your Upsonic container is running locally on port 5000.
 
-
-# Import the Upsonic client
-import upsonic
-
 # Dump a function into the library
 def sum(a, b):
     return a + b
-client.dump("math.basics.sum", sum)
+dump("math.basics.sum", sum)
 
 # Load a module or a function from the library
 math = client.load_module("math")
 
-result = math.basics.sum(5, 2)
+math.basics.sum(5, 2)
 
 ```
 
