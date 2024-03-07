@@ -67,7 +67,7 @@ We welcome contributions to the Upsonic Python Client Library!
 
 ## Support & Questions
 
-For any questions or if you encounter an issue, please reach out to our support team at support@upsonic.co or open an issue on the project's GitHub page.
+For any questions or if you encounter an issue, please reach out to our support team at info@upsonic.co or open an issue on the project's GitHub page.
 
 
 
