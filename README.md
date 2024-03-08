@@ -1,6 +1,6 @@
-# Upsonic | Python Client Library
+# Upsonic | Self-Driven Autonomous Python Libraries
 
-The Upsonic Python Client Library is designed to help data scientists and ML engineers efficiently manage and automate maintenance-free utility library creation. It provides a simple, easy-to-use Python interface to interact with the Upsonic platform.
+The Upsonic is designed to help data scientists and ML engineers efficiently manage and automate maintenance-free utility library creation. It provides a simple, easy-to-use Python interface to interact with the Upsonic platform.
 [Website](https://upsonic.co/) | [Discord](https://discord.gg/) | [Twitter](https://twitter.com/upsonicco)
 
 
@@ -12,11 +12,29 @@ The Upsonic Python Client Library is designed to help data scientists and ML eng
 - Support for both direct and modular function importation from the library.
 - Streamlined version control and collaboration features, allowing teams to work together seamlessly.
 
+### Easiest Library View
+Usponic proveides an dashboard for your team members. Everyone can access to the dashboard by their [user status](https://docs.upsonic.co/on-prem/using/users). After the accessing they can easily view the top libraries and automaticaly generated connections codes.
+![image](https://github.com/Upsonic/Upsonic/assets/41792982/aa67f1f9-e510-4c5f-98fd-6876016157e7)
+
+
+### Automaticaly Documentation
+In Upsonic On-Prem dashboard we have automaticaly generated documentation for your each function, class, object or variables. For this you can use OpenAI GPT integration or a self-hosted Google Gemma model in your installation. They are making your documentations automaticaly. Also you can easily search your content.
+
+- Documentation
+- Time Complexity
+- Mistakes
+- Required Test Tyoes
+- Security Analyses
+- Tags
+
+![image](https://github.com/Upsonic/Upsonic/assets/41792982/031678af-f0a4-43e9-976b-81707060e85e)
 
   
 ## Installation
 
 You need to install the Upsonic container.
+
+[Installing and Running On-Prem Container](https://docs.upsonic.co/on-prem/getting_started/install_on_prem)
 
 Once the container is up and running, you can install the Upsonic Python Client Library on your local system using the pip package manager:
 ```console
@@ -30,26 +48,24 @@ Once the container is up and running, you can install the Upsonic Python Client 
 Here's an updated quickstart guide to get you up and running with your container:
 
 ```python
-
-# Import the Upsonic client
 from upsonic import Upsonic_On_Prem
-
-# Initialize the client by providing the Upsonic container URL and AccessKey
 upsonic = Upsonic_On_Prem('https://your-server-address:5000', 'ACK_****************')
 
-# This is assuming your Upsonic container is running locally on port 5000.
 
-# Dump a function into the library
+
 def sum(a, b):
     return a + b
+
 upsonic.dump("math.basics.sum", sum)
 
-# Load a module or a function from the library
+
+
 math = upsonic.load_module("math")
 
 math.basics.sum(5, 2)
-
 ```
+
+
 
 
 
