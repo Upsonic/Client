@@ -11,7 +11,7 @@ import textwrap
 
 import cloudpickle
 import dill
-
+import pickle
 def encrypt(key, message, liberty=True):
     the_module = dill.detect.getmodule(message)
     if the_module is not None:
@@ -24,7 +24,7 @@ def encrypt(key, message, liberty=True):
     
     fernet_key = base64.urlsafe_b64encode(hashlib.sha256(key.encode()).digest())
     fernet = Fernet(fernet_key)
-    encrypted_message = fernet.encrypt(cloudpickle.dumps(message))
+    encrypted_message = fernet.encrypt(cloudpickle.dumps(message, protocol=pickle.DEFAULT_PROTOCOL))
     return encrypted_message
 
 def decrypt(key, message):
