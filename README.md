@@ -121,6 +121,5 @@ For any questions or if you encounter an issue, please reach out to our support 
    <tr>
       <td><a href="https://wears.com.tr/" target="_blank"><img src="https://github.com/Upsonic/Upsonic/assets/41792982/19f39eec-5251-45ce-837b-8e9db1df17ad" alt="wears" width = 360px></a></td>
        <td><a href="https://exar.com.tr/" target="_blank"><img src="https://github.com/Upsonic/Upsonic/assets/41792982/cf7d9753-97dc-4b9d-9847-4807fdbdd0e3" alt="exar" width = 360px></a></td>
-             <td><a href="https://www.smartopt.com.tr/" target="_blank"><img src="https://github.com/Upsonic/Upsonic/assets/41792982/10d78a0e-65ae-424a-a8bd-d55cd7692223" alt="smartopt" width = 360px></a></td>
   </tr>
 </table>
