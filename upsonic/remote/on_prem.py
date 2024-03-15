@@ -374,7 +374,7 @@ class Upsonic_On_Prem:
 
         data = {
             "scope": key,
-            "code": textwrap.dedent(inspect.getsource(value)),
+            "code": textwrap.dedent(self.extract_source(value)),
         }
 
         self._send_request("POST", "/dump_code", data)
@@ -448,10 +448,9 @@ class Upsonic_On_Prem:
         datas = self._send_request("GET", "/get_all_scopes_user")
         return datas
 
-    def delete(self, key):
-        data = {"database_name": self.database_name, "key": key}
-        self.cache_pop(key)
-        return self._send_request("POST", "/controller/delete", data)
+    def delete(self, scope):
+        data = {"scope": scope}
+        return self._send_request("POST", "/delete_scope", data)
 
     def database_list(self):
         return ast.literal_eval(self._send_request("GET", "/database/list"))
@@ -476,3 +475,173 @@ class Upsonic_On_Prem:
 
     def database_delete_all(self):
         return self._send_request("GET", "/database/delete_all")
+
+
+    def ai_completion(self, message, model=None):
+        data = {"message": message}
+        if model != None:
+            data["model"] = model
+        return self._send_request("POST", "/ai_completion", data)
+
+    def get_all_scopes_user(self):
+        return self._send_request("GET", "/get_all_scopes_user")
+
+
+    def extract_source(self, value):
+        result = ""
+        try:
+            result = inspect.getsource(value)
+        except:
+            result = dill.source.getsource(value)
+        return result
+
+
+    def auto_dump(self, value, ask=True, check_idea=True, print_prompts=False, model=None):
+        if check_idea:
+            check = self.check_idea(value, print_prompts=print_prompts, model=model)
+            if check != True:
+                print("Check:", check)
+                return
+
+        code = textwrap.dedent(self.extract_source(value))
+        all_scopes = self.get_all_scopes_user()
+        all_scopes = "\n".join(all_scopes)
+
+        prompt = f"""
+You are an helpful software engineer. Help to organize library elements in a short and clear manner.
+
+
+Generate a position for this:
+```
+{code}
+```
+
+Currenlty Index of Library:
+```
+{all_scopes}
+```
+
+Suggested Position:
+
+"""
+
+        ai_answer = self.ai_completion(prompt, model=model)
+        ai_answer = ai_answer.replace("`", "").replace("\n", "")
+        ai_answer = '.'.join(ai_answer.split('.')[:-1])
+        ai_answer = ai_answer + "." + dill.source.getname(value)
+        prompt = prompt + f"\nASSISTANT: {ai_answer}\n"
+
+        prompt = prompt + f"\nQUESTION: Extract and just answer with the suggested position"
+        if print_prompts:
+            print("Prompt", prompt.replace(code, "CODE").replace(all_scopes, "ALL SCOPES"))
+        ai_answer = self.ai_completion(prompt, model=model)
+        if print_prompts:
+            print("AI answer", ai_answer.replace(code, "CODE").replace(all_scopes, "ALL SCOPES"))
+        ai_answer = ai_answer.replace("`", "").replace("\n", "")
+        ai_answer = ai_answer.replace("ASSISTANT: ", "")
+        if ai_answer in all_scopes:
+            print(f"Check: similarity with the {ai_answer} is detected")
+            return
+        if ask:
+            print("Commands:\n(Y)es/(N)o\n")
+            while True:
+                y_n = input(f"{ai_answer} ").lower()
+
+                if y_n == "y":
+                    self.set(ai_answer, value)
+                    print("\nDumped")
+                    break
+                if y_n == "n":
+                    break
+
+        else:
+            self.set(ai_answer, value)
+            print("\nDumped")
+
+
+    def get_code(self, scope):
+        data = {"scope": scope}
+        return self._send_request("POST", "/get_code_of_scope", data)
+
+    def get_document(self, scope):
+        data = {"scope": scope}
+        return self._send_request("POST", "/get_document_of_scope", data)
+
+
+    def check_idea(self, value, print_prompts=False, model=None):
+        code = textwrap.dedent(self.extract_source(value))
+
+
+        all_scopes_ = self.get_all_scopes_user()
+        all_scopes = ""
+        for i in all_scopes_:
+            all_scopes += i + "\n"
+
+        if print_prompts:
+            print("Code", code)
+            print("All scopes", all_scopes)
+
+        prompt = f"""
+Current Library Index:
+```
+{all_scopes}
+
+```
+
+Now analyze the each element of Current Library Index, if you want a potential similar functionality with this:
+
+```
+{code}
+
+```
+
+Which one is the most similar ?
+"""
+
+        ai_answer = self.ai_completion(prompt, model=model)
+
+        ai_answer = ai_answer.replace("`", "").replace("\n", "")
+
+
+        similarity_explanation = ai_answer
+
+        prompt = prompt + f"\nASSISTANT: {ai_answer}\n"
+
+        prompt = prompt + f"\nQUESTION: Is there any duplication risk (Y/N)?"
+
+
+        if print_prompts:
+            print("Prompt", prompt.replace(code, "CODE").replace(all_scopes, "ALL SCOPES"))
+        ai_answer = self.ai_completion(prompt, model=model)
+        ai_answer = ai_answer.replace("`", "").replace("\n", "")
+        ai_answer = ai_answer.split(",")[0]
+        ai_answer = ai_answer.replace("ASSISTANT: ", "")
+        if print_prompts:
+            print("AI answer", ai_answer.replace(code, "CODE").replace(all_scopes, "ALL SCOPES"))
+        if ai_answer == "Y" or ai_answer == "YES" or ai_answer == "Yes":
+            prompt = prompt + f"\nASSISTANT: {ai_answer}\n"
+
+            prompt = prompt + f"\nQUESTION: Extract and just answer with the suggested position"
+            ai_answer = self.ai_completion(prompt, model=model)
+            ai_answer = ai_answer.replace("`", "").replace("\n", "")
+            ai_answer = ai_answer.split(",")[0]
+            ai_answer = ai_answer.replace("ASSISTANT: ", "")
+            return "similarity: "+ai_answer + " - " + similarity_explanation
+        if ai_answer == "N" or ai_answer == "NO" or ai_answer == "No":
+            return True
+        return similarity_explanation
+
+    def search_by_documentation(self, question):
+        data = {"question": question}
+        response = self._send_request("POST", "/search_by_documentation", data)
+        result = []
+        for i in response:
+            result.append(i[0])
+        return result
+
+    def search(self, question):
+        return self.search_by_documentation(question)
+
+
+    def get_default_ai_model(self):
+        return self._send_request("GET", "/get_default_ai_model")
