@@ -177,7 +177,7 @@ class Upsonic_On_Prem:
         globals()[name] = value
 
 
-    def load_module(self, module_name, ):
+    def load_module(self, module_name, version=None):
         encryption_key = "u"
         the_all = self.get_all()
         original_name = module_name
@@ -195,7 +195,17 @@ class Upsonic_On_Prem:
                 i = i.replace(original_name, module_name)
             name = i.split(".")
             if module_name == name[0]:
-                the_all_imports[i] = self.get(original_i)
+                if version != None:
+                    try:
+                        the_all_imports[i] = self.get(
+                            original_i,
+                            version,
+                        )
+                    except:
+                        self._log(f"No {version} version for {original_i}")
+                        the_all_imports[i] = self.get(original_i)
+                else:
+                    the_all_imports[i] = self.get(original_i,)
         import types
 
         def create_module_obj(dictionary):
@@ -343,9 +353,11 @@ class Upsonic_On_Prem:
     def load(
             self,
             key,
+            version=None
     ):
         return self.get(
             key,
+            version=version
         )
 
     def set(
@@ -402,6 +414,7 @@ class Upsonic_On_Prem:
     def get(
             self,
             key,
+            version=None
 
     ):
         response = None
@@ -411,9 +424,14 @@ class Upsonic_On_Prem:
         data = {"scope": key}
 
         if response is None:
-            response = self._send_request("POST", "/load", data)
-
-        response = self.decrypt(encryption_key, response)
+            if version != None:
+                response = self.get_version_data(key, version)
+            else:
+                response = self._send_request("POST", "/load", data)
+        try:
+            response = self.decrypt(encryption_key, response)
+        except:
+            self._log(f"Error on {key} maybe its not included in the library")
         return response
 
     def active(
@@ -645,3 +663,20 @@ Which one is the most similar ?
 
     def get_default_ai_model(self):
         return self._send_request("GET", "/get_default_ai_model")
+
+
+    def get_version_history(self, key):
+        data = {"scope": key}
+        return self._send_request("POST", "/get_version_history", data)
+
+    def delete_version(self, key, version):
+        data = {"version": key+":"+version}
+        return self._send_request("POST", "/delete_version", data)
+
+    def create_version(self, key, version):
+        data = {"scope":key ,"version": version}
+        return self._send_request("POST", "/create_version", data)
+
+    def get_version_data(self, key, version):
+        data = {"version": key+":"+version}
+        return self._send_request("POST", "/load_specific_version", data)
