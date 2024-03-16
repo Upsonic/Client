@@ -375,21 +375,18 @@ class Upsonic_On_Prem:
 
         data = {
             "scope": key,
-            "data": self.encrypt(encryption_key, value, liberty=liberty),
-        }
-
-        self._send_request("POST", "/dump", data)
-
-        data = {"scope": key, "type": the_type}
-
-        self._send_request("POST", "/dump_type", data)
-
-        data = {
-            "scope": key,
             "code": textwrap.dedent(self.extract_source(value)),
         }
 
         self._send_request("POST", "/dump_code", data)
+
+
+
+
+
+        data = {"scope": key, "type": the_type}
+
+        self._send_request("POST", "/dump_type", data)
 
 
         data = {
@@ -407,6 +404,14 @@ class Upsonic_On_Prem:
         }
 
         self._send_request("POST", "/dump_python_version", data)
+
+
+        data = {
+            "scope": key,
+            "data": self.encrypt(encryption_key, value, liberty=liberty),
+        }
+
+        self._send_request("POST", "/dump", data)
 
 
         return True
@@ -673,9 +678,21 @@ Which one is the most similar ?
         data = {"version": key+":"+version}
         return self._send_request("POST", "/delete_version", data)
 
+    def delete_module_version(self, module_name, version):
+        data = {"top_library":module_name ,"version": version}
+        return self._send_request("POST", "/delete_version_prefix", data)
+
     def create_version(self, key, version):
         data = {"scope":key ,"version": version}
         return self._send_request("POST", "/create_version", data)
+
+
+    def create_module_version(self, module_name, version):
+        data = {"top_library":module_name ,"version": version}
+        return self._send_request("POST", "/create_version_prefix", data)
+
+
+
 
     def get_version_data(self, key, version):
         data = {"version": key+":"+version}
