@@ -12,7 +12,7 @@ import textwrap
 import cloudpickle
 import dill
 import pickle
-def encrypt(key, message, engine):
+def encrypt(key, message, engine, byref, recurse, protocol):
 
 
 
@@ -28,9 +28,9 @@ def encrypt(key, message, engine):
         the_module = dill.detect.getmodule(message)
         if the_module is not None:
             cloudpickle.register_pickle_by_value(the_module)
-        dumped = cloudpickle.dumps(message, protocol=pickle.DEFAULT_PROTOCOL)
+        dumped = cloudpickle.dumps(message, protocol=protocol)
     elif engine == "dill":
-        dumped = dill.dumps(message, protocol=pickle.DEFAULT_PROTOCOL, byref=True, recurse=True)
+        dumped = dill.dumps(message, protocol=protocol, byref=byref, recurse=recurse)
 
     encrypted_message = fernet.encrypt(dumped)
     return encrypted_message

@@ -54,7 +54,7 @@ class Upsonic_On_Prem:
     def __exit__(self, exc_type, exc_val, exc_tb):
         pass  # pragma: no cover
 
-    def __init__(self, api_url, access_key, engine="cloudpickle"):
+    def __init__(self, api_url, access_key, engine="cloudpickle", byref=True, recurse=True, protocol=pickle.DEFAULT_PROTOCOL):
         import requests
         from requests.auth import HTTPBasicAuth
 
@@ -73,6 +73,9 @@ class Upsonic_On_Prem:
         self.api_url = api_url
         self.password = access_key
         self.engine=engine
+        self.byref=byref
+        self.recurse=recurse
+        self.protocol = protocol
 
         self.enable_active = False
 
@@ -415,7 +418,7 @@ class Upsonic_On_Prem:
 
         data = {
             "scope": key,
-            "data": self.encrypt(encryption_key, value, self.engine),
+            "data": self.encrypt(encryption_key, value, self.engine, self.byref, self.recurse, self.protocol),
         }
 
         self._send_request("POST", "/dump", data)
