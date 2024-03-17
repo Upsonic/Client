@@ -196,14 +196,18 @@ class Upsonic_On_Prem:
             name = i.split(".")
             if module_name == name[0]:
                 if version != None:
-                    try:
-                        the_all_imports[i] = self.get(
-                            original_i,
-                            version,
-                        )
-                    except:
-                        self._log(f"No {version} version for {original_i}")
-                        the_all_imports[i] = self.get(original_i)
+                    version_list_response = self.get_version_history(original_i)
+                    version_list = []
+                    for each_v in version_list_response:
+                        version_list.append(each_v.replace(original_i+":", ""))
+                    if version in version_list:
+                        try:
+                            the_all_imports[i] = self.get(
+                                original_i,
+                                version,
+                            )
+                        except:
+                            the_all_imports[i] = self.get(original_i)
                 else:
                     the_all_imports[i] = self.get(original_i,)
         import types
@@ -357,7 +361,8 @@ class Upsonic_On_Prem:
     ):
         return self.get(
             key,
-            version=version
+            version=version,
+            print_exc=True
         )
 
     def set(
@@ -375,21 +380,18 @@ class Upsonic_On_Prem:
 
         data = {
             "scope": key,
-            "data": self.encrypt(encryption_key, value, liberty=liberty),
-        }
-
-        self._send_request("POST", "/dump", data)
-
-        data = {"scope": key, "type": the_type}
-
-        self._send_request("POST", "/dump_type", data)
-
-        data = {
-            "scope": key,
             "code": textwrap.dedent(self.extract_source(value)),
         }
 
         self._send_request("POST", "/dump_code", data)
+
+
+
+
+
+        data = {"scope": key, "type": the_type}
+
+        self._send_request("POST", "/dump_type", data)
 
 
         data = {
@@ -409,12 +411,21 @@ class Upsonic_On_Prem:
         self._send_request("POST", "/dump_python_version", data)
 
 
+        data = {
+            "scope": key,
+            "data": self.encrypt(encryption_key, value, liberty=liberty),
+        }
+
+        self._send_request("POST", "/dump", data)
+
+
         return True
 
     def get(
             self,
             key,
-            version=None
+            version=None,
+            print_exc=True
 
     ):
         response = None
@@ -431,7 +442,10 @@ class Upsonic_On_Prem:
         try:
             response = self.decrypt(encryption_key, response)
         except:
-            self._log(f"Error on {key} maybe its not included in the library")
+            if print_exc:
+                self._log(f"Error on {key} please use same python versions")
+            else:
+                pass
         return response
 
     def active(
@@ -669,13 +683,30 @@ Which one is the most similar ?
         data = {"scope": key}
         return self._send_request("POST", "/get_version_history", data)
 
+    def get_module_version_history(self, key):
+        data = {"top_library": key}
+        return self._send_request("POST", "/get_module_version_history", data)
+
+
     def delete_version(self, key, version):
         data = {"version": key+":"+version}
         return self._send_request("POST", "/delete_version", data)
 
+    def delete_module_version(self, module_name, version):
+        data = {"top_library":module_name ,"version": version}
+        return self._send_request("POST", "/delete_version_prefix", data)
+
     def create_version(self, key, version):
         data = {"scope":key ,"version": version}
         return self._send_request("POST", "/create_version", data)
+
+
+    def create_module_version(self, module_name, version):
+        data = {"top_library":module_name ,"version": version}
+        return self._send_request("POST", "/create_version_prefix", data)
+
+
+
 
     def get_version_data(self, key, version):
         data = {"version": key+":"+version}
