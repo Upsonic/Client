@@ -202,7 +202,6 @@ class Upsonic_On_Prem:
                             version,
                         )
                     except:
-                        self._log(f"No {version} version for {original_i}")
                         the_all_imports[i] = self.get(original_i)
                 else:
                     the_all_imports[i] = self.get(original_i,)
@@ -357,7 +356,8 @@ class Upsonic_On_Prem:
     ):
         return self.get(
             key,
-            version=version
+            version=version,
+            print_exc=True
         )
 
     def set(
@@ -419,7 +419,8 @@ class Upsonic_On_Prem:
     def get(
             self,
             key,
-            version=None
+            version=None,
+            print_exc=False
 
     ):
         response = None
@@ -436,7 +437,10 @@ class Upsonic_On_Prem:
         try:
             response = self.decrypt(encryption_key, response)
         except:
-            self._log(f"Error on {key} maybe its not included in the library")
+            if print_exc:
+                self._log(f"Error on {key} maybe its not included in the library")
+            else:
+                pass
         return response
 
     def active(
@@ -673,6 +677,11 @@ Which one is the most similar ?
     def get_version_history(self, key):
         data = {"scope": key}
         return self._send_request("POST", "/get_version_history", data)
+
+    def get_module_version_history(self, key):
+        data = {"top_library": key}
+        return self._send_request("POST", "/get_module_version_history", data)
+
 
     def delete_version(self, key, version):
         data = {"version": key+":"+version}
