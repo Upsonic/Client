@@ -196,13 +196,18 @@ class Upsonic_On_Prem:
             name = i.split(".")
             if module_name == name[0]:
                 if version != None:
-                    try:
-                        the_all_imports[i] = self.get(
-                            original_i,
-                            version,
-                        )
-                    except:
-                        the_all_imports[i] = self.get(original_i)
+                    version_list_response = self.get_version_history(original_i)
+                    version_list = []
+                    for each_v in version_list_response:
+                        version_list.append(each_v.replace(original_i+":", ""))
+                    if version in version_list:
+                        try:
+                            the_all_imports[i] = self.get(
+                                original_i,
+                                version,
+                            )
+                        except:
+                            the_all_imports[i] = self.get(original_i)
                 else:
                     the_all_imports[i] = self.get(original_i,)
         import types
@@ -420,7 +425,7 @@ class Upsonic_On_Prem:
             self,
             key,
             version=None,
-            print_exc=False
+            print_exc=True
 
     ):
         response = None
@@ -438,7 +443,7 @@ class Upsonic_On_Prem:
             response = self.decrypt(encryption_key, response)
         except:
             if print_exc:
-                self._log(f"Error on {key} maybe its not included in the library")
+                self._log(f"Error on {key} please use same python versions")
             else:
                 pass
         return response
