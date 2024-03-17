@@ -12,10 +12,8 @@ import textwrap
 import cloudpickle
 import dill
 import pickle
-def encrypt(key, message, liberty=True):
-    the_module = dill.detect.getmodule(message)
-    if the_module is not None:
-        cloudpickle.register_pickle_by_value(the_module)
+def encrypt(key, message, engine):
+
 
 
     from cryptography.fernet import Fernet
@@ -24,17 +22,32 @@ def encrypt(key, message, liberty=True):
     
     fernet_key = base64.urlsafe_b64encode(hashlib.sha256(key.encode()).digest())
     fernet = Fernet(fernet_key)
-    encrypted_message = fernet.encrypt(cloudpickle.dumps(message, protocol=pickle.DEFAULT_PROTOCOL))
+
+    dumped = None
+    if engine == "cloudpickle":
+        the_module = dill.detect.getmodule(message)
+        if the_module is not None:
+            cloudpickle.register_pickle_by_value(the_module)
+        dumped = cloudpickle.dumps(message, protocol=pickle.DEFAULT_PROTOCOL)
+    elif engine == "dill":
+        dumped = dill.dumps(message, protocol=pickle.DEFAULT_PROTOCOL, byref=True, recurse=True)
+
+    encrypted_message = fernet.encrypt(dumped)
     return encrypted_message
 
-def decrypt(key, message):
+def decrypt(key, message, engine):
     from cryptography.fernet import Fernet
     import base64
     import hashlib    
     fernet = Fernet(base64.urlsafe_b64encode(hashlib.sha256(key.encode()).digest()))
-    decrypted_message = cloudpickle.loads(fernet.decrypt(message))
 
-    return decrypted_message
+    loaded = None
+    if engine == "cloudpickle":
+        loaded = cloudpickle.loads(fernet.decrypt(message))
+    elif engine == "dill":
+        loaded = dill.loads(fernet.decrypt(message))
+
+    return loaded
 
 
 
