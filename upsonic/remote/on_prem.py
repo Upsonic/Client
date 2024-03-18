@@ -56,7 +56,7 @@ class Upsonic_On_Prem:
     def __exit__(self, exc_type, exc_val, exc_tb):
         pass  # pragma: no cover
 
-    def __init__(self, api_url, access_key, engine="cloudpickle,importable,dill", byref=True, recurse=True, protocol=pickle.DEFAULT_PROTOCOL, source=True, builtin=True):
+    def __init__(self, api_url, access_key, engine="cloudpickle,importable,dill", byref=True, recurse=True, protocol=pickle.DEFAULT_PROTOCOL, source=True, builtin=True, tester=False):
         import requests
         from requests.auth import HTTPBasicAuth
 
@@ -80,6 +80,8 @@ class Upsonic_On_Prem:
         self.protocol = protocol
         self.source = source
         self.builtin = builtin
+
+        self.tester = tester
 
         self.enable_active = False
 
@@ -423,9 +425,16 @@ class Upsonic_On_Prem:
 
         the_engine_reports = {}
         for engine in self.engine.split(","):
-            the_engine_reports[engine] = self.encrypt(encryption_key, value, engine, self.byref, self.recurse, self.protocol, self.source, self.builtin)
+            try:
+                the_engine_reports[engine] = self.encrypt(encryption_key, value, engine, self.byref, self.recurse, self.protocol, self.source, self.builtin)
+            except:
+                if self.tester:
+                    self._log(f"Error on {engine} while dumping {key}")
+                    traceback.print_exc()
 
 
+        if self.tester:
+            self._log("the_engine_reports", the_engine_reports)
         dumped = pickle.dumps(the_engine_reports, protocol=1)
         fernet_key = base64.urlsafe_b64encode(hashlib.sha256(encryption_key.encode()).digest())
         fernet = Fernet(fernet_key)
