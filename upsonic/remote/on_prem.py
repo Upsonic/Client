@@ -476,7 +476,9 @@ class Upsonic_On_Prem:
                     response = self.decrypt(encryption_key, value, engine)
                     break
                 except:
-                    pass
+                    if self.tester:
+                        self._log(f"Error on {engine} while loading {key}")
+                        traceback.print_exc()
         except:
             if print_exc:
                 self._log(f"Error on {key} please use same python versions")
