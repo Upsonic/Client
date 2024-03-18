@@ -36,7 +36,7 @@ def encrypt(key, message, engine, byref, recurse, protocol, source, builtin):
     elif engine == "importable":
         name_of_object = dill.source.getname(message)
         dumped = {"name": name_of_object, "importable": dill.source.importable(message, source=source, builtin=builtin)}
-        dumped = dill.dumps(dumped, protocol=protocol, byref=byref, recurse=recurse)
+        dumped = pickle.dumps(dumped, protocol=1)
 
 
     encrypted_message = fernet.encrypt(dumped)
@@ -54,16 +54,16 @@ def decrypt(key, message, engine):
     elif engine == "dill":
         loaded = dill.loads(fernet.decrypt(message))
     elif engine == "importable":
-        loaded = dill.loads(fernet.decrypt(message))
+
+        loaded = pickle.loads(fernet.decrypt(message))
 
 
         def extract(code_string, function_name, tmp_dir="."):
-            tmp_file = os.path.join(tmp_dir, function_name + ".py")
-
+            tmp_file = os.path.join(tmp_dir, function_name+"_upsonic" + ".py")
             with open(tmp_file, "w") as f:
                 f.write(code_string)
 
-            spec = importlib.util.spec_from_file_location(function_name, tmp_file)
+            spec = importlib.util.spec_from_file_location(function_name+"_upsonic", tmp_file)
             module = importlib.util.module_from_spec(spec)
             spec.loader.exec_module(module)
 
