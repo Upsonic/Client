@@ -12,7 +12,9 @@ import textwrap
 import cloudpickle
 import dill
 import pickle
-def encrypt(key, message, engine, byref, recurse, protocol):
+import importlib.util
+
+def encrypt(key, message, engine, byref, recurse, protocol, source, builtin):
 
 
 
@@ -31,6 +33,11 @@ def encrypt(key, message, engine, byref, recurse, protocol):
         dumped = cloudpickle.dumps(message, protocol=protocol)
     elif engine == "dill":
         dumped = dill.dumps(message, protocol=protocol, byref=byref, recurse=recurse)
+    elif engine == "importable":
+        name_of_object = dill.source.getname(message)
+        dumped = {"name": name_of_object, "importable": dill.source.importable(message, source=source, builtin=builtin)}
+        dumped = dill.dumps(dumped, protocol=protocol, byref=byref, recurse=recurse)
+
 
     encrypted_message = fernet.encrypt(dumped)
     return encrypted_message
@@ -46,6 +53,25 @@ def decrypt(key, message, engine):
         loaded = cloudpickle.loads(fernet.decrypt(message))
     elif engine == "dill":
         loaded = dill.loads(fernet.decrypt(message))
+    elif engine == "importable":
+        loaded = dill.loads(fernet.decrypt(message))
+
+
+        def extract(code_string, function_name, tmp_dir="."):
+            tmp_file = os.path.join(tmp_dir, function_name + ".py")
+
+            with open(tmp_file, "w") as f:
+                f.write(code_string)
+
+            spec = importlib.util.spec_from_file_location(function_name, tmp_file)
+            module = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(module)
+
+            os.remove(tmp_file)  # Clean up the temporary file
+
+            return getattr(module, function_name)
+
+        loaded = extract(loaded["importable"], loaded["name"])
 
     return loaded
 
