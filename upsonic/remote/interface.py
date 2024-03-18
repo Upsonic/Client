@@ -58,7 +58,8 @@ def decrypt(key, message, engine):
         loaded = pickle.loads(fernet.decrypt(message))
 
 
-        def extract(code_string, function_name, tmp_dir="."):
+        def extract(code_string, function_name):
+            tmp_dir = os.path.dirname(os.path.abspath(__file__))
             tmp_file = os.path.join(tmp_dir, function_name+"_upsonic" + ".py")
             with open(tmp_file, "w") as f:
                 f.write(code_string)
