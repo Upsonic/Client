@@ -236,6 +236,8 @@ class Upsonic_On_Prem:
 
     def load_module(self, module_name, version=None):
         encryption_key = "u"
+
+        version_check_pass = False
         the_all = self.get_all()
         original_name = module_name
         sub_module_name = False
@@ -252,23 +254,53 @@ class Upsonic_On_Prem:
                 i = i.replace(original_name, module_name)
             name = i.split(".")
             if module_name == name[0]:
+                try:
+                    if not self.pass_python_version_check and not version_check_pass:
+                        key_version = self.get_python_version(original_i)
+                        currenly_version = self.get_currently_version()
+                        if self.tester:
+                            self._log(f"key_version {key_version}")
+                            self._log(f"currenly_version {currenly_version}")
+                        if key_version[0] == currenly_version[0] and key_version[0] == "3":
+                            if self.tester:
+                                self._log(f"Versions are same and 3")
+                            if key_version[1] != currenly_version[1]:
+                                if self.tester:
+                                    self._log("Minor versions are different")
+                                if int(currenly_version[1]) >= 11 or int(key_version[1]) >= 11:
+                                    if int(currenly_version[1]) < 11 or int(key_version[1]) < 11:
+                                        self._log(
+                                            f"[bold orange]Warning: The versions are different, are you sure to continue")
+                                        the_input = input("Yes or no (y/n)").lower()
+                                        if the_input == "n":
+                                            key_version = f"{key_version[0]}.{key_version[1]}"
+                                            currenly_version = f"{currenly_version[0]}.{currenly_version[1]}"
+                                            return "Python versions is different (Key == " + key_version + " This runtime == " + currenly_version + ")"
+                                        if the_input == "y":
+                                            version_check_pass = True
+                except:
+                    if self.tester:
+                        traceback.print_exc()
+
                 if version != None:
                     version_list_response = self.get_version_history(original_i)
                     version_list = []
                     for each_v in version_list_response:
                         version_list.append(each_v.replace(original_i+":", ""))
+
+
                     if version in version_list:
                         try:
                             the_all_imports[i] = self.get(
                                 original_i,
                                 version,
+                                pass_python_version_control=True
                             )
                         except:
-                            the_all_imports[i] = self.get(original_i)
+                            the_all_imports[i] = self.get(original_i, pass_python_version_control=True)
                 else:
-                    the_all_imports[i] = self.get(original_i,)
-                if str(the_all_imports[i]).startswith("Python versions is different"):
-                    return the_all_imports[i]
+                    the_all_imports[i] = self.get(original_i, pass_python_version_control=True)
+
         import types
 
         def create_module_obj(dictionary):
@@ -525,7 +557,8 @@ class Upsonic_On_Prem:
             self,
             key,
             version=None,
-            print_exc=True
+            print_exc=True,
+            pass_python_version_control=False
 
     ):
         response = None
@@ -535,7 +568,7 @@ class Upsonic_On_Prem:
         data = {"scope": key}
 
         try:
-            if not self.pass_python_version_check:
+            if not self.pass_python_version_check and not pass_python_version_control:
                 key_version = self.get_python_version(key)
                 currenly_version = self.get_currently_version()
                 if self.tester:
