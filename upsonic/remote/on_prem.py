@@ -35,6 +35,50 @@ from pip._internal.operations import freeze
 
 import traceback
 
+
+def extract_local_files(obj, debug=False, local_directory=None):
+    if local_directory == None:
+        local_directory = os.getcwd()
+    print(local_directory) if debug else None
+
+    the_elements = dill.detect.globalvars(obj)
+    print(the_elements) if debug else None
+    the_local_elements = {}
+    for element, value in the_elements.items():
+        element_file = dill.source.getfile(value)
+        print(element_file) if debug else None
+        if element_file.startswith(local_directory):
+            print("Inside") if debug else None
+            with open(element_file, "r") as f:
+                element_content = f.read()
+            print("element_content", element_content) if debug else None
+            the_local_elements[os.path.basename(element_file)] = element_content
+
+    print("Complated") if debug else None
+    return the_local_elements
+
+
+def dump_local_files(extract, debug=False, local_directory=None):
+    if local_directory == None:
+        local_directory = os.getcwd()
+    print(local_directory) if debug else None
+
+    for element, value in extract.items():
+        # Create a directory named as upsonic if not exists
+        if not os.path.exists(os.path.join(local_directory, "upsonic")):
+            os.makedirs(os.path.join(local_directory, "upsonic"))
+
+        file_location = os.path.join(local_directory, "upsonic", element)
+        print(file_location) if debug else None
+        print(value) if debug else None
+        with open(file_location, "w") as f:
+            f.write(value)
+
+        sys.path.insert(0, os.path.join(local_directory, "upsonic"))
+
+
+
+
 class Upsonic_On_Prem:
     prevent_enable = False
     quiet_startup = False
@@ -56,7 +100,7 @@ class Upsonic_On_Prem:
     def __exit__(self, exc_type, exc_val, exc_tb):
         pass  # pragma: no cover
 
-    def __init__(self, api_url, access_key, engine="cloudpickle,importable,dill", byref=True, recurse=True, protocol=pickle.DEFAULT_PROTOCOL, source=True, builtin=True):
+    def __init__(self, api_url, access_key, engine="cloudpickle,importable,dill", pass_python_version_check=False, byref=True, recurse=True, protocol=pickle.DEFAULT_PROTOCOL, source=True, builtin=True, tester=False):
         import requests
         from requests.auth import HTTPBasicAuth
 
@@ -80,6 +124,9 @@ class Upsonic_On_Prem:
         self.protocol = protocol
         self.source = source
         self.builtin = builtin
+
+        self.tester = tester
+        self.pass_python_version_check = pass_python_version_check
 
         self.enable_active = False
 
@@ -189,6 +236,8 @@ class Upsonic_On_Prem:
 
     def load_module(self, module_name, version=None):
         encryption_key = "u"
+
+        version_check_pass = False
         the_all = self.get_all()
         original_name = module_name
         sub_module_name = False
@@ -205,21 +254,53 @@ class Upsonic_On_Prem:
                 i = i.replace(original_name, module_name)
             name = i.split(".")
             if module_name == name[0]:
+                try:
+                    if not self.pass_python_version_check and not version_check_pass:
+                        key_version = self.get_python_version(original_i)
+                        currenly_version = self.get_currently_version()
+                        if self.tester:
+                            self._log(f"key_version {key_version}")
+                            self._log(f"currenly_version {currenly_version}")
+                        if key_version[0] == currenly_version[0] and key_version[0] == "3":
+                            if self.tester:
+                                self._log(f"Versions are same and 3")
+                            if key_version[1] != currenly_version[1]:
+                                if self.tester:
+                                    self._log("Minor versions are different")
+                                if int(currenly_version[1]) >= 11 or int(key_version[1]) >= 11:
+                                    if int(currenly_version[1]) < 11 or int(key_version[1]) < 11:
+                                        self._log(
+                                            f"[bold orange]Warning: The versions are different, are you sure to continue")
+                                        the_input = input("Yes or no (y/n)").lower()
+                                        if the_input == "n":
+                                            key_version = f"{key_version[0]}.{key_version[1]}"
+                                            currenly_version = f"{currenly_version[0]}.{currenly_version[1]}"
+                                            return "Python versions is different (Key == " + key_version + " This runtime == " + currenly_version + ")"
+                                        if the_input == "y":
+                                            version_check_pass = True
+                except:
+                    if self.tester:
+                        traceback.print_exc()
+
                 if version != None:
                     version_list_response = self.get_version_history(original_i)
                     version_list = []
                     for each_v in version_list_response:
                         version_list.append(each_v.replace(original_i+":", ""))
+
+
                     if version in version_list:
                         try:
                             the_all_imports[i] = self.get(
                                 original_i,
                                 version,
+                                pass_python_version_control=True
                             )
                         except:
-                            the_all_imports[i] = self.get(original_i)
+                            the_all_imports[i] = self.get(original_i, pass_python_version_control=True)
                 else:
-                    the_all_imports[i] = self.get(original_i,)
+                    the_all_imports[i] = self.get(original_i, pass_python_version_control=True)
+
         import types
 
         def create_module_obj(dictionary):
@@ -375,6 +456,25 @@ class Upsonic_On_Prem:
             print_exc=True
         )
 
+
+    def get_currently_version(self):
+        total = sys.version
+        the_version = []
+        the_version.append(total.split(".")[0])
+        the_version.append(total.split(".")[1])
+        the_version.append(total.split(".")[2])
+        return the_version
+
+    def get_python_version(self, key):
+        data = {"scope": key}
+        total = self._send_request("POST", "/get_python_version_of_scope", data)
+        the_version = []
+        the_version.append(total.split(".")[0])
+        the_version.append(total.split(".")[1])
+        the_version.append(total.split(".")[2])
+        return the_version
+
+
     def set(
             self,
             key,
@@ -419,16 +519,29 @@ class Upsonic_On_Prem:
 
         self._send_request("POST", "/dump_python_version", data)
 
-
+        fernet_key = base64.urlsafe_b64encode(hashlib.sha256(encryption_key.encode()).digest())
+        fernet = Fernet(fernet_key)
 
         the_engine_reports = {}
         for engine in self.engine.split(","):
-            the_engine_reports[engine] = self.encrypt(encryption_key, value, engine, self.byref, self.recurse, self.protocol, self.source, self.builtin)
+            try:
+                the_engine_reports[engine] = self.encrypt(encryption_key, value, engine, self.byref, self.recurse, self.protocol, self.source, self.builtin)
+            except:
+                if self.tester:
+                    self._log(f"Error on {engine} while dumping {key}")
+                    traceback.print_exc()
+        try:
+            the_engine_reports["extracted_local_files"] = fernet.encrypt(pickle.dumps(extract_local_files(value, self.tester), protocol=1))
+        except:
+            if self.tester:
+                self._log(f"Error on extracted_local_files while dumping {key}")
+                traceback.print_exc()
 
 
+        if self.tester:
+            self._log(f"the_engine_reports {the_engine_reports}")
         dumped = pickle.dumps(the_engine_reports, protocol=1)
-        fernet_key = base64.urlsafe_b64encode(hashlib.sha256(encryption_key.encode()).digest())
-        fernet = Fernet(fernet_key)
+
 
         data = {
             "scope": key,
@@ -444,7 +557,8 @@ class Upsonic_On_Prem:
             self,
             key,
             version=None,
-            print_exc=True
+            print_exc=True,
+            pass_python_version_control=False
 
     ):
         response = None
@@ -452,6 +566,33 @@ class Upsonic_On_Prem:
         encryption_key = "u"
 
         data = {"scope": key}
+
+        try:
+            if not self.pass_python_version_check and not pass_python_version_control:
+                key_version = self.get_python_version(key)
+                currenly_version = self.get_currently_version()
+                if self.tester:
+                    self._log(f"key_version {key_version}")
+                    self._log(f"currenly_version {currenly_version}")
+                if key_version[0] == currenly_version[0] and key_version[0] == "3":
+                    if self.tester:
+                        self._log(f"Versions are same and 3")
+                    if key_version[1] != currenly_version[1]:
+                        if self.tester:
+                            self._log("Minor versions are different")
+                        if int(currenly_version[1]) >= 11 or int(key_version[1]) >= 11:
+                            if int(currenly_version[1]) < 11 or int(key_version[1]) < 11:
+                                self._log(f"[bold orange]Warning: The versions are different, are you sure to continue")
+                                the_input = input("Yes or no (y/n)").lower()
+                                if the_input == "n":
+                                    key_version = f"{key_version[0]}.{key_version[1]}"
+                                    currenly_version = f"{currenly_version[0]}.{currenly_version[1]}"
+                                    return "Python versions is different (Key == " + key_version + " This runtime == " + currenly_version + ")"
+        except:
+            if self.tester:
+                traceback.print_exc()
+
+
 
         if response is None:
             if version != None:
@@ -462,15 +603,30 @@ class Upsonic_On_Prem:
             fernet_key = base64.urlsafe_b64encode(hashlib.sha256(encryption_key.encode()).digest())
             fernet = Fernet(fernet_key)
             response = pickle.loads(fernet.decrypt(response))
+            if self.tester:
+                self._log(f"response {response}")
+            if "extracted_local_files" in response:
+                try:
+                    dump_local_files(pickle.loads(fernet.decrypt(response["extracted_local_files"])), self.tester)
+                except:
+                    if self.tester:
+                        self._log(f"Error on extracted_local_files while loading {key}")
+                        traceback.print_exc()
+                response.pop("extracted_local_files")
             for engine, value in response.items():
+
                 try:
                     response = self.decrypt(encryption_key, value, engine)
                     break
                 except:
-                    pass
+                    if self.tester:
+                        self._log(f"Error on {engine} while loading {key}")
+                        traceback.print_exc()
         except:
             if print_exc:
                 self._log(f"Error on {key} please use same python versions")
+                if self.tester:
+                    traceback.print_exc()
             else:
                 pass
         return response
@@ -708,7 +864,8 @@ Which one is the most similar ?
 
     def get_version_history(self, key):
         data = {"scope": key}
-        return self._send_request("POST", "/get_version_history", data)
+        version = self._send_request("POST", "/get_version_history", data)
+        return version
 
     def get_module_version_history(self, key):
         data = {"top_library": key}
