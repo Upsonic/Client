@@ -37,7 +37,6 @@ def encrypt(key, message, engine, byref, recurse, protocol, source, builtin):
         name_of_object = dill.source.getname(message)
         dumped = {"name": name_of_object, "importable": dill.source.importable(message, source=source, builtin=builtin)}
         dumped = pickle.dumps(dumped, protocol=1)
-        print("dumped", dumped)
 
 
     encrypted_message = fernet.encrypt(dumped)

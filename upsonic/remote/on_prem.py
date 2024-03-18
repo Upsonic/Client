@@ -56,7 +56,7 @@ class Upsonic_On_Prem:
     def __exit__(self, exc_type, exc_val, exc_tb):
         pass  # pragma: no cover
 
-    def __init__(self, api_url, access_key, engine="combine", byref=True, recurse=True, protocol=pickle.DEFAULT_PROTOCOL, source=True, builtin=True):
+    def __init__(self, api_url, access_key, engine="cloudpickle,importable,dill", byref=True, recurse=True, protocol=pickle.DEFAULT_PROTOCOL, source=True, builtin=True):
         import requests
         from requests.auth import HTTPBasicAuth
 
@@ -422,10 +422,9 @@ class Upsonic_On_Prem:
 
 
         the_engine_reports = {}
-        the_engine_reports["cloudpickle"] = self.encrypt(encryption_key, value, "cloudpickle", self.byref, self.recurse, self.protocol, self.source, self.builtin)
-        the_engine_reports["dill"] = self.encrypt(encryption_key, value, "dill", self.byref, self.recurse, self.protocol, self.source, self.builtin)
-        the_engine_reports["importable"] = self.encrypt(encryption_key, value, "importable", self.byref, self.recurse, self.protocol, self.source, self.builtin)
-        print("the_engine_reports", the_engine_reports)
+        for engine in self.engine.split(","):
+            the_engine_reports[engine] = self.encrypt(encryption_key, value, engine, self.byref, self.recurse, self.protocol, self.source, self.builtin)
+
 
         dumped = pickle.dumps(the_engine_reports, protocol=1)
         fernet_key = base64.urlsafe_b64encode(hashlib.sha256(encryption_key.encode()).digest())
@@ -463,19 +462,15 @@ class Upsonic_On_Prem:
             fernet_key = base64.urlsafe_b64encode(hashlib.sha256(encryption_key.encode()).digest())
             fernet = Fernet(fernet_key)
             response = pickle.loads(fernet.decrypt(response))
-            print("Get_response", response)
-            transformation = False
             for engine, value in response.items():
                 try:
                     response = self.decrypt(encryption_key, value, engine)
-                    transformation = True
                     break
                 except:
                     pass
         except:
             if print_exc:
                 self._log(f"Error on {key} please use same python versions")
-                traceback.print_exc()
             else:
                 pass
         return response
