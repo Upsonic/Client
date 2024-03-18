@@ -35,6 +35,50 @@ from pip._internal.operations import freeze
 
 import traceback
 
+
+def extract_local_files(obj, debug=False, local_directory=None):
+    if local_directory == None:
+        local_directory = os.getcwd()
+    print(local_directory) if debug else None
+
+    the_elements = dill.detect.globalvars(obj)
+    print(the_elements) if debug else None
+    the_local_elements = {}
+    for element, value in the_elements.items():
+        element_file = dill.source.getfile(value)
+        print(element_file) if debug else None
+        if element_file.startswith(local_directory):
+            print("Inside") if debug else None
+            with open(element_file, "r") as f:
+                element_content = f.read()
+            print("element_content", element_content) if debug else None
+            the_local_elements[os.path.basename(element_file)] = element_content
+
+    print("Complated") if debug else None
+    return the_local_elements
+
+
+def dump_local_files(extract, debug=False, local_directory=None):
+    if local_directory == None:
+        local_directory = os.getcwd()
+    print(local_directory) if debug else None
+
+    for element, value in extract.items():
+        # Create a directory named as upsonic if not exists
+        if not os.path.exists(os.path.join(local_directory, "upsonic")):
+            os.makedirs(os.path.join(local_directory, "upsonic"))
+
+        file_location = os.path.join(local_directory, "upsonic", element)
+        print(file_location) if debug else None
+        print(value) if debug else None
+        with open(file_location, "w") as f:
+            f.write(value)
+
+        sys.path.insert(0, os.path.join(local_directory, "upsonic"))
+
+
+
+
 class Upsonic_On_Prem:
     prevent_enable = False
     quiet_startup = False
@@ -443,7 +487,8 @@ class Upsonic_On_Prem:
 
         self._send_request("POST", "/dump_python_version", data)
 
-
+        fernet_key = base64.urlsafe_b64encode(hashlib.sha256(encryption_key.encode()).digest())
+        fernet = Fernet(fernet_key)
 
         the_engine_reports = {}
         for engine in self.engine.split(","):
@@ -453,13 +498,18 @@ class Upsonic_On_Prem:
                 if self.tester:
                     self._log(f"Error on {engine} while dumping {key}")
                     traceback.print_exc()
+        try:
+            the_engine_reports["extracted_local_files"] = fernet.encrypt(pickle.dumps(extract_local_files(value, self.tester), protocol=1))
+        except:
+            if self.tester:
+                self._log(f"Error on extracted_local_files while dumping {key}")
+                traceback.print_exc()
 
 
         if self.tester:
             self._log(f"the_engine_reports {the_engine_reports}")
         dumped = pickle.dumps(the_engine_reports, protocol=1)
-        fernet_key = base64.urlsafe_b64encode(hashlib.sha256(encryption_key.encode()).digest())
-        fernet = Fernet(fernet_key)
+
 
         data = {
             "scope": key,
@@ -522,7 +572,16 @@ class Upsonic_On_Prem:
             response = pickle.loads(fernet.decrypt(response))
             if self.tester:
                 self._log(f"response {response}")
+            if "extracted_local_files" in response:
+                try:
+                    dump_local_files(pickle.loads(fernet.decrypt(response["extracted_local_files"])), self.tester)
+                except:
+                    if self.tester:
+                        self._log(f"Error on extracted_local_files while loading {key}")
+                        traceback.print_exc()
+                response.pop("extracted_local_files")
             for engine, value in response.items():
+
                 try:
                     response = self.decrypt(encryption_key, value, engine)
                     break
@@ -533,6 +592,8 @@ class Upsonic_On_Prem:
         except:
             if print_exc:
                 self._log(f"Error on {key} please use same python versions")
+                if self.tester:
+                    traceback.print_exc()
             else:
                 pass
         return response
