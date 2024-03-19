@@ -243,6 +243,8 @@ class Upsonic_On_Prem:
             )
 
             sys.path.insert(0, the_dir)
+        if self.tester:
+            self._log(f"sys.path {sys.path}")
 
     def unset_the_library_specific_locations(self):
         sys.path = self.sys_path_backup
