@@ -245,7 +245,7 @@ class Upsonic_On_Prem:
             for each_r in requirements:
                 each_r_ = each_r.split("==")[0]
                 if each_r_ == value:
-                    total[each] = each_r_
+                    total[each] = each_r
 
         return total
 
@@ -637,7 +637,8 @@ class Upsonic_On_Prem:
 
 
 
-
+        if self.tester:
+            self._log(f"the_original_requirements {the_original_requirements}")
         data = {
             "scope": key,
             "requirements": the_original_requirements,
