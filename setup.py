@@ -15,7 +15,7 @@ setup(
     author="Upsonic",
     author_email="onur.atakan.ulusoy@upsonic.co",
     license="MIT",
-    packages=["upsonic", "upsonic.remote"],
+    packages=["upsonic", "upsonic.remote", "upsonic.remote.localimport"],
     install_requires=install_requires,
     entry_points={
         "console_scripts": ["upsonic=upsonic.remote.interface:Upsonic_CLI"],
