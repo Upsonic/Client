@@ -556,7 +556,7 @@ class Upsonic_On_Prem:
 
         data = {
             "scope": key,
-            "python_version": f"{sys.version.major}.{sys.version.minor}.{sys.version.micro}",
+            "python_version": f"{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}",
         }
 
         self._send_request("POST", "/dump_python_version", data)
