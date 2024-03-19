@@ -764,6 +764,9 @@ class Upsonic_On_Prem:
         if needed_libraries != None:
             try:
                 the_globals = self.generate_the_globals(needed_libraries, key)
+                if inspect.isfunction(response):
+                    for each_one in the_globals:
+                        response.__globals__[each_one] = the_globals[each_one]
                 if self.tester:
                     self._log(f"the_globals {the_globals}")
             except:
