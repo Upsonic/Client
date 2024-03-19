@@ -151,8 +151,7 @@ class Upsonic_On_Prem:
 
         self.enable_active = False
 
-
-        self.cache_dir = os.path.join(os.getcwd(), "upsonic_cache") if cache_dir == None else cache_dir
+        self.cache_dir = os.path.join(os.path.realpath(__file__), "upsonic_cache") if cache_dir == None else cache_dir
         if not os.path.exists(self.cache_dir):
             os.mkdir(self.cache_dir)
 
