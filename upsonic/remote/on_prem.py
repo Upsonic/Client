@@ -910,3 +910,8 @@ Which one is the most similar ?
     def get_version_data(self, key, version):
         data = {"version": key+":"+version}
         return self._send_request("POST", "/load_specific_version", data)
+    
+    
+    def get_requirements(self, key):
+        data = {"scope": key}
+        return self._send_request("POST", "/get_requirements_of_scope", data)
