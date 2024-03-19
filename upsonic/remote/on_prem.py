@@ -138,6 +138,12 @@ class Upsonic_On_Prem:
 
         self.enable_active = False
 
+
+        self.cache_dir = os.path.join(os.getcwd(), "upsonic_cache")
+        if not os.path.exists(self.cache_dir):
+            os.mkdir(self.cache_dir)
+
+
         if self.status == True:
             self._log(
                 f"[bold green]Upsonic[bold green] active",
@@ -208,13 +214,6 @@ class Upsonic_On_Prem:
 
     @contextmanager
     def import_package(self, package):
-        """
-        import sys
-        for a in list(sys.modules):
-            if a.startswith("numpy"):
-                del sys.modules[a]
-        """
-
         package_name = package.split("==")[0]
         package_version = (
             package.split("==")[1]
@@ -910,3 +909,8 @@ Which one is the most similar ?
     def get_version_data(self, key, version):
         data = {"version": key+":"+version}
         return self._send_request("POST", "/load_specific_version", data)
+    
+    
+    def get_requirements(self, key):
+        data = {"scope": key}
+        return self._send_request("POST", "/get_requirements_of_scope", data)
