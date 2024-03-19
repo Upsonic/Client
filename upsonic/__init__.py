@@ -9,6 +9,7 @@ try:
 except:
     pass
 
+from .remote import localimport
 from .remote import Upsonic_Remote
 from .remote import Upsonic_On_Prem
 from .remote import Upsonic_Cloud_Free

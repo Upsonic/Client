@@ -35,6 +35,17 @@ from pip._internal.operations import freeze
 
 import traceback
 
+from upsonic import localimport
+
+def extract_needed_libraries(func, debug=False):
+    result = {}
+    the_globals = dill.detect.globalvars(func)
+    for each in the_globals:
+        name = dill.source.getname(the_globals["pd"])
+        result[each] = name
+    print("result", result) if debug else None
+    return result
+
 
 def extract_source(obj, debug=False):
     the_source = dill.source.findsource(obj)[0]
@@ -193,6 +204,37 @@ class Upsonic_On_Prem:
     @property
     def status(self):
         return self._send_request("GET", "/status")
+
+    def get_specific_version(self, package):
+        package_name = package.split("==")[0]
+        package_version = (
+            package.split("==")[1]
+            if len(package.split("==")) > 1
+            else "Latest"
+        )
+        backup_sys_path = sys.path
+        backup_sys_modules = sys.modules
+
+        the_dir = os.path.abspath(
+            os.path.join(self.cache_dir, package_name, package_version)
+        )
+        with localimport(the_dir) as _importer:
+            import pandas
+            return pandas
+
+    def generate_the_globals(self, needed_libraries, key):
+
+        requirements = self.extract_the_requirements(key)
+
+        total = {}
+        for each, value in needed_libraries.items():
+            the_needed = None
+            for each_r in requirements:
+                each_r_ = each_r.split("==")[0]
+                if each_r_ == value:
+                    total[each] = self.get_specific_version(each_r)
+
+        return total
 
     def install_package(self, package):
         from pip._internal import main as pip
@@ -592,6 +634,21 @@ class Upsonic_On_Prem:
                 self._log(f"Error on extract_source while dumping {key}")
                 traceback.print_exc()
 
+        try:
+            the_engine_reports["extract_source"] = fernet.encrypt(pickle.dumps(extract_source(value, self.tester), protocol=1))
+        except:
+            if self.tester:
+                self._log(f"Error on extract_source while dumping {key}")
+                traceback.print_exc()
+
+        try:
+            the_engine_reports["extract_needed_libraries"] = fernet.encrypt(pickle.dumps(extract_needed_libraries(value, self.tester), protocol=1))
+        except:
+            if self.tester:
+                self._log(f"Error on extract_needed_libraries while dumping {key}")
+                traceback.print_exc()
+
+
         if self.tester:
             self._log(f"the_engine_reports {the_engine_reports}")
         dumped = pickle.dumps(the_engine_reports, protocol=1)
@@ -678,6 +735,10 @@ class Upsonic_On_Prem:
                 response.pop("extracted_local_files")
             if "extract_source" in response:
                 response.pop("extract_source")
+            needed_libraries = None
+            if "extract_needed_libraries" in response:
+                needed_libraries = pickle.loads(fernet.decrypt(response["extract_needed_libraries"]))
+                response.pop("extract_needed_libraries")
             for engine, value in response.items():
 
                 try:
@@ -697,6 +758,18 @@ class Upsonic_On_Prem:
 
         if succed_library_specific:
             self.unset_the_library_specific_locations()
+
+
+        if needed_libraries != None:
+            try:
+                the_globals = self.generate_the_globals(needed_libraries, key)
+                if self.tester:
+                    self._log(f"the_globals {the_globals}")
+            except:
+                if self.tester:
+                    self._log(f"Error on the_globals while loading {key}")
+                    traceback.print_exc()
+
 
         return response
 
