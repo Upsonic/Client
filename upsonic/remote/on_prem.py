@@ -231,7 +231,7 @@ class Upsonic_On_Prem:
             the_needed = None
             for each_r in requirements:
                 each_r_ = each_r.split("==")[0]
-                if each_r_ == value:
+                if each_r_.lower() == value.lower():
                     total[each] = self.get_specific_version(each_r)
 
         return total
@@ -244,7 +244,7 @@ class Upsonic_On_Prem:
             the_needed = None
             for each_r in requirements:
                 each_r_ = each_r.split("==")[0]
-                if each_r_ == value:
+                if each_r_.lower() == value.lower():
                     total[each] = each_r
 
         return total
@@ -564,8 +564,8 @@ class Upsonic_On_Prem:
     def get_currently_version(self):
         total = sys.version_info
         the_version = []
-        the_version.append(total.minor)
         the_version.append(total.major)
+        the_version.append(total.minor)
         the_version.append(total.micro)
         return the_version
 
