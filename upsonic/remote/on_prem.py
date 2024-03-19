@@ -624,8 +624,8 @@ class Upsonic_On_Prem:
                 if self.tester:
                     self._log(f"the_original_requirements in_generation {the_original_requirements}")
                 the_text = ""
-                for each, value in the_original_requirements.items():
-                    the_text += value + ", "
+                for each, value_ in the_original_requirements.items():
+                    the_text += value_ + ", "
                 the_original_requirements = the_text[:-2]
 
             except:
