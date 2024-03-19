@@ -265,10 +265,9 @@ class Upsonic_On_Prem:
                             if self.tester:
                                 self._log(f"Versions are same and 3")
                             if key_version[1] != currenly_version[1]:
-                                if self.tester:
-                                    self._log("Minor versions are different")
-                                if int(currenly_version[1]) >= 11 or int(key_version[1]) >= 11:
-                                    if int(currenly_version[1]) < 11 or int(key_version[1]) < 11:
+                                        if self.tester:
+                                            self._log("Minor versions are different")
+
                                         self._log(
                                             f"[bold orange]Warning: The versions are different, are you sure to continue")
                                         the_input = input("Yes or no (y/n)").lower()
@@ -458,11 +457,11 @@ class Upsonic_On_Prem:
 
 
     def get_currently_version(self):
-        total = sys.version
+        total = sys.version_info
         the_version = []
-        the_version.append(total.split(".")[0])
-        the_version.append(total.split(".")[1])
-        the_version.append(total.split(".")[2])
+        the_version.append(total.minor)
+        the_version.append(total.major)
+        the_version.append(total.micro)
         return the_version
 
     def get_python_version(self, key):
@@ -514,7 +513,7 @@ class Upsonic_On_Prem:
 
         data = {
             "scope": key,
-            "python_version": sys.version,
+            "python_version": f"{sys.version.major}.{sys.version.minor}.{sys.version.micro}",
         }
 
         self._send_request("POST", "/dump_python_version", data)
