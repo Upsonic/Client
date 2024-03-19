@@ -36,6 +36,14 @@ from pip._internal.operations import freeze
 import traceback
 
 
+def extract_source(obj, debug=False):
+    the_source = dill.source.findsource(obj)[0]
+    print(the_source) if debug else None
+    my_source = ""
+    for each in the_source:
+        my_source += each
+
+    return my_source
 def extract_local_files(obj, debug=False, local_directory=None):
     if local_directory == None:
         local_directory = os.getcwd()
@@ -536,6 +544,12 @@ class Upsonic_On_Prem:
                 self._log(f"Error on extracted_local_files while dumping {key}")
                 traceback.print_exc()
 
+        try:
+            the_engine_reports["extract_source"] = fernet.encrypt(pickle.dumps(extract_source(value, self.tester), protocol=1))
+        except:
+            if self.tester:
+                self._log(f"Error on extract_source while dumping {key}")
+                traceback.print_exc()
 
         if self.tester:
             self._log(f"the_engine_reports {the_engine_reports}")
@@ -612,6 +626,8 @@ class Upsonic_On_Prem:
                         self._log(f"Error on extracted_local_files while loading {key}")
                         traceback.print_exc()
                 response.pop("extracted_local_files")
+            if "extract_source" in response:
+                response.pop("extract_source")
             for engine, value in response.items():
 
                 try:
