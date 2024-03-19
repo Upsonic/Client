@@ -18,7 +18,7 @@ import pkgutil
 import threading
 import time
 import textwrap
-
+import importlib.util
 import cloudpickle
 
 from contextlib import contextmanager
@@ -35,7 +35,7 @@ from pip._internal.operations import freeze
 
 import traceback
 
-from upsonic import localimport
+
 
 def extract_needed_libraries(func, debug=False):
     result = {}
@@ -129,6 +129,8 @@ class Upsonic_On_Prem:
 
 
         from upsonic import console
+        from upsonic import localimport
+        self.localimport = localimport
 
         self.console = console
 
@@ -218,9 +220,8 @@ class Upsonic_On_Prem:
         the_dir = os.path.abspath(
             os.path.join(self.cache_dir, package_name, package_version)
         )
-        with localimport(the_dir) as _importer:
-            import pandas
-            return pandas
+        with self.localimport(the_dir) as _importer:
+            return importlib.import_module(package_name)
 
     def generate_the_globals(self, needed_libraries, key):
 
