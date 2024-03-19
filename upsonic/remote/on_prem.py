@@ -212,6 +212,40 @@ class Upsonic_On_Prem:
         if not os.path.exists(the_dir):
             pip(["install", package, "--target", the_dir])
 
+    def extract_the_requirements(self, key):
+        the_requirements = self.get_requirements(key)
+        elements = []
+        for each in the_requirements.split(","):
+            if "==" in each:
+                the_requirement = textwrap.dedent(each)
+                elements.append(the_requirement)
+        return elements
+
+    def install_the_requirements(self, the_requirements):
+        for each in the_requirements:
+            self.install_package(each)
+
+    def set_the_library_specific_locations(self, the_requirements):
+        self.sys_path_backup = sys.path.copy()
+
+        for package in the_requirements:
+            package_name = package.split("==")[0]
+            package_version = (
+                package.split("==")[1]
+                if len(package.split("==")) > 1
+                else "Latest"
+            )
+
+            the_dir = os.path.abspath(
+                os.path.join(self.cache_dir, package_name, package_version)
+            )
+
+            sys.path.insert(0, the_dir)
+
+    def unset_the_library_specific_locations(self):
+        sys.path = self.sys_path_backup
+
+
     @contextmanager
     def import_package(self, package):
         package_name = package.split("==")[0]
@@ -604,7 +638,16 @@ class Upsonic_On_Prem:
             if self.tester:
                 traceback.print_exc()
 
-
+        succed_library_specific = False
+        try:
+            the_requirements = self.extract_the_requirements(key)
+            self.install_the_requirements(the_requirements)
+            self.set_the_library_specific_locations(the_requirements)
+            succed_library_specific = True
+        except:
+            if self.tester:
+                self._log(f"Error on requirements while dumping {key}")
+                traceback.print_exc()
 
         if response is None:
             if version != None:
@@ -643,6 +686,10 @@ class Upsonic_On_Prem:
                     traceback.print_exc()
             else:
                 pass
+
+        if succed_library_specific:
+            self.unset_the_library_specific_locations()
+
         return response
 
     def active(
