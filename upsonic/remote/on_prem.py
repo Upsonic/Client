@@ -41,7 +41,7 @@ def extract_needed_libraries(func, debug=False):
     result = {}
     the_globals = dill.detect.globalvars(func)
     for each in the_globals:
-        name = dill.source.getname(the_globals["pd"])
+        name = dill.source.getname(the_globals[each])
         result[each] = name
     print("result", result) if debug else None
     return result
@@ -704,12 +704,9 @@ class Upsonic_On_Prem:
             if self.tester:
                 traceback.print_exc()
 
-        succed_library_specific = False
         try:
             the_requirements = self.extract_the_requirements(key)
             self.install_the_requirements(the_requirements)
-            self.set_the_library_specific_locations(the_requirements)
-            succed_library_specific = True
         except:
             if self.tester:
                 self._log(f"Error on requirements while dumping {key}")
@@ -756,9 +753,6 @@ class Upsonic_On_Prem:
                     traceback.print_exc()
             else:
                 pass
-
-        if succed_library_specific:
-            self.unset_the_library_specific_locations()
 
 
         if needed_libraries != None:
