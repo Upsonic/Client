@@ -243,7 +243,7 @@ class Upsonic_On_Prem:
             )
 
             the_dir = os.path.abspath(
-                os.path.join(self.cache_dir, package_name, package_version)
+                os.path.join(self.cache_dir, package_name, package_version, package_name)
             )
 
             sys.path.insert(0, the_dir)
