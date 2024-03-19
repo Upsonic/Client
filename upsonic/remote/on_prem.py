@@ -108,7 +108,7 @@ class Upsonic_On_Prem:
     def __exit__(self, exc_type, exc_val, exc_tb):
         pass  # pragma: no cover
 
-    def __init__(self, api_url, access_key, engine="cloudpickle,importable,dill", pass_python_version_check=False, byref=True, recurse=True, protocol=pickle.DEFAULT_PROTOCOL, source=True, builtin=True, tester=False):
+    def __init__(self, api_url, access_key, engine="cloudpickle,importable,dill", cache_dir=None, pass_python_version_check=False, byref=True, recurse=True, protocol=pickle.DEFAULT_PROTOCOL, source=True, builtin=True, tester=False):
         import requests
         from requests.auth import HTTPBasicAuth
 
@@ -139,7 +139,7 @@ class Upsonic_On_Prem:
         self.enable_active = False
 
 
-        self.cache_dir = os.path.join(os.getcwd(), "upsonic_cache")
+        self.cache_dir = os.path.join(os.getcwd(), "upsonic_cache") if cache_dir == None else cache_dir
         if not os.path.exists(self.cache_dir):
             os.mkdir(self.cache_dir)
 
@@ -209,8 +209,8 @@ class Upsonic_On_Prem:
         )
         if not os.path.exists(the_dir):
             os.makedirs(the_dir)
-
-        pip(["install", package, "--target", the_dir])
+        if not os.path.exists(the_dir):
+            pip(["install", package, "--target", the_dir])
 
     @contextmanager
     def import_package(self, package):
