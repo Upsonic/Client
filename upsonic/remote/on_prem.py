@@ -236,6 +236,20 @@ class Upsonic_On_Prem:
 
         return total
 
+    def generate_the_true_requirements(self, requirements, needed_libraries, key):
+
+
+        total = {}
+        for each, value in needed_libraries.items():
+            the_needed = None
+            for each_r in requirements:
+                each_r_ = each_r.split("==")[0]
+                if each_r_ == value:
+                    total[each] = each_r_
+
+        return total
+
+
     def install_package(self, package):
         from pip._internal import main as pip
 
@@ -593,9 +607,40 @@ class Upsonic_On_Prem:
         self._send_request("POST", "/dump_type", data)
 
 
+        the_requirements = Upsonic_On_Prem.export_requirement()
+        the_original_requirements = the_requirements
+        elements = []
+        for each in the_requirements.split(","):
+            if "==" in each:
+                the_requirement = textwrap.dedent(each)
+                elements.append(the_requirement)
+        the_requirements = elements
+
+        extracted_needed_libraries = None
+        try:
+            extracted_needed_libraries = extract_needed_libraries(value, self.tester)
+            try:
+                the_original_requirements = self.generate_the_true_requirements(the_requirements, extracted_needed_libraries, key)
+                the_text = ""
+                for each, value in the_original_requirements.items():
+                    the_text += value + ", "
+                the_original_requirements = the_text[:-2]
+
+            except:
+                if self.tester:
+                    self._log(f"Error on generate_the_true_requirements while dumping {key}")
+                    traceback.print_exc()
+        except:
+            if self.tester:
+                self._log(f"Error on extract_needed_libraries while dumping {key}")
+                traceback.print_exc()
+
+
+
+
         data = {
             "scope": key,
-            "requirements": Upsonic_On_Prem.export_requirement(),
+            "requirements": the_original_requirements,
         }
 
         self._send_request("POST", "/dump_requirements", data)
@@ -641,12 +686,8 @@ class Upsonic_On_Prem:
                 self._log(f"Error on extract_source while dumping {key}")
                 traceback.print_exc()
 
-        try:
-            the_engine_reports["extract_needed_libraries"] = fernet.encrypt(pickle.dumps(extract_needed_libraries(value, self.tester), protocol=1))
-        except:
-            if self.tester:
-                self._log(f"Error on extract_needed_libraries while dumping {key}")
-                traceback.print_exc()
+        if extracted_needed_libraries != None:
+            the_engine_reports["extract_needed_libraries"] = fernet.encrypt(pickle.dumps(extracted_needed_libraries, protocol=1))
 
 
         if self.tester:
