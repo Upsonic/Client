@@ -621,6 +621,8 @@ class Upsonic_On_Prem:
             extracted_needed_libraries = extract_needed_libraries(value, self.tester)
             try:
                 the_original_requirements = self.generate_the_true_requirements(the_requirements, extracted_needed_libraries, key)
+                if self.tester:
+                    self._log(f"the_original_requirements in_generation {the_original_requirements}")
                 the_text = ""
                 for each, value in the_original_requirements.items():
                     the_text += value + ", "
