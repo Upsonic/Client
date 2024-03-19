@@ -41,7 +41,7 @@ def extract_needed_libraries(func, debug=False):
     result = {}
     the_globals = dill.detect.globalvars(func)
     for each in the_globals:
-        name = dill.source.getname(the_globals["pd"])
+        name = dill.source.getname(the_globals[each])
         result[each] = name
     print("result", result) if debug else None
     return result
@@ -151,8 +151,7 @@ class Upsonic_On_Prem:
 
         self.enable_active = False
 
-
-        self.cache_dir = os.path.join(os.getcwd(), "upsonic_cache") if cache_dir == None else cache_dir
+        self.cache_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), "upsonic_cache") if cache_dir == None else cache_dir
         if not os.path.exists(self.cache_dir):
             os.mkdir(self.cache_dir)
 
@@ -236,6 +235,20 @@ class Upsonic_On_Prem:
                     total[each] = self.get_specific_version(each_r)
 
         return total
+
+    def generate_the_true_requirements(self, requirements, needed_libraries, key):
+
+
+        total = {}
+        for each, value in needed_libraries.items():
+            the_needed = None
+            for each_r in requirements:
+                each_r_ = each_r.split("==")[0]
+                if each_r_ == value:
+                    total[each] = each_r_
+
+        return total
+
 
     def install_package(self, package):
         from pip._internal import main as pip
@@ -594,9 +607,40 @@ class Upsonic_On_Prem:
         self._send_request("POST", "/dump_type", data)
 
 
+        the_requirements = Upsonic_On_Prem.export_requirement()
+        the_original_requirements = the_requirements
+        elements = []
+        for each in the_requirements.split(","):
+            if "==" in each:
+                the_requirement = textwrap.dedent(each)
+                elements.append(the_requirement)
+        the_requirements = elements
+
+        extracted_needed_libraries = None
+        try:
+            extracted_needed_libraries = extract_needed_libraries(value, self.tester)
+            try:
+                the_original_requirements = self.generate_the_true_requirements(the_requirements, extracted_needed_libraries, key)
+                the_text = ""
+                for each, value in the_original_requirements.items():
+                    the_text += value + ", "
+                the_original_requirements = the_text[:-2]
+
+            except:
+                if self.tester:
+                    self._log(f"Error on generate_the_true_requirements while dumping {key}")
+                    traceback.print_exc()
+        except:
+            if self.tester:
+                self._log(f"Error on extract_needed_libraries while dumping {key}")
+                traceback.print_exc()
+
+
+
+
         data = {
             "scope": key,
-            "requirements": Upsonic_On_Prem.export_requirement(),
+            "requirements": the_original_requirements,
         }
 
         self._send_request("POST", "/dump_requirements", data)
@@ -642,12 +686,8 @@ class Upsonic_On_Prem:
                 self._log(f"Error on extract_source while dumping {key}")
                 traceback.print_exc()
 
-        try:
-            the_engine_reports["extract_needed_libraries"] = fernet.encrypt(pickle.dumps(extract_needed_libraries(value, self.tester), protocol=1))
-        except:
-            if self.tester:
-                self._log(f"Error on extract_needed_libraries while dumping {key}")
-                traceback.print_exc()
+        if extracted_needed_libraries != None:
+            the_engine_reports["extract_needed_libraries"] = fernet.encrypt(pickle.dumps(extracted_needed_libraries, protocol=1))
 
 
         if self.tester:
@@ -704,12 +744,9 @@ class Upsonic_On_Prem:
             if self.tester:
                 traceback.print_exc()
 
-        succed_library_specific = False
         try:
             the_requirements = self.extract_the_requirements(key)
             self.install_the_requirements(the_requirements)
-            self.set_the_library_specific_locations(the_requirements)
-            succed_library_specific = True
         except:
             if self.tester:
                 self._log(f"Error on requirements while dumping {key}")
@@ -757,13 +794,13 @@ class Upsonic_On_Prem:
             else:
                 pass
 
-        if succed_library_specific:
-            self.unset_the_library_specific_locations()
-
 
         if needed_libraries != None:
             try:
                 the_globals = self.generate_the_globals(needed_libraries, key)
+                if inspect.isfunction(response):
+                    for each_one in the_globals:
+                        response.__globals__[each_one] = the_globals[each_one]
                 if self.tester:
                     self._log(f"the_globals {the_globals}")
             except:
