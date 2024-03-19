@@ -211,7 +211,7 @@ class Upsonic_On_Prem:
             os.makedirs(the_dir)
             if self.tester:
                 self._log(f"Installing {package} to {the_dir}")
-            pip(["install", package, "--target", the_dir])
+            pip(["install", package, "--target", the_dir, "--no-dependencies"])
 
     def extract_the_requirements(self, key):
         the_requirements = self.get_requirements(key)
@@ -243,7 +243,7 @@ class Upsonic_On_Prem:
             )
 
             the_dir = os.path.abspath(
-                os.path.join(self.cache_dir, package_name, package_version, package_name)
+                os.path.join(self.cache_dir, package_name, package_version)
             )
 
             sys.path.insert(0, the_dir)
