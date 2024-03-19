@@ -209,7 +209,6 @@ class Upsonic_On_Prem:
         )
         if not os.path.exists(the_dir):
             os.makedirs(the_dir)
-        if not os.path.exists(the_dir):
             if self.tester:
                 self._log(f"Installing {package} to {the_dir}")
             pip(["install", package, "--target", the_dir])
@@ -225,7 +224,12 @@ class Upsonic_On_Prem:
 
     def install_the_requirements(self, the_requirements):
         for each in the_requirements:
-            self.install_package(each)
+            try:
+                self.install_package(each)
+            except:
+                if self.tester:
+                    self._log(f"Error on {each}")
+                    traceback.print_exc()
 
     def set_the_library_specific_locations(self, the_requirements):
         self.sys_path_backup = sys.path.copy()
@@ -239,10 +243,12 @@ class Upsonic_On_Prem:
             )
 
             the_dir = os.path.abspath(
-                os.path.join(self.cache_dir, package_name, package_version)
+                os.path.join(self.cache_dir, package_name, package_version, package_name)
             )
 
             sys.path.insert(0, the_dir)
+        if self.tester:
+            self._log(f"sys.path {sys.path}")
 
     def unset_the_library_specific_locations(self):
         sys.path = self.sys_path_backup
@@ -556,7 +562,7 @@ class Upsonic_On_Prem:
 
         data = {
             "scope": key,
-            "python_version": f"{sys.version.major}.{sys.version.minor}.{sys.version.micro}",
+            "python_version": f"{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}",
         }
 
         self._send_request("POST", "/dump_python_version", data)
