@@ -224,7 +224,12 @@ class Upsonic_On_Prem:
 
     def install_the_requirements(self, the_requirements):
         for each in the_requirements:
-            self.install_package(each)
+            try:
+                self.install_package(each)
+            except:
+                if self.tester:
+                    self._log(f"Error on {each}")
+                    traceback.print_exc()
 
     def set_the_library_specific_locations(self, the_requirements):
         self.sys_path_backup = sys.path.copy()
