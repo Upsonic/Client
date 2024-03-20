@@ -266,16 +266,26 @@ class Upsonic_On_Prem:
         )
         if not os.path.exists(the_dir) or not self.enable_elastic_dependency:
 
+            def blockPrint():
+                sys.stdout = open(os.devnull, 'w')
+
+            def enablePrint():
+                sys.stdout = sys.__stdout__
+
 
             if self.enable_elastic_dependency:
                 os.makedirs(the_dir)
                 if self.tester:
                     self._log(f"Installing {package} to {the_dir}")
+                blockPrint()
                 pip(["install", package, "--target", the_dir, "--no-dependencies"])
             else:
                 if self.tester:
                     self._log(f"Installing {package} to default_dir")
+                blockPrint()
                 pip(["install", package])
+
+            enablePrint()
 
     def extract_the_requirements(self, key):
         the_requirements = self.get_requirements(key)
