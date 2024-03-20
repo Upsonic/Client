@@ -42,7 +42,7 @@ def extract_needed_libraries(func, debug=False):
     the_globals = dill.detect.globalvars(func)
     for each in the_globals:
         name = dill.source.getname(the_globals[each])
-        result[each] = name
+        result[each] = name.split(".")[0]
     print("result", result) if debug else None
     return result
 
