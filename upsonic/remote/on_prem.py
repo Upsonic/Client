@@ -336,7 +336,7 @@ class Upsonic_On_Prem:
                         # create directories if not present in destination
                         os.makedirs(os.path.dirname(dest_file_name), exist_ok=True)
                         # copy file
-                        shutil.copy(full_file_name, dest_file_name
+                        shutil.copy(full_file_name, dest_file_name)
 
         if self.tester:
             self._log(f"the sha256 of new directory {already_exist} {sha256_dir}")
