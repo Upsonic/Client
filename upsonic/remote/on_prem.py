@@ -758,6 +758,7 @@ class Upsonic_On_Prem:
             try:
                 the_requirements = self.extract_the_requirements(key)
                 self.install_the_requirements(the_requirements)
+                self.set_the_library_specific_locations(the_requirements)
             except:
                 if self.tester:
                     self._log(f"Error on requirements while dumping {key}")
@@ -794,6 +795,7 @@ class Upsonic_On_Prem:
                     response = self.decrypt(encryption_key, value, engine)
                     break
                 except:
+                    response = "Error"
                     self._log(f"Error on {engine} while loading {key}")
                     traceback.print_exc()
         except:
@@ -806,6 +808,7 @@ class Upsonic_On_Prem:
 
         if not self.disable_elastic_dependency:
             if needed_libraries != None:
+                self.unset_the_library_specific_locations()
                 try:
                     the_globals = self.generate_the_globals(needed_libraries, key)
                     if inspect.isfunction(response):
