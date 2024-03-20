@@ -757,6 +757,8 @@ class Upsonic_On_Prem:
             pass_python_version_control=False
 
     ):
+        if self.tester:
+            self._log(f"Process started for {key}")
         response = None
 
         encryption_key = "u"
