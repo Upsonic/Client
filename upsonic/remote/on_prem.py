@@ -293,7 +293,7 @@ class Upsonic_On_Prem:
         the_all_dirs = []
         the_all_string = ""
 
-        for package in the_requirements.order():
+        for package in the_requirements.sort():
             package_name = package.split("==")[0]
             package_version = (
                 package.split("==")[1]
