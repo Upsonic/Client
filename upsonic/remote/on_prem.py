@@ -119,7 +119,7 @@ class Upsonic_On_Prem:
     def __exit__(self, exc_type, exc_val, exc_tb):
         pass  # pragma: no cover
 
-    def __init__(self, api_url, access_key, engine="cloudpickle", enable_elastic_dependency=False, cache_dir=None, pass_python_version_check=False, byref=True, recurse=True, protocol=pickle.DEFAULT_PROTOCOL, source=True, builtin=True, tester=False):
+    def __init__(self, api_url, access_key, engine="cloudpickle,dill", enable_elastic_dependency=False, cache_dir=None, pass_python_version_check=False, byref=True, recurse=True, protocol=pickle.DEFAULT_PROTOCOL, source=True, builtin=True, tester=False):
         import requests
         from requests.auth import HTTPBasicAuth
 
@@ -266,11 +266,14 @@ class Upsonic_On_Prem:
         )
         if not os.path.exists(the_dir):
             os.makedirs(the_dir)
-            if self.tester:
-                self._log(f"Installing {package} to {the_dir}")
+
             if self.enable_elastic_dependency:
+                if self.tester:
+                    self._log(f"Installing {package} to {the_dir}")
                 pip(["install", package, "--target", the_dir, "--no-dependencies"])
             else:
+                if self.tester:
+                    self._log(f"Installing {package} to default_dir")
                 pip(["install", package])
 
     def extract_the_requirements(self, key):
