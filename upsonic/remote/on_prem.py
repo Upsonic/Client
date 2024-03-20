@@ -232,7 +232,7 @@ class Upsonic_On_Prem:
             for each_r in requirements:
                 each_r_ = each_r.split("==")[0]
                 if each_r_.lower() == value.lower():
-                    total[each] = self.get_specific_version(each_r)
+                    total[each] = self.get_specific_version(each_r.lower())
 
         return total
 
