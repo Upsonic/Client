@@ -288,6 +288,10 @@ class Upsonic_On_Prem:
                     self._log(f"Error on {each}")
                     traceback.print_exc()
 
+    def delete_cache(self):
+        shutil.rmtree(self.cache_dir)
+
+
     def set_the_library_specific_locations(self, the_requirements):
 
         the_all_dirs = []
