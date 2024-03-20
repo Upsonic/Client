@@ -34,7 +34,7 @@ import sys
 from pip._internal.operations import freeze
 
 import traceback
-
+import os, hashlib, shutil
 
 
 def extract_needed_libraries(func, debug=False):
@@ -42,7 +42,7 @@ def extract_needed_libraries(func, debug=False):
     the_globals = dill.detect.globalvars(func)
     for each in the_globals:
         name = dill.source.getname(the_globals[each])
-        result[each] = name
+        result[each] = name.split(".")[0]
     print("result", result) if debug else None
     return result
 
@@ -119,7 +119,7 @@ class Upsonic_On_Prem:
     def __exit__(self, exc_type, exc_val, exc_tb):
         pass  # pragma: no cover
 
-    def __init__(self, api_url, access_key, engine="cloudpickle,importable,dill", cache_dir=None, pass_python_version_check=False, byref=True, recurse=True, protocol=pickle.DEFAULT_PROTOCOL, source=True, builtin=True, tester=False):
+    def __init__(self, api_url, access_key, engine="cloudpickle", disable_elastic_dependency=False, cache_dir=None, pass_python_version_check=False, byref=True, recurse=True, protocol=pickle.DEFAULT_PROTOCOL, source=True, builtin=True, tester=False):
         import requests
         from requests.auth import HTTPBasicAuth
 
@@ -145,6 +145,7 @@ class Upsonic_On_Prem:
         self.protocol = protocol
         self.source = source
         self.builtin = builtin
+        self.disable_elastic_dependency = disable_elastic_dependency
 
         self.tester = tester
         self.pass_python_version_check = pass_python_version_check
@@ -231,7 +232,7 @@ class Upsonic_On_Prem:
             the_needed = None
             for each_r in requirements:
                 each_r_ = each_r.split("==")[0]
-                if each_r_.lower() == value.lower():
+                if each_r_.split(".")[0].lower() == value.split(".")[0].lower():
                     total[each] = self.get_specific_version(each_r.lower())
 
         return total
@@ -244,7 +245,7 @@ class Upsonic_On_Prem:
             the_needed = None
             for each_r in requirements:
                 each_r_ = each_r.split("==")[0]
-                if each_r_.lower() == value.lower():
+                if each_r_.split(".")[0].lower() == value.split(".")[0].lower():
                     total[each] = each_r
 
         return total
@@ -288,23 +289,57 @@ class Upsonic_On_Prem:
                     traceback.print_exc()
 
     def set_the_library_specific_locations(self, the_requirements):
-        self.sys_path_backup = sys.path.copy()
 
-        for package in the_requirements:
+        the_all_dirs = []
+        the_all_string = ""
+
+        ordered_list = sorted(the_requirements)
+        if self.tester:
+            self._log(f"ordered_list {ordered_list}")
+
+        for package in ordered_list:
             package_name = package.split("==")[0]
             package_version = (
                 package.split("==")[1]
                 if len(package.split("==")) > 1
                 else "Latest"
             )
+            the_all_string += package
 
             the_dir = os.path.abspath(
                 os.path.join(self.cache_dir, package_name, package_version)
             )
 
-            sys.path.insert(0, the_dir)
+            the_all_dirs.append(the_dir)
+
+        # Create folder with sha256 of the_all_string
+        sha256_string = hashlib.sha256(the_all_string.encode('utf-8')).hexdigest()
+        sha256_dir = os.path.join(self.cache_dir, sha256_string)
+        already_exist = os.path.exists(sha256_dir)
+        os.makedirs(sha256_dir, exist_ok=True)
+
+        if not already_exist:
+            # Copying all contents in the_all_dirs to sha256_dir
+            for directory in the_all_dirs:
+                # iterate through directories and files in 'directory'
+                for dirpath, dirnames, filenames in os.walk(directory):
+                    # construct source directory and destination directory structures
+                    struct = os.path.join(sha256_dir, dirpath[len(directory)+1:])
+                    # create directory structure in destination folder
+                    os.makedirs(struct, exist_ok=True)
+                    # copying all files in current directory to destination directory
+                    for file in filenames:
+                        src_file = os.path.join(dirpath, file)
+                        dst_file = os.path.join(struct, file)
+                        shutil.copy2(src_file, dst_file)
+
         if self.tester:
-            self._log(f"sys.path {sys.path}")
+            self._log(f"the sha256 of new directory {already_exist} {sha256_dir}")
+
+
+        return sha256_dir
+
+
 
     def unset_the_library_specific_locations(self):
         sys.path = self.sys_path_backup
@@ -608,13 +643,17 @@ class Upsonic_On_Prem:
 
 
         the_requirements = Upsonic_On_Prem.export_requirement()
-        the_original_requirements = the_requirements
+        the_original_requirements = ""
+        if self.tester:
+            self._log(f"The first original requirements {the_original_requirements}")
         elements = []
         for each in the_requirements.split(","):
             if "==" in each:
                 the_requirement = textwrap.dedent(each)
                 elements.append(the_requirement)
         the_requirements = elements
+        if self.tester:
+            self._log(f"the_requirements {the_requirements}")
 
         extracted_needed_libraries = None
         try:
@@ -722,6 +761,9 @@ class Upsonic_On_Prem:
 
         data = {"scope": key}
 
+        versions_are_different = False
+        if pass_python_version_control:
+            versions_are_different = True
         try:
             if not self.pass_python_version_check and not pass_python_version_control:
                 key_version = self.get_python_version(key)
@@ -737,6 +779,7 @@ class Upsonic_On_Prem:
                             self._log("Minor versions are different")
                         if int(currenly_version[1]) >= 11 or int(key_version[1]) >= 11:
                             if int(currenly_version[1]) < 11 or int(key_version[1]) < 11:
+                                versions_are_different = True
                                 self._log(f"[bold orange]Warning: The versions are different, are you sure to continue")
                                 the_input = input("Yes or no (y/n)").lower()
                                 if the_input == "n":
@@ -746,14 +789,19 @@ class Upsonic_On_Prem:
         except:
             if self.tester:
                 traceback.print_exc()
+        the_requirements_path = None
+        if not self.disable_elastic_dependency:
+            try:
+                the_requirements = self.extract_the_requirements(key)
 
-        try:
-            the_requirements = self.extract_the_requirements(key)
-            self.install_the_requirements(the_requirements)
-        except:
-            if self.tester:
-                self._log(f"Error on requirements while dumping {key}")
-                traceback.print_exc()
+                self.install_the_requirements(the_requirements)
+                if self.tester:
+                    self._log(f"the_requirements {the_requirements}")
+                the_requirements_path = self.set_the_library_specific_locations(the_requirements)
+            except:
+                if self.tester:
+                    self._log(f"Error on requirements while dumping {key}")
+                    traceback.print_exc()
 
         if response is None:
             if version != None:
@@ -783,12 +831,17 @@ class Upsonic_On_Prem:
             for engine, value in response.items():
 
                 try:
-                    response = self.decrypt(encryption_key, value, engine)
-                    break
+                    if the_requirements_path is not None:
+                        with self.localimport(the_requirements_path) as _importer:
+                            response = self.decrypt(encryption_key, value, engine)
+                            break
+                    else:
+                        response = self.decrypt(encryption_key, value, engine)
+                        break
                 except:
-                    if self.tester:
-                        self._log(f"Error on {engine} while loading {key}")
-                        traceback.print_exc()
+                    response = "Error"
+                    self._log(f"Error on {engine} while loading {key}")
+                    traceback.print_exc()
         except:
             if print_exc:
                 self._log(f"Error on {key} please use same python versions")
@@ -797,19 +850,6 @@ class Upsonic_On_Prem:
             else:
                 pass
 
-
-        if needed_libraries != None:
-            try:
-                the_globals = self.generate_the_globals(needed_libraries, key)
-                if inspect.isfunction(response):
-                    for each_one in the_globals:
-                        response.__globals__[each_one] = the_globals[each_one]
-                if self.tester:
-                    self._log(f"the_globals {the_globals}")
-            except:
-                if self.tester:
-                    self._log(f"Error on the_globals while loading {key}")
-                    traceback.print_exc()
 
 
         return response
