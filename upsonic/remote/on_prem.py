@@ -292,10 +292,8 @@ class Upsonic_On_Prem:
 
         the_all_dirs = []
         the_all_string = ""
-        if self.tester:
-            self._log(f"the_requirements {the_requirements}")
 
-        ordered_list = the_requirements.sort()
+        ordered_list = sorted(the_requirements)
         if self.tester:
             self._log(f"ordered_list {ordered_list}")
 
