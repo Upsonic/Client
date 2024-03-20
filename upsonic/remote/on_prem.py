@@ -119,7 +119,7 @@ class Upsonic_On_Prem:
     def __exit__(self, exc_type, exc_val, exc_tb):
         pass  # pragma: no cover
 
-    def __init__(self, api_url, access_key, engine="cloudpickle,importable,dill", disable_elastic_dependency=False, cache_dir=None, pass_python_version_check=False, byref=True, recurse=True, protocol=pickle.DEFAULT_PROTOCOL, source=True, builtin=True, tester=False):
+    def __init__(self, api_url, access_key, engine="cloudpickle", disable_elastic_dependency=False, cache_dir=None, pass_python_version_check=False, byref=True, recurse=True, protocol=pickle.DEFAULT_PROTOCOL, source=True, builtin=True, tester=False):
         import requests
         from requests.auth import HTTPBasicAuth
 
@@ -725,6 +725,9 @@ class Upsonic_On_Prem:
 
         data = {"scope": key}
 
+        versions_are_different = False
+        if pass_python_version_control:
+            versions_are_different = True
         try:
             if not self.pass_python_version_check and not pass_python_version_control:
                 key_version = self.get_python_version(key)
@@ -740,6 +743,7 @@ class Upsonic_On_Prem:
                             self._log("Minor versions are different")
                         if int(currenly_version[1]) >= 11 or int(key_version[1]) >= 11:
                             if int(currenly_version[1]) < 11 or int(key_version[1]) < 11:
+                                versions_are_different = True
                                 self._log(f"[bold orange]Warning: The versions are different, are you sure to continue")
                                 the_input = input("Yes or no (y/n)").lower()
                                 if the_input == "n":
@@ -790,9 +794,8 @@ class Upsonic_On_Prem:
                     response = self.decrypt(encryption_key, value, engine)
                     break
                 except:
-                    if self.tester:
-                        self._log(f"Error on {engine} while loading {key}")
-                        traceback.print_exc()
+                    self._log(f"Error on {engine} while loading {key}")
+                    traceback.print_exc()
         except:
             if print_exc:
                 self._log(f"Error on {key} please use same python versions")
