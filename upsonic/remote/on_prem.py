@@ -311,6 +311,8 @@ class Upsonic_On_Prem:
             )
 
             the_all_dirs.append(the_dir)
+        if self.tester:
+            self._log(f"the_all_string {the_all_string}")
 
         # Create folder with sha256 of the_all_string
         sha256_string = hashlib.sha256(the_all_string.encode('utf-8')).hexdigest()
