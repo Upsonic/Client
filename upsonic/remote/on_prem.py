@@ -615,6 +615,8 @@ class Upsonic_On_Prem:
                 the_requirement = textwrap.dedent(each)
                 elements.append(the_requirement)
         the_requirements = elements
+        if self.tester:
+            self._log(f"the_requirements {the_requirements}")
 
         extracted_needed_libraries = None
         try:
