@@ -268,7 +268,7 @@ class Upsonic_On_Prem:
             os.makedirs(the_dir)
             if self.tester:
                 self._log(f"Installing {package} to {the_dir}")
-            pip(["install", package, "--target", the_dir, "--no-dependencies"])
+            pip(["install", package, "--target", the_dir])
 
     def extract_the_requirements(self, key):
         the_requirements = self.get_requirements(key)
