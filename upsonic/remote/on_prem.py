@@ -34,7 +34,7 @@ import sys
 from pip._internal.operations import freeze
 
 import traceback
-
+import os, hashlib, shutil
 
 
 def extract_needed_libraries(func, debug=False):
@@ -289,23 +289,53 @@ class Upsonic_On_Prem:
                     traceback.print_exc()
 
     def set_the_library_specific_locations(self, the_requirements):
-        self.sys_path_backup = sys.path.copy()
 
-        for package in the_requirements:
+        the_all_dirs = []
+        the_all_string = ""
+
+        for package in the_requirements.order():
             package_name = package.split("==")[0]
             package_version = (
                 package.split("==")[1]
                 if len(package.split("==")) > 1
                 else "Latest"
             )
+            the_all_string += package
 
             the_dir = os.path.abspath(
                 os.path.join(self.cache_dir, package_name, package_version)
             )
 
-            sys.path.insert(0, the_dir)
+            the_all_dirs.append(the_dir)
+
+        # Create folder with sha256 of the_all_string
+        sha256_string = hashlib.sha256(the_all_string.encode('utf-8')).hexdigest()
+        sha256_dir = os.path.join(self.cache_dir, sha256_string)
+        already_exist = os.path.exists(sha256_dir)
+        os.makedirs(sha256_dir, exist_ok=True)
+
+        if not already_exist:
+            # Copying all contents in the_all_dirs to sha256_dir
+            for directory in the_all_dirs:
+                # iterate through directories and files in 'directory'
+                for dirpath, dirnames, filenames in os.walk(directory):
+                    # construct source directory and destination directory structures
+                    struct = os.path.join(sha256_dir, dirpath[len(directory)+1:])
+                    # create directory structure in destination folder
+                    os.makedirs(struct, exist_ok=True)
+                    # copying all files in current directory to destination directory
+                    for file in filenames:
+                        src_file = os.path.join(dirpath, file)
+                        dst_file = os.path.join(struct, file)
+                        shutil.copy2(src_file, dst_file)
+
         if self.tester:
-            self._log(f"sys.path {sys.path}")
+            self._log(f"the sha256 of new directory {already_exist} {sha256_dir}")
+
+
+        return sha256_dir
+
+
 
     def unset_the_library_specific_locations(self):
         sys.path = self.sys_path_backup
@@ -753,12 +783,12 @@ class Upsonic_On_Prem:
         except:
             if self.tester:
                 traceback.print_exc()
-
+        the_requirements_path = None
         if not self.disable_elastic_dependency:
             try:
                 the_requirements = self.extract_the_requirements(key)
                 self.install_the_requirements(the_requirements)
-                self.set_the_library_specific_locations(the_requirements)
+                the_requirements_path = self.set_the_library_specific_locations(the_requirements)
             except:
                 if self.tester:
                     self._log(f"Error on requirements while dumping {key}")
@@ -792,8 +822,13 @@ class Upsonic_On_Prem:
             for engine, value in response.items():
 
                 try:
-                    response = self.decrypt(encryption_key, value, engine)
-                    break
+                    if the_requirements_path is not None:
+                        with self.localimport(the_requirements_path) as _importer:
+                            response = self.decrypt(encryption_key, value, engine)
+                            break
+                    else:
+                        response = self.decrypt(encryption_key, value, engine)
+                        break
                 except:
                     response = "Error"
                     self._log(f"Error on {engine} while loading {key}")
@@ -807,19 +842,6 @@ class Upsonic_On_Prem:
                 pass
 
         if not self.disable_elastic_dependency:
-            if needed_libraries != None:
-                self.unset_the_library_specific_locations()
-                try:
-                    the_globals = self.generate_the_globals(needed_libraries, key)
-                    if inspect.isfunction(response):
-                        for each_one in the_globals:
-                            response.__globals__[each_one] = the_globals[each_one]
-                    if self.tester:
-                        self._log(f"the_globals {the_globals}")
-                except:
-                    if self.tester:
-                        self._log(f"Error on the_globals while loading {key}")
-                        traceback.print_exc()
 
 
         return response
