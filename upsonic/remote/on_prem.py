@@ -841,7 +841,6 @@ class Upsonic_On_Prem:
             else:
                 pass
 
-        if not self.disable_elastic_dependency:
 
 
         return response
