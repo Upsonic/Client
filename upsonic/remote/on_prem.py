@@ -119,7 +119,7 @@ class Upsonic_On_Prem:
     def __exit__(self, exc_type, exc_val, exc_tb):
         pass  # pragma: no cover
 
-    def __init__(self, api_url, access_key, engine="cloudpickle,importable,dill", cache_dir=None, pass_python_version_check=False, byref=True, recurse=True, protocol=pickle.DEFAULT_PROTOCOL, source=True, builtin=True, tester=False):
+    def __init__(self, api_url, access_key, engine="cloudpickle,importable,dill", disable_elastic_dependency=False, cache_dir=None, pass_python_version_check=False, byref=True, recurse=True, protocol=pickle.DEFAULT_PROTOCOL, source=True, builtin=True, tester=False):
         import requests
         from requests.auth import HTTPBasicAuth
 
@@ -145,6 +145,7 @@ class Upsonic_On_Prem:
         self.protocol = protocol
         self.source = source
         self.builtin = builtin
+        self.disable_elastic_dependency = disable_elastic_dependency
 
         self.tester = tester
         self.pass_python_version_check = pass_python_version_check
@@ -749,13 +750,14 @@ class Upsonic_On_Prem:
             if self.tester:
                 traceback.print_exc()
 
-        try:
-            the_requirements = self.extract_the_requirements(key)
-            self.install_the_requirements(the_requirements)
-        except:
-            if self.tester:
-                self._log(f"Error on requirements while dumping {key}")
-                traceback.print_exc()
+        if not self.disable_elastic_dependency:
+            try:
+                the_requirements = self.extract_the_requirements(key)
+                self.install_the_requirements(the_requirements)
+            except:
+                if self.tester:
+                    self._log(f"Error on requirements while dumping {key}")
+                    traceback.print_exc()
 
         if response is None:
             if version != None:
@@ -799,19 +801,19 @@ class Upsonic_On_Prem:
             else:
                 pass
 
-
-        if needed_libraries != None:
-            try:
-                the_globals = self.generate_the_globals(needed_libraries, key)
-                if inspect.isfunction(response):
-                    for each_one in the_globals:
-                        response.__globals__[each_one] = the_globals[each_one]
-                if self.tester:
-                    self._log(f"the_globals {the_globals}")
-            except:
-                if self.tester:
-                    self._log(f"Error on the_globals while loading {key}")
-                    traceback.print_exc()
+        if not self.disable_elastic_dependency:
+            if needed_libraries != None:
+                try:
+                    the_globals = self.generate_the_globals(needed_libraries, key)
+                    if inspect.isfunction(response):
+                        for each_one in the_globals:
+                            response.__globals__[each_one] = the_globals[each_one]
+                    if self.tester:
+                        self._log(f"the_globals {the_globals}")
+                except:
+                    if self.tester:
+                        self._log(f"Error on the_globals while loading {key}")
+                        traceback.print_exc()
 
 
         return response
