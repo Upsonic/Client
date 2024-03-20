@@ -787,6 +787,8 @@ class Upsonic_On_Prem:
         if not self.disable_elastic_dependency:
             try:
                 the_requirements = self.extract_the_requirements(key)
+                if self.tester:
+                    self._log(f"the_requirements {the_requirements}")
                 self.install_the_requirements(the_requirements)
                 the_requirements_path = self.set_the_library_specific_locations(the_requirements)
             except:
