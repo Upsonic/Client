@@ -643,7 +643,7 @@ class Upsonic_On_Prem:
 
 
         the_requirements = Upsonic_On_Prem.export_requirement()
-        the_original_requirements = the_requirements
+        the_original_requirements = ""
         if self.tester:
             self._log(f"The first original requirements {the_original_requirements}")
         elements = []
