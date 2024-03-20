@@ -288,6 +288,10 @@ class Upsonic_On_Prem:
                     self._log(f"Error on {each}")
                     traceback.print_exc()
 
+    def delete_cache(self):
+        shutil.rmtree(self.cache_dir)
+
+
     def set_the_library_specific_locations(self, the_requirements):
 
         the_all_dirs = []
@@ -311,6 +315,8 @@ class Upsonic_On_Prem:
             )
 
             the_all_dirs.append(the_dir)
+        if self.tester:
+            self._log(f"the_all_string {the_all_string}")
 
         # Create folder with sha256 of the_all_string
         sha256_string = hashlib.sha256(the_all_string.encode('utf-8')).hexdigest()
@@ -320,18 +326,17 @@ class Upsonic_On_Prem:
 
         if not already_exist:
             # Copying all contents in the_all_dirs to sha256_dir
-            for directory in the_all_dirs:
-                # iterate through directories and files in 'directory'
-                for dirpath, dirnames, filenames in os.walk(directory):
-                    # construct source directory and destination directory structures
-                    struct = os.path.join(sha256_dir, dirpath[len(directory)+1:])
-                    # create directory structure in destination folder
-                    os.makedirs(struct, exist_ok=True)
-                    # copying all files in current directory to destination directory
-                    for file in filenames:
-                        src_file = os.path.join(dirpath, file)
-                        dst_file = os.path.join(struct, file)
-                        shutil.copy2(src_file, dst_file)
+            for dir_path in the_all_dirs:
+                for root, dirs, files in os.walk(dir_path):
+                    for file in files:
+                        # construct full file path
+                        full_file_name = os.path.join(root, file)
+                        # construct destination path
+                        dest_file_name = sha256_dir + full_file_name[len(dir_path):]
+                        # create directories if not present in destination
+                        os.makedirs(os.path.dirname(dest_file_name), exist_ok=True)
+                        # copy file
+                        shutil.copy(full_file_name, dest_file_name)
 
         if self.tester:
             self._log(f"the sha256 of new directory {already_exist} {sha256_dir}")
@@ -755,6 +760,8 @@ class Upsonic_On_Prem:
             pass_python_version_control=False
 
     ):
+        if self.tester:
+            self._log(f"Process started for {key}")
         response = None
 
         encryption_key = "u"
