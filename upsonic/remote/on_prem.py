@@ -292,8 +292,14 @@ class Upsonic_On_Prem:
 
         the_all_dirs = []
         the_all_string = ""
+        if self.tester:
+            self._log(f"the_requirements {the_requirements}")
 
-        for package in the_requirements.sort():
+        ordered_list = the_requirements.sort()
+        if self.tester:
+            self._log(f"ordered_list {ordered_list}")
+
+        for package in ordered_list:
             package_name = package.split("==")[0]
             package_version = (
                 package.split("==")[1]
@@ -787,9 +793,10 @@ class Upsonic_On_Prem:
         if not self.disable_elastic_dependency:
             try:
                 the_requirements = self.extract_the_requirements(key)
+
+                self.install_the_requirements(the_requirements)
                 if self.tester:
                     self._log(f"the_requirements {the_requirements}")
-                self.install_the_requirements(the_requirements)
                 the_requirements_path = self.set_the_library_specific_locations(the_requirements)
             except:
                 if self.tester:
