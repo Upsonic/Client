@@ -231,7 +231,7 @@ class Upsonic_On_Prem:
             the_needed = None
             for each_r in requirements:
                 each_r_ = each_r.split("==")[0]
-                if each_r_.lower() == value.lower():
+                if each_r_.split(".")[0].lower() == value.split(".")[0].lower():
                     total[each] = self.get_specific_version(each_r.lower())
 
         return total
@@ -244,7 +244,7 @@ class Upsonic_On_Prem:
             the_needed = None
             for each_r in requirements:
                 each_r_ = each_r.split("==")[0]
-                if each_r_.lower() == value.lower():
+                if each_r_.split(".")[0].lower() == value.split(".")[0].lower():
                     total[each] = each_r
 
         return total
