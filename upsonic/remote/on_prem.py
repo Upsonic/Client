@@ -264,10 +264,11 @@ class Upsonic_On_Prem:
         the_dir = os.path.abspath(
             os.path.join(self.cache_dir, package_name, package_version)
         )
-        if not os.path.exists(the_dir):
-            os.makedirs(the_dir)
+        if not os.path.exists(the_dir) or not self.enable_elastic_dependency:
+
 
             if self.enable_elastic_dependency:
+                os.makedirs(the_dir)
                 if self.tester:
                     self._log(f"Installing {package} to {the_dir}")
                 pip(["install", package, "--target", the_dir, "--no-dependencies"])
