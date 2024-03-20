@@ -119,7 +119,7 @@ class Upsonic_On_Prem:
     def __exit__(self, exc_type, exc_val, exc_tb):
         pass  # pragma: no cover
 
-    def __init__(self, api_url, access_key, engine="cloudpickle", enable_elastic_dependency=False, cache_dir=None, pass_python_version_check=False, byref=True, recurse=True, protocol=pickle.DEFAULT_PROTOCOL, source=True, builtin=True, tester=False):
+    def __init__(self, api_url, access_key, engine="cloudpickle,dill", enable_elastic_dependency=False, cache_dir=None, pass_python_version_check=False, byref=True, recurse=True, protocol=pickle.DEFAULT_PROTOCOL, source=True, builtin=True, tester=False):
         import requests
         from requests.auth import HTTPBasicAuth
 
@@ -264,13 +264,16 @@ class Upsonic_On_Prem:
         the_dir = os.path.abspath(
             os.path.join(self.cache_dir, package_name, package_version)
         )
-        if not os.path.exists(the_dir):
-            os.makedirs(the_dir)
-            if self.tester:
-                self._log(f"Installing {package} to {the_dir}")
+        if not os.path.exists(the_dir) or not self.enable_elastic_dependency:
+
             if self.enable_elastic_dependency:
+                os.makedirs(the_dir)
+                if self.tester:
+                    self._log(f"Installing {package} to {the_dir}")
                 pip(["install", package, "--target", the_dir, "--no-dependencies"])
             else:
+                if self.tester:
+                    self._log(f"Installing {package} to default_dir")
                 pip(["install", package])
 
     def extract_the_requirements(self, key):
@@ -283,9 +286,14 @@ class Upsonic_On_Prem:
         return elements
 
     def install_the_requirements(self, the_requirements):
+        installed_requirements = self.export_requirement()
         for each in the_requirements:
             try:
-                self.install_package(each)
+                if each not in installed_requirements or self.enable_elastic_dependency:
+                    self.install_package(each)
+                else:
+                    if self.tester:
+                        self._log("Already installed in system")
             except:
                 if self.tester:
                     self._log(f"Error on {each}")
