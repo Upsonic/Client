@@ -637,6 +637,18 @@ class Upsonic_On_Prem:
             value,
     ):
 
+        if key.startswith("."):
+            self._log("Error: The key can not start with '.'")
+            return False
+        if ":" in key:
+            self._log("Error: The key can not include ':'")
+            return False
+        if key.endswith("."):
+            self._log("Error: The key can not end with '.'")
+            return False
+        if "." not in key:
+            self._log("Error: You should create a parent with '.' like math.sum")
+
         the_type = type(value).__name__
         if the_type == "type":
             the_type = "class"
