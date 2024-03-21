@@ -648,6 +648,7 @@ class Upsonic_On_Prem:
             return False
         if "." not in key:
             self._log("Error: You should create a parent with '.' like math.sum")
+            return False
         if ".." in key:
             self._log("Error: The key can not include multiple dot one after one'..'")
             return False
