@@ -646,6 +646,8 @@ class Upsonic_On_Prem:
         if key.endswith("."):
             self._log("Error: The key can not end with '.'")
             return False
+        if "." not in key:
+            self._log("Error: You should create a parent with '.' like math.sum")
         if ".." in key:
             self._log("Error: The key can not include multiple dot one after one'..'")
             return False
