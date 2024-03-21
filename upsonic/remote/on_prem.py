@@ -119,7 +119,7 @@ class Upsonic_On_Prem:
     def __exit__(self, exc_type, exc_val, exc_tb):
         pass  # pragma: no cover
 
-    def __init__(self, api_url, access_key, engine="cloudpickle,dill", enable_elastic_dependency=False, cache_dir=None, pass_python_version_check=False, byref=True, recurse=True, protocol=pickle.DEFAULT_PROTOCOL, source=True, builtin=True, tester=False):
+    def __init__(self, api_url, access_key, engine="cloudpickle,dill", enable_local_files=True, enable_elastic_dependency=False, cache_dir=None, pass_python_version_check=False, byref=True, recurse=True, protocol=pickle.DEFAULT_PROTOCOL, source=True, builtin=True, tester=False):
         import requests
         from requests.auth import HTTPBasicAuth
 
@@ -146,6 +146,7 @@ class Upsonic_On_Prem:
         self.source = source
         self.builtin = builtin
         self.enable_elastic_dependency = enable_elastic_dependency
+        self.enable_local_files = enable_local_files
 
         self.tester = tester
         self.pass_python_version_check = pass_python_version_check
@@ -636,6 +637,18 @@ class Upsonic_On_Prem:
             value,
     ):
 
+        if key.startswith("."):
+            self._log("Error: The key can not start with '.'")
+            return False
+        if ":" in key:
+            self._log("Error: The key can not include ':'")
+            return False
+        if key.endswith("."):
+            self._log("Error: The key can not end with '.'")
+            return False
+        if "." not in key:
+            self._log("Error: You should create a parent with '.' like math.sum")
+
         the_type = type(value).__name__
         if the_type == "type":
             the_type = "class"
@@ -835,7 +848,11 @@ class Upsonic_On_Prem:
                 self._log(f"response {response}")
             if "extracted_local_files" in response:
                 try:
-                    dump_local_files(pickle.loads(fernet.decrypt(response["extracted_local_files"])), self.tester)
+                    if self.enable_local_files:
+                        dump_local_files(pickle.loads(fernet.decrypt(response["extracted_local_files"])), self.tester)
+                    else:
+                        if self.tester:
+                            self._log(f"Local files are not enabled")
                 except:
                     if self.tester:
                         self._log(f"Error on extracted_local_files while loading {key}")
