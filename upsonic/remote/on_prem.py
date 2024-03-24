@@ -119,6 +119,28 @@ class Upsonic_On_Prem:
     def __exit__(self, exc_type, exc_val, exc_tb):
         pass  # pragma: no cover
 
+
+    @property
+    def console(self):
+        from upsonic import console
+        return console
+
+    @property
+    def localimport(self):
+        from upsonic import localimport
+        return localimport
+
+    @property
+    def encrypt(self):
+        from upsonic import encrypt
+        return encrypt
+
+    @property
+    def decrypt(self):
+        from upsonic import decrypt
+        return decrypt
+
+
     def __init__(self, api_url, access_key, engine="cloudpickle,dill", enable_local_files=True, enable_elastic_dependency=False, cache_dir=None, pass_python_version_check=False, byref=True, recurse=True, protocol=pickle.DEFAULT_PROTOCOL, source=True, builtin=True, tester=False):
         import requests
         from requests.auth import HTTPBasicAuth
@@ -128,11 +150,6 @@ class Upsonic_On_Prem:
         requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
 
-        from upsonic import console
-        from upsonic import localimport
-        self.localimport = localimport
-
-        self.console = console
 
         self.requests = requests
         self.HTTPBasicAuth = HTTPBasicAuth
@@ -167,10 +184,6 @@ class Upsonic_On_Prem:
                 f"[bold red]Upsonic[bold red] is down",
             )
 
-        from upsonic import encrypt, decrypt
-
-        self.encrypt = encrypt
-        self.decrypt = decrypt
 
         self.thread_number = 5
 
