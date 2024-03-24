@@ -751,6 +751,7 @@ class Upsonic_On_Prem:
 
 
         if len(the_engine_reports) == 0 and not self.tester:
+            self._log("[red] Error: No engine is able to dump the object")
             for error in engine_reports_exceptions:
                 print(error)
 
