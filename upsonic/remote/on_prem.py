@@ -736,6 +736,8 @@ class Upsonic_On_Prem:
         fernet_key = base64.urlsafe_b64encode(hashlib.sha256(encryption_key.encode()).digest())
         fernet = Fernet(fernet_key)
 
+
+        engine_reports_exceptions = []
         the_engine_reports = {}
         for engine in self.engine.split(","):
             try:
@@ -744,6 +746,14 @@ class Upsonic_On_Prem:
                 if self.tester:
                     self._log(f"Error on {engine} while dumping {key}")
                     traceback.print_exc()
+                else:
+                    engine_reports_exceptions.append(traceback.format_exc())
+
+
+        if len(the_engine_reports) == 0 and not self.tester:
+            for error in engine_reports_exceptions:
+                print(error)
+
         try:
             the_engine_reports["extracted_local_files"] = fernet.encrypt(pickle.dumps(extract_local_files(value, self.tester), protocol=1))
         except:
