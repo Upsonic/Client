@@ -41,7 +41,7 @@ def extract_needed_libraries(func, debug=False):
     result = {}
     the_globals = dill.detect.globalvars(func)
     for each in the_globals:
-        name = dill.source.getname(the_globals[each])
+        name = dill.source.getname(the_globals[each], fqn=True)
         result[each] = name.split(".")[0]
     print("result", result) if debug else None
     return result
@@ -638,9 +638,9 @@ class Upsonic_On_Prem:
         data = {"scope": key}
         total = self._send_request("POST", "/get_python_version_of_scope", data)
         the_version = []
-        the_version.append(total.split(".")[0])
-        the_version.append(total.split(".")[1])
-        the_version.append(total.split(".")[2])
+        the_version.append(int(total.split(".")[0]))
+        the_version.append(int(total.split(".")[1]))
+        the_version.append(int(total.split(".")[2]))
         return the_version
 
 
