@@ -35,7 +35,7 @@ from pip._internal.operations import freeze
 
 import traceback
 import os, hashlib, shutil
-
+from memory_profiler import memory_usage
 
 def extract_needed_libraries(func, debug=False):
     result = {}
@@ -919,8 +919,31 @@ class Upsonic_On_Prem:
                 pass
 
 
+        #Run anayses
+
+
 
         return response
+
+    def get_settings(self, key):
+        data = {"scope": key}
+        return self._send_request("POST", "/get_settings_of_scope", data)
+
+    def is_usage_analyses_true(self, key):
+        settings = self.get_settings(key)
+
+        if settings == None:
+            cpu_usage_analyses = False
+        else:
+            if "usage_analyses" in settings:
+                try:
+                    cpu_usage_analyses = settings["usage_analyses"].lower() == "true"
+                except:
+
+                    cpu_usage_analyses = None
+
+        return cpu_usage_analyses
+
 
     def active(
             self,
