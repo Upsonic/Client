@@ -953,7 +953,7 @@ class Upsonic_On_Prem:
             except:
                 traceback.print_exc()
                 succed=False
-                output = None
+                output = traceback.format_exc()
             # Get process time and memory usage after function execution
             end_time = time.process_time()
             end_memory = memory_usage(-1, interval=0.1, timeout=1)[0]
@@ -974,8 +974,10 @@ class Upsonic_On_Prem:
             # Return the function output
             the_version = "Latest" if version == None else version
             the_type = "Succed" if succed else "Failed"
-            self.add_run_history(key, the_version, cpu_usage_for_one_core, memory_used, total_time, the_type)
-
+            try:
+                self.add_run_history(key, the_version, cpu_usage_for_one_core, memory_used, total_time, the_type)
+            except:
+                self._log(f"Error on adding run history, for server not supported. {key}")
             return output
 
         return wrapper_function
