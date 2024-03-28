@@ -141,7 +141,7 @@ class Upsonic_On_Prem:
         return decrypt
 
 
-    def __init__(self, api_url, access_key, engine="cloudpickle,dill", enable_local_files=True, enable_elastic_dependency=False, cache_dir=None, pass_python_version_check=False, byref=True, recurse=True, protocol=pickle.DEFAULT_PROTOCOL, source=True, builtin=True, tester=False):
+    def __init__(self, api_url, access_key, engine="cloudpickle,dill", enable_usage_analyses=True, enable_local_files=True, enable_elastic_dependency=False, cache_dir=None, pass_python_version_check=False, byref=True, recurse=True, protocol=pickle.DEFAULT_PROTOCOL, source=True, builtin=True, tester=False):
         import requests
         from requests.auth import HTTPBasicAuth
 
@@ -163,6 +163,7 @@ class Upsonic_On_Prem:
         self.source = source
         self.builtin = builtin
         self.enable_elastic_dependency = enable_elastic_dependency
+        self.enable_usage_analyses = enable_usage_analyses
         self.enable_local_files = enable_local_files
 
         self.tester = tester
@@ -920,10 +921,64 @@ class Upsonic_On_Prem:
 
 
         #Run anayses
-
+        if self.enable_usage_analyses:
+            if inspect.isfunction(response) and self.is_usage_analyses_true(key):
+                response = self.profile_function(key, version, response)
 
 
         return response
+
+    def add_run_history(self, key, version, cpu_usage_one_core, memory_usage, elapsed_time, type):
+        data = {
+            "scope": key,
+            "version": version,
+            "cpu_usage": cpu_usage_one_core,
+            "memory_usage": memory_usage,
+            "elapsed_time": elapsed_time,
+            "type": type
+        }
+
+        self._send_request("POST", "/dump_run", data)
+
+
+    def profile_function(self, key, version, func):
+        def wrapper_function(*args, **kwargs):
+            # Get current process time and memory usage before function execution
+            start_time = time.process_time()
+            start_memory = memory_usage(-1, interval=0.1, timeout=1)[0]
+            # Run the function and get its output
+            succed = True
+            try:
+                output = func(*args, **kwargs)
+            except:
+                traceback.print_exc()
+                succed=False
+                output = None
+            # Get process time and memory usage after function execution
+            end_time = time.process_time()
+            end_memory = memory_usage(-1, interval=0.1, timeout=1)[0]
+            # Calculate time used and memory used
+            time_used = end_time - start_time
+            memory_used = end_memory - start_memory
+            # Calculate the total CPU time available
+            total_time = time_used
+            # Calculate the CPU usage of the function
+            total_cpu_count = os.cpu_count()
+            cpu_usage_for_one_core = time_used * 100
+            cpu_usage_total = cpu_usage_for_one_core / os.cpu_count()
+            # print CPU and memory usage
+            #print(f'CPU used by one core: {cpu_usage_for_one_core}%')
+            #print(f'CPU used by total cores ({total_cpu_count}): {cpu_usage_total}%')
+            #print(f'Memory used: {memory_used} MiB')
+            #print(f'Time consuming by second: {total_time}')
+            # Return the function output
+            the_version = "Latest" if version == None else version
+            the_type = "Succed" if succed else "Failed"
+            self.add_run_history(key, the_version, cpu_usage_for_one_core, memory_used, total_time, the_type)
+
+            return output
+
+        return wrapper_function
 
     def get_settings(self, key):
         data = {"scope": key}
