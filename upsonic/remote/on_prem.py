@@ -814,7 +814,8 @@ class Upsonic_On_Prem:
             key,
             version=None,
             print_exc=True,
-            pass_python_version_control=False
+            pass_python_version_control=False,
+            pass_usage_analyses=False
 
     ):
         if self.tester:
@@ -921,7 +922,7 @@ class Upsonic_On_Prem:
 
 
         #Run anayses
-        if self.enable_usage_analyses:
+        if self.enable_usage_analyses and not pass_usage_analyses:
             if inspect.isfunction(response) and self.is_usage_analyses_true(key):
                 response = self.profile_function(key, version, response)
 
