@@ -1150,8 +1150,10 @@ Suggested Position:
         data = {"scope": scope}
         return self._send_request("POST", "/get_code_of_scope", data)
 
-    def get_document(self, scope):
+    def get_document(self, scope, version=None):
         data = {"scope": scope}
+        if version != None:
+            data["version"] = version
         return self._send_request("POST", "/get_document_of_scope", data)
 
 
