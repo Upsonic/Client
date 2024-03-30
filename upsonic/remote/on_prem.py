@@ -914,7 +914,6 @@ class Upsonic_On_Prem:
                     traceback.print_exc()
         except:
             if print_exc:
-                self._log(f"Error on {key} please use same python versions")
                 if self.tester:
                     traceback.print_exc()
             else:
