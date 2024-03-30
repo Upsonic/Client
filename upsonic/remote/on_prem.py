@@ -1271,3 +1271,10 @@ Which one is the most similar ?
     def get_requirements(self, key):
         data = {"scope": key}
         return self._send_request("POST", "/get_requirements_of_scope", data)
+
+
+    def get_type(self, key, version=None):
+        data = {"scope": key}
+        if version != None:
+            data["version"] = version
+        return self._send_request("POST", "/get_type_of_scope", data)
