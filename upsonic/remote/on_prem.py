@@ -3,7 +3,7 @@
 
 import json
 import ast
-
+from functools import wraps
 from hashlib import sha256
 
 import pickle
@@ -942,6 +942,7 @@ class Upsonic_On_Prem:
 
 
     def profile_function(self, key, version, func):
+        @wraps(func)
         def wrapper_function(*args, **kwargs):
             # Get current process time and memory usage before function execution
             start_time = time.process_time()
