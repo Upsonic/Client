@@ -14,6 +14,23 @@ import dill
 import pickle
 import importlib.util
 
+
+def upsonic_serializer(func):
+    the_source = dill.source.findsource(func)
+    the_full_string = ""
+    for each in the_source[0]:
+        the_full_string += each
+    imports = [line + "\n" for line in the_full_string.split('\n')
+               if line.lstrip().startswith('import ') or line.lstrip().startswith('from ')]
+
+    the_import_string = ""
+    for each in imports:
+        the_import_string += each
+
+    the_function_string = dill.source.getsource(func)
+
+    return the_import_string + "\n" + the_function_string
+
 def encrypt(key, message, engine, byref, recurse, protocol, source, builtin):
 
 
@@ -33,9 +50,9 @@ def encrypt(key, message, engine, byref, recurse, protocol, source, builtin):
         dumped = cloudpickle.dumps(message, protocol=protocol)
     elif engine == "dill":
         dumped = dill.dumps(message, protocol=protocol, byref=byref, recurse=recurse)
-    elif engine == "importable":
+    elif engine == "upsonic_serializer":
         name_of_object = dill.source.getname(message)
-        dumped = {"name": name_of_object, "importable": dill.source.importable(message, source=source, builtin=builtin)}
+        dumped = {"name": name_of_object, "upsonic_serializer": upsonic_serializer(message)}
         dumped = pickle.dumps(dumped, protocol=1)
 
 
@@ -53,7 +70,7 @@ def decrypt(key, message, engine):
         loaded = cloudpickle.loads(fernet.decrypt(message))
     elif engine == "dill":
         loaded = dill.loads(fernet.decrypt(message))
-    elif engine == "importable":
+    elif engine == "upsonic_serializer":
 
         loaded = pickle.loads(fernet.decrypt(message))
 
@@ -72,7 +89,7 @@ def decrypt(key, message, engine):
 
             return getattr(module, function_name)
 
-        loaded = extract(loaded["importable"], loaded["name"])
+        loaded = extract(loaded["upsonic_serializer"], loaded["name"])
 
     return loaded
 
