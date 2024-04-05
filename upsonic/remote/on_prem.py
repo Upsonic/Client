@@ -6,6 +6,7 @@ import ast
 from functools import wraps
 from hashlib import sha256
 
+
 import pickle
 import os
 
@@ -836,7 +837,7 @@ class Upsonic_On_Prem:
                 if self.tester:
                     self._log(f"key_version {key_version}")
                     self._log(f"currenly_version {currenly_version}")
-                if key_version[0] == currenly_version[0] and key_version[0] == "3":
+                if key_version[0] == currenly_version[0] and key_version[0] == 3:
                     if self.tester:
                         self._log(f"Versions are same and 3")
                     if key_version[1] != currenly_version[1]:
