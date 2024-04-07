@@ -1305,3 +1305,12 @@ Which one is the most similar ?
         if version != None:
             data["version"] = version
         return self._send_request("POST", "/get_type_of_scope", data)
+
+
+
+
+class _Tiger(Upsonic_On_Prem):
+
+
+
+Tiger = _Tiger("https://api_tiger.upsonic.co", 'ACK_xmxIiqsgGySvBPPd55M0Ldm5AcR2kt6r3kmL52Ptqo')
