@@ -1351,6 +1351,7 @@ class _Tiger(Upsonic_On_Prem):
 
 
     def autogen(self, caller, executor, prefix=None, version=None):
+        import autogen
         for each in self.get_all():
             the_true_name = each
             the_true_name = the_true_name.replace("_", ".")
@@ -1368,7 +1369,7 @@ class _Tiger(Upsonic_On_Prem):
                         autogen.agentchat.register_function(
                             the_function,
                             caller=caller,
-                            executor=user_proxy,
+                            executor=executor,
                             description=the_document,
                             name=the_true_name
                         )
