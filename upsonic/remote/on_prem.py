@@ -1291,6 +1291,13 @@ Which one is the most similar ?
         }
         return self._send_request("POST", "/dump_requirements", data)
 
+    def clear_requirements(self, key):
+        data = {
+            "scope": key,
+            "requirements": "",
+        }
+        return self._send_request("POST", "/dump_requirements", data)
+
     def get_type(self, key, version=None):
         data = {"scope": key}
         if version != None:
