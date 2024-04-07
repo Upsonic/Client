@@ -23,11 +23,8 @@ from .remote import requires
 from .remote import encrypt
 from .remote import decrypt
 
-from rich.console import Console
-
 from .remote import interface
 
-console = Console()
 
 open_databases = {}
 

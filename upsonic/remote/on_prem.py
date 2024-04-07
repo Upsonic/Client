@@ -38,6 +38,14 @@ import traceback
 import os, hashlib, shutil
 from memory_profiler import memory_usage
 
+from rich.console import Console
+
+console = Console()
+from .remote.localimport import localimport
+from .remote.interface import encrypt
+from .remote.interface import decrypt
+
+
 def extract_needed_libraries(func, debug=False):
     result = {}
     the_globals = dill.detect.globalvars(func)
@@ -123,22 +131,22 @@ class Upsonic_On_Prem:
 
     @property
     def console(self):
-        from upsonic import console
+
         return console
 
     @property
     def localimport(self):
-        from upsonic import localimport
+
         return localimport
 
     @property
     def encrypt(self):
-        from upsonic import encrypt
+
         return encrypt
 
     @property
     def decrypt(self):
-        from upsonic import decrypt
+
         return decrypt
 
 
