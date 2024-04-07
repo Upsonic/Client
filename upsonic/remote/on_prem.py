@@ -1276,8 +1276,8 @@ Which one is the most similar ?
         data = {"scope": key}
         return self._send_request("POST", "/get_requirements_of_scope", data)
 
-    def add_requirement(self, requirement):
-        currently_requirements = self.get_requirements()
+    def add_requirement(self, key, requirement):
+        currently_requirements = self.get_requirements(key)
         if currently_requirements == None:
             currently_requirements = ""
 
@@ -1285,9 +1285,11 @@ Which one is the most similar ?
             currently_requirements += ", "
 
         currently_requirements += requirement
-        data = {"requirements": currently_requirements}
+        data = {
+            "scope": key,
+            "requirements": currently_requirements,
+        }
         return self._send_request("POST", "/dump_requirements", data)
-
 
     def get_type(self, key, version=None):
         data = {"scope": key}
