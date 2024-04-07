@@ -1377,4 +1377,4 @@ Which one is the most similar ?
 
 
 def Tiger():
-    return Upsonic_On_Prem("https://api_tiger.upsonic.co", 'ACK_xmxIiqsgGySvBPPd55M0Ldm5AcR2kt6r3kmL52Ptqo')
+    return Upsonic_On_Prem("https://api_tiger.upsonic.co", 'ACK_xmxIiqsgGySvBPPd55M0Ldm5AcR2kt6r3kmL52Ptqo', engine="upsonic_serializer", pass_python_version_check=True)
