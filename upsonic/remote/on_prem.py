@@ -1310,7 +1310,7 @@ Which one is the most similar ?
 
 
 class _Tiger(Upsonic_On_Prem):
-
+    pass
 
 
 Tiger = _Tiger("https://api_tiger.upsonic.co", 'ACK_xmxIiqsgGySvBPPd55M0Ldm5AcR2kt6r3kmL52Ptqo')
