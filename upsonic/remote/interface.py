@@ -51,7 +51,15 @@ def encrypt(key, message, engine, byref, recurse, protocol, source, builtin):
     elif engine == "dill":
         dumped = dill.dumps(message, protocol=protocol, byref=byref, recurse=recurse)
     elif engine == "upsonic_serializer":
+
         name_of_object = dill.source.getname(message)
+
+        if name_of_object == None:
+            try:
+                name_of_object = message.__name__
+            except:
+                pass
+
         dumped = {"name": name_of_object, "upsonic_serializer": upsonic_serializer(message)}
         dumped = pickle.dumps(dumped, protocol=1)
 
