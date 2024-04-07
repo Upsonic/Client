@@ -1318,10 +1318,6 @@ Which one is the most similar ?
             data["version"] = version
         return self._send_request("POST", "/get_type_of_scope", data)
 
-
-
-
-class _Tiger(Upsonic_On_Prem):
     def langchain(self, prefix=None, version=None):
         from langchain.pydantic_v1 import BaseModel, Field
         from langchain.tools import BaseTool, StructuredTool, tool
@@ -1378,5 +1374,7 @@ class _Tiger(Upsonic_On_Prem):
                         pass
 
 
+
+
 def Tiger():
-    return _Tiger("https://api_tiger.upsonic.co", 'ACK_xmxIiqsgGySvBPPd55M0Ldm5AcR2kt6r3kmL52Ptqo')
+    return Upsonic_On_Prem("https://api_tiger.upsonic.co", 'ACK_xmxIiqsgGySvBPPd55M0Ldm5AcR2kt6r3kmL52Ptqo')
