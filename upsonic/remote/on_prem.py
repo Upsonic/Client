@@ -1322,7 +1322,59 @@ Which one is the most similar ?
 
 
 class _Tiger(Upsonic_On_Prem):
-    pass
+    def langchain(self, prefix=None, version=None):
+        from langchain.pydantic_v1 import BaseModel, Field
+        from langchain.tools import BaseTool, StructuredTool, tool
+        all_functions = []
+        for each in self.get_all():
+            the_true_name = each
+            the_true_name = the_true_name.replace("_", ".")
+            the_true_name = the_true_name.replace(".", "_")
+            if prefix != None:
+                if not each.startswith(prefix):
+                    continue
+            if self.get_type(each) == "function":
+                the_function = self.get(each, version=version)
+                if inspect.isfunction(the_function):
+                    the_document = self.get_document(each, version=version) or " "
+                    the_function.__doc__ = the_document
+                    try:
+                        the_tool = tool(the_function)
+                        original_name = the_tool.name
+                        the_tool.name = the_true_name
+                        the_tool.description = the_tool.description.replace(original_name, the_true_name)[:1000]
+                        all_functions.append(the_tool)
+                    except:
+                        traceback.print_exc()
+                        pass
+        return all_functions
+
+
+    def autogen(self, caller, executor, prefix=None, version=None):
+        for each in self.get_all():
+            the_true_name = each
+            the_true_name = the_true_name.replace("_", ".")
+            the_true_name = the_true_name.replace(".", "_")
+            if prefix != None:
+                if not each.startswith(prefix):
+                    continue
+            if self.get_type(each) == "function":
+                the_function = self.get(each, version=version)
+                if inspect.isfunction(the_function):
+                    the_document = self.get_document(each, version=version) or " "
+                    the_function.__doc__ = the_document
+                    try:
+                        the_document = the_document.replace(each, the_true_name).replace(each.split(".")[-1], the_true_name)[:1000]
+                        autogen.agentchat.register_function(
+                            the_function,
+                            caller=caller,
+                            executor=user_proxy,
+                            description=the_document,
+                            name=the_true_name
+                        )
+                    except:
+                        traceback.print_exc()
+                        pass
 
 
 def Tiger():
