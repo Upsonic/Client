@@ -21,7 +21,7 @@ def upsonic_serializer(func):
     for each in the_source[0]:
         the_full_string += each
     imports = [line + "\n" for line in the_full_string.split('\n')
-               if line.lstrip().startswith('import ') or line.lstrip().startswith('from ')]
+               if line.startswith('import ') or line.startswith('from ')]
 
     the_import_string = ""
     for each in imports:
