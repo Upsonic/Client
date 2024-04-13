@@ -830,7 +830,8 @@ class Upsonic_On_Prem:
             version=None,
             print_exc=True,
             pass_python_version_control=False,
-            pass_usage_analyses=False
+            pass_usage_analyses=False,
+            try_to_extract_importable=False
 
     ):
         if self.tester:
@@ -918,10 +919,10 @@ class Upsonic_On_Prem:
                 try:
                     if the_requirements_path is not None:
                         with self.localimport(the_requirements_path) as _importer:
-                            response = self.decrypt(encryption_key, value, engine)
+                            response = self.decrypt(encryption_key, value, engine, try_to_extract_importable=try_to_extract_importable)
                             break
                     else:
-                        response = self.decrypt(encryption_key, value, engine)
+                        response = self.decrypt(encryption_key, value, engine, try_to_extract_importable=try_to_extract_importable)
                         break
                 except:
                     response = "Error"

@@ -67,7 +67,7 @@ def encrypt(key, message, engine, byref, recurse, protocol, source, builtin):
     encrypted_message = fernet.encrypt(dumped)
     return encrypted_message
 
-def decrypt(key, message, engine):
+def decrypt(key, message, engine, try_to_extract_importable=False):
     from cryptography.fernet import Fernet
     import base64
     import hashlib    
@@ -82,6 +82,8 @@ def decrypt(key, message, engine):
 
         loaded = pickle.loads(fernet.decrypt(message))
 
+        if try_to_extract_importable:
+            return loaded["upsonic_serializer"]
 
         def extract(code_string, function_name):
             tmp_dir = os.path.dirname(os.path.abspath(__file__))
