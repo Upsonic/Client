@@ -1318,6 +1318,13 @@ Which one is the most similar ?
             data["version"] = version
         return self._send_request("POST", "/get_type_of_scope", data)
 
+    def get_code(self, key, version=None):
+        data = {"scope": key}
+        if version != None:
+            data["version"] = version
+        return self._send_request("POST", "/get_code_of_scope", data)
+
+
     def langchain(self, prefix=None, version=None):
         from langchain.pydantic_v1 import BaseModel, Field
         from langchain.tools import BaseTool, StructuredTool, tool
