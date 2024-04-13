@@ -22,7 +22,7 @@ from .remote import no_exception
 from .remote import requires
 from .remote import encrypt
 from .remote import decrypt
-
+from .remote import upsonic_serializer
 from .remote import interface
 
 
