@@ -1454,7 +1454,7 @@ Which one is the most similar ?
                     pass
 
         for each_f in all_functions:
-            print(agent.computer.run("python", each_f.function))
+            agent.computer.run("python", each_f.function)
 
         agent.system_message += r"""
     # THE OTHER APIs
