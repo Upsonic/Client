@@ -9,6 +9,7 @@ from hashlib import sha256
 
 import pickle
 import os
+import re
 
 import copy
 from cryptography.fernet import Fernet
@@ -1409,6 +1410,69 @@ Which one is the most similar ?
                         traceback.print_exc()
                         pass
 
+
+    def openinterpreter(self, agent, prefix=None, version=None):
+        def replace_function_name(input_string, new_function_name):
+            result = re.sub(r"(def )(\w+)", f"\g<1>{new_function_name}", input_string)
+            return result
+
+        def extract_function_definition(input_string):
+            function_name = input_string.split('def ')[1].split(')')[0]
+
+            return function_name + ")"
+
+        class open_interpreter_tool:
+            def __init__(self, function, name, document):
+                self.name = name
+                self.description = document
+                self.function = replace_function_name(function, name)
+
+            @property
+            def type_for_prompt(self):
+                the_description = self.description[:200]
+                the_description.replace("\n", " ")
+                return extract_function_definition(self.function).replace("\n", " ") + " #" + the_description
+
+        all_functions = []
+        for each in self.get_all():
+            the_true_name = each
+            original_name = each
+            the_true_name = the_true_name.replace("_", ".")
+            the_true_name = the_true_name.replace(".", "_")
+            if prefix != None:
+                if not each.startswith(prefix):
+                    continue
+            if self.get_type(each) == "function":
+                the_function = self.get(each, version=version, try_to_extract_importable=True)
+                the_document = self.get_document(each, version=version) or " "
+                the_document = the_document.replace(original_name.split(".")[-1], the_true_name)[:1000]
+                try:
+                    the_tool = open_interpreter_tool(the_function, the_true_name, the_document)
+                    all_functions.append(the_tool)
+                except:
+                    traceback.print_exc()
+                    pass
+
+        for each_f in all_functions:
+            print(agent.computer.run("python", each_f.function))
+
+        agent.system_message += r"""
+    # THE OTHER APIs
+    
+    These functions ALREADY IMPORTED, and can be used for many tasks:
+    
+    ```python
+    
+    """
+
+        for each_f in all_functions:
+            agent.system_message += each_f.type_for_prompt + "\n\n"
+
+        agent.system_message += r"""
+    ```
+    
+    Do not import the anythink, They are already imported.
+    """
 
 
 
