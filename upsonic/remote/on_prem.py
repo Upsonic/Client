@@ -1413,7 +1413,7 @@ Which one is the most similar ?
 
     def openinterpreter(self, agent, prefix=None, version=None):
         def replace_function_name(input_string, new_function_name):
-            result = re.sub(r"(def )(\w+)", f"\g<1>{new_function_name}", input_string)
+            result = re.sub(r"^(def )(\w+)", f"\g<1>{new_function_name}", input_string, flags=re.MULTILINE)
             return result
 
         def extract_function_definition(input_string):
