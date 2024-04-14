@@ -1332,6 +1332,8 @@ Which one is the most similar ?
         from langchain.tools import BaseTool, StructuredTool, tool
         all_functions = []
         for each in self.get_all():
+            if each.endswith("__user"):
+                continue
             the_true_name = each
             the_true_name = the_true_name.replace("_", ".")
             the_true_name = the_true_name.replace(".", "_")
@@ -1360,6 +1362,8 @@ Which one is the most similar ?
         from crewai_tools import tool
         all_functions = []
         for each in self.get_all():
+            if each.endswith("__user"):
+                continue
             the_true_name = each
             the_true_name = the_true_name.replace("_", ".")
             the_true_name = the_true_name.replace(".", "_")
@@ -1386,6 +1390,8 @@ Which one is the most similar ?
     def autogen(self, caller, executor, prefix=None, version=None):
         import autogen
         for each in self.get_all():
+            if each.endswith("__user"):
+                continue
             the_true_name = each
             the_true_name = the_true_name.replace("_", ".")
             the_true_name = the_true_name.replace(".", "_")
@@ -1435,6 +1441,8 @@ Which one is the most similar ?
 
         all_functions = []
         for each in self.get_all():
+            if each.endswith("__user"):
+                continue
             the_true_name = each
             original_name = each
             the_true_name = the_true_name.replace("_", ".")
