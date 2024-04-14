@@ -1459,11 +1459,11 @@ Which one is the most similar ?
             agent.computer.run("python", each_f.function)
 
         agent.system_message += r"""
-    # THE OTHER APIs
+# THE OTHER APIs
     
-    These functions ALREADY IMPORTED, and can be used for many tasks:
+These functions ALREADY IMPORTED, and can be used for many tasks:
     
-    ```python
+```python
     
     """
 
@@ -1471,9 +1471,9 @@ Which one is the most similar ?
             agent.system_message += each_f.type_for_prompt + "\n\n"
 
         agent.system_message += r"""
-    ```
+```
     
-    Do not import the anythink, They are already imported.
+Do not import the anythink, They are already imported.
     """
 
 
