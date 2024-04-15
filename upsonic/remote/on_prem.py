@@ -226,7 +226,7 @@ class Upsonic_On_Prem:
 
                 return result
             except:  # pragma: no cover
-                print(f"Error on '{self.api_url + endpoint}': ", response.text)
+                print(f"Error on '{self.api_url + endpoint}': ", response.text) if self.tester else None
                 return [None]  # pragma: no cover
         except:
             print("Error: Remote is down")
