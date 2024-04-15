@@ -1007,7 +1007,7 @@ class Upsonic_On_Prem:
     def is_usage_analyses_true(self, key):
         settings = self.get_settings(key)
 
-        if settings == None:
+        if settings == None or settings == [None]:
             cpu_usage_analyses = False
         else:
             if "usage_analyses" in settings:
