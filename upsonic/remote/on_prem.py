@@ -958,6 +958,10 @@ class Upsonic_On_Prem:
         self._send_request("POST", "/dump_run", data)
 
 
+    def get_dump_history(self, key):
+        data = {"scope": key}
+        return self._send_request("POST", "/get_dump_history", data)
+
     def profile_function(self, key, version, func):
         @wraps(func)
         def wrapper_function(*args, **kwargs):
@@ -990,7 +994,12 @@ class Upsonic_On_Prem:
             #print(f'Memory used: {memory_used} MiB')
             #print(f'Time consuming by second: {total_time}')
             # Return the function output
-            the_version = "Latest" if version == None else version
+            the_version = None
+            if version == None:
+                latest_commit = self.get_latest_commit(key)[0].split(":")[1]
+                the_version = latest_commit
+            else:
+                the_version = version
             the_type = "Succed" if succed else "Failed"
             try:
                 self.add_run_history(key, the_version, cpu_usage_for_one_core, memory_used, total_time, the_type)
