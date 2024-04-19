@@ -996,7 +996,7 @@ class Upsonic_On_Prem:
             # Return the function output
             the_version = None
             if version == None:
-                latest_commit = self.get_latest_commit(key)[0].split(":")[1]
+                latest_commit = self.get_dump_history(key)[0].split(":")[1]
                 the_version = latest_commit
             else:
                 the_version = version
