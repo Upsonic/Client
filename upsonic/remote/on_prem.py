@@ -940,7 +940,10 @@ class Upsonic_On_Prem:
         #Run anayses
         if self.enable_usage_analyses and not pass_usage_analyses:
             if inspect.isfunction(response) and self.is_usage_analyses_true(key):
-                response = self.profile_function(key, version, response)
+                commit = None
+                if version == None:
+                    commit = self.get_dump_history(key)[0].split(":")[1]
+                response = self.profile_function(key, version, commit, response)
 
 
         return response
@@ -962,7 +965,7 @@ class Upsonic_On_Prem:
         data = {"scope": key}
         return self._send_request("POST", "/get_dump_history", data)
 
-    def profile_function(self, key, version, func):
+    def profile_function(self, key, version, commit, func):
         @wraps(func)
         def wrapper_function(*args, **kwargs):
             # Get current process time and memory usage before function execution
@@ -996,7 +999,7 @@ class Upsonic_On_Prem:
             # Return the function output
             the_version = None
             if version == None:
-                latest_commit = self.get_dump_history(key)[0].split(":")[1]
+                latest_commit = commit
                 the_version = latest_commit
             else:
                 the_version = version
