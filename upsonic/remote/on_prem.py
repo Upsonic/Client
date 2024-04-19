@@ -820,10 +820,12 @@ class Upsonic_On_Prem:
             "data": fernet.encrypt(dumped)
         }
 
-        self._send_request("POST", "/dump", data)
+        response = self._send_request("POST", "/dump", data)
 
-
-        return True
+        if response != [None]:
+            return True
+        else:
+            return False
 
     def get(
             self,
