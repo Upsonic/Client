@@ -6,4 +6,3 @@ requests
 python-dotenv
 cloudpickle
 memory-profiler==0.61.0
-readline

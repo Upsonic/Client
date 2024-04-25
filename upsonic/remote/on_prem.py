@@ -886,6 +886,8 @@ class Upsonic_On_Prem:
         try:
             fernet_key = base64.urlsafe_b64encode(hashlib.sha256(encryption_key.encode()).digest())
             fernet = Fernet(fernet_key)
+            #Turn response to bytes
+            response = response.encode()
             response = pickle.loads(fernet.decrypt(response))
             if self.tester:
                 self._log(f"response {response}")

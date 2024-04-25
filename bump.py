@@ -38,8 +38,7 @@ def update_version(version):
             f.seek(0)
             f.write(content)
 
-def create_tag(version):
-    os.system(f"git tag v{version}")
+
 
 def create_commit(version):
     os.system("git add .")
@@ -48,7 +47,7 @@ def create_commit(version):
 
 def push():
     os.system("git push")
-    os.system("git push --tag")
+
 
 def main():
     part = sys.argv[1]
@@ -57,7 +56,7 @@ def main():
     write_version(new_version)
     update_version(new_version)
     create_commit(new_version)
-    create_tag(new_version)
+
     push()
 
 if __name__ == '__main__':
