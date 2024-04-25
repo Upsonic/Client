@@ -1,4 +1,4 @@
-from .controller import Upsonic_Remote
+
 from .on_prem import Upsonic_On_Prem, Tiger, Tiger_Admin
 from .interface import Upsonic_Cloud_Free
 from .interface import Upsonic_Cloud_Pro

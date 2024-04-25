@@ -10,7 +10,7 @@ except:
     pass
 
 from .remote import localimport
-from .remote import Upsonic_Remote
+
 from .remote import Upsonic_On_Prem, Tiger, Tiger_Admin
 from .remote import Upsonic_Cloud_Free
 from .remote import Upsonic_Cloud_Pro

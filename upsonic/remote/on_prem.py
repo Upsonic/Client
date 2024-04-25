@@ -27,7 +27,7 @@ from contextlib import contextmanager
 
 import sys
 
-from rich.progress import Progress
+
 
 import textwrap
 import dill
@@ -40,10 +40,6 @@ import os, hashlib, shutil
 from memory_profiler import memory_usage
 
 
-
-from rich.console import Console
-
-console = Console()
 
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 from remote.localimport import localimport
@@ -125,7 +121,7 @@ class Upsonic_On_Prem:
         return the_string[:-2]
 
     def _log(self, message):
-        self.console.log(message)
+        print(message)
 
     def __enter__(self):
         return self  # pragma: no cover
@@ -133,11 +129,6 @@ class Upsonic_On_Prem:
     def __exit__(self, exc_type, exc_val, exc_tb):
         pass  # pragma: no cover
 
-
-    @property
-    def console(self):
-
-        return console
 
     @property
     def localimport(self):
@@ -859,10 +850,9 @@ class Upsonic_On_Prem:
                     if self.tester:
                         self._log(f"Versions are same and 3")
                     if key_version[1] != currenly_version[1]:
-                        if self.tester:
-                            self._log("Minor versions are different")
-                        if int(currenly_version[1]) >= 11 or int(key_version[1]) >= 11:
-                            if int(currenly_version[1]) < 11 or int(key_version[1]) < 11:
+                                if self.tester:
+                                    self._log("Minor versions are different")
+
                                 versions_are_different = True
                                 self._log(f"[bold orange]Warning: The versions are different, are you sure to continue")
                                 the_input = input("Yes or no (y/n)").lower()
