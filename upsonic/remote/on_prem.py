@@ -652,6 +652,15 @@ class Upsonic_On_Prem:
         return the_version
 
 
+
+    def get_lock(self, key):
+        data = {"scope": key}
+        lock = self._send_request("POST", "/get_lock_of_scope", data)
+        return lock
+
+
+
+
     def set(
             self,
             key,
@@ -676,6 +685,12 @@ class Upsonic_On_Prem:
 
 
 
+        try:
+            if self.get_lock(key):
+                self._log("This scope is locked now! Someone dumping.")
+                return False
+        except:
+            pass
 
 
         the_type = type(value).__name__
