@@ -691,7 +691,7 @@ class Upsonic_On_Prem:
 
 
         try:
-            if seld.get_lock(key):
+            if self.get_lock(key):
                 self._log("This scope is locked now! Someone dumping.")
                 return False
         except:
