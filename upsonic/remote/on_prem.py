@@ -663,7 +663,6 @@ class Upsonic_On_Prem:
     def get_lock(self, key):
         data = {"scope": key}
         lock = self._send_request("POST", "/get_lock_of_scope", data)
-        print("the lock: ", lock)
         return lock
 
     def set(
