@@ -660,6 +660,10 @@ class Upsonic_On_Prem:
         the_version.append(int(total.split(".")[2]))
         return the_version
 
+    def get_lock(self, key):
+        data = {"scope": key}
+        lock = self._send_request("POST", "/get_lock_of_scope", data)
+        return lock
 
     def set(
             self,
@@ -683,6 +687,14 @@ class Upsonic_On_Prem:
             self._log("Error: The key can not include multiple dot one after one'..'")
             return False
 
+
+
+        try:
+            if seld.get_lock(key):
+                self._log("This scope is locked now! Someone dumping.")
+                return False
+        except:
+            pass
 
 
 
