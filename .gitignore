@@ -3,6 +3,7 @@ upsonic_cache/
 .vscode
 
 test.py
+test.ipynb
 
 test_backup
 *.Upsonic

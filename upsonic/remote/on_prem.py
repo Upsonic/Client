@@ -614,12 +614,14 @@ class Upsonic_On_Prem:
             self,
             key,
             value,
+            message=None,
 
     ):
 
         return self.set(
             key,
             value,
+            message=message
         )
 
     def load(
@@ -665,6 +667,7 @@ class Upsonic_On_Prem:
             self,
             key,
             value,
+            message=None
     ):
 
         if key.startswith("."):
@@ -806,13 +809,6 @@ class Upsonic_On_Prem:
                 self._log(f"Error on extract_source while dumping {key}")
                 traceback.print_exc()
 
-        try:
-            the_engine_reports["extract_source"] = fernet.encrypt(pickle.dumps(extract_source(value, self.tester), protocol=1))
-        except:
-            if self.tester:
-                self._log(f"Error on extract_source while dumping {key}")
-                traceback.print_exc()
-
         if extracted_needed_libraries != None:
             the_engine_reports["extract_needed_libraries"] = fernet.encrypt(pickle.dumps(extracted_needed_libraries, protocol=1))
 
@@ -824,7 +820,8 @@ class Upsonic_On_Prem:
 
         data = {
             "scope": key,
-            "data": fernet.encrypt(dumped)
+            "data": fernet.encrypt(dumped),
+            "commit_message": message
         }
 
         response = self._send_request("POST", "/dump", data)
@@ -834,6 +831,9 @@ class Upsonic_On_Prem:
         else:
             return False
 
+    def print_code(self, key, version=None):
+        print(self.get(key, version=version, extract_source=True))
+
     def get(
             self,
             key,
@@ -841,7 +841,8 @@ class Upsonic_On_Prem:
             print_exc=True,
             pass_python_version_control=False,
             pass_usage_analyses=False,
-            try_to_extract_importable=False
+            try_to_extract_importable=False,
+            extract_source=False
 
     ):
         if self.tester:
@@ -919,6 +920,8 @@ class Upsonic_On_Prem:
                         self._log(f"Error on extracted_local_files while loading {key}")
                         traceback.print_exc()
                 response.pop("extracted_local_files")
+            if extract_source:
+                return pickle.loads(fernet.decrypt(response["extract_source"]))                
             if "extract_source" in response:
                 response.pop("extract_source")
             needed_libraries = None
