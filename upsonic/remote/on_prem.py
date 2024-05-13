@@ -623,12 +623,14 @@ class Upsonic_On_Prem:
             self,
             key,
             value,
+            message=None,
 
     ):
 
         return self.set(
             key,
             value,
+            message=message
         )
 
     def load(
@@ -669,6 +671,7 @@ class Upsonic_On_Prem:
             self,
             key,
             value,
+            message=None
     ):
 
         if key.startswith("."):
@@ -830,7 +833,8 @@ class Upsonic_On_Prem:
 
         data = {
             "scope": key,
-            "data": fernet.encrypt(dumped)
+            "data": fernet.encrypt(dumped),
+            "commit_message": message
         }
 
         response = self._send_request("POST", "/dump", data)
