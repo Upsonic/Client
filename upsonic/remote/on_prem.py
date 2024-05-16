@@ -1536,7 +1536,7 @@ Do not import the anythink, They are already imported.
 
         from .ollama_langchain import Ollama
 
-        llm = Ollama(model=f"{model}**{self.password}", base_url = self.api_url+'/ollama/') 
+        llm = Ollama(model=f"{model}**{self.password}", base_url = self.api_url+'/ollama') 
         return llm
 
 
