@@ -1519,6 +1519,27 @@ Do not import the anythink, They are already imported.
 
 
 
+
+    def return_openai_llm(self, model=None):
+
+        from langchain_openai import OpenAI
+        import httpx
+        httpx_client = httpx.Client(verify=False)
+
+        llm = OpenAI(openai_api_key=self.password, http_client=httpx_client, openai_api_base=self.api_url+'/openai/', model_name=model)        
+        return llm
+
+
+
+
+    def return_ollama_llm(self, model=None):
+
+        from .ollama_langchain import Ollama
+
+        llm = Ollama(model=f"{model}**{self.password}", base_url = self.api_url+'/ollama/') 
+        return llm
+
+
 def Tiger():
     return Upsonic_On_Prem("https://api_tiger.upsonic.co", 'ACK_xmxIiqsgGySvBPPd55M0Ldm5AcR2kt6r3kmL52Ptqo', engine="upsonic_serializer", pass_python_version_check=True)
 
