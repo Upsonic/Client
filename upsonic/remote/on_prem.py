@@ -1526,7 +1526,7 @@ Do not import the anythink, They are already imported.
         import httpx
         httpx_client = httpx.Client(verify=False)
 
-        llm = ChatOpenAI(openai_api_key=self.password, http_client=httpx_client, api_base=self.api_url+'/openai/', model_name=model)        
+        llm = ChatOpenAI(openai_api_key=self.password, http_client=httpx_client, openai_api_base=self.api_url+'/openai/', model_name=model)        
         return llm
 
 
