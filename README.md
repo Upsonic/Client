@@ -48,8 +48,8 @@ Once the container is up and running, you can install the Upsonic Python Client 
 Here's an updated quickstart guide to get you up and running with your container:
 
 ```python
-from upsonic import Upsonic_On_Prem
-upsonic = Upsonic_On_Prem('https://your-server-address:5000', 'ACK_****************')
+from upsonic import UpsonicOnPrem
+upsonic = UpsonicOnPrem('https://your-server-address:5000', 'ACK_****************')
 
 
 
