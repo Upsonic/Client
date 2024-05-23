@@ -1529,6 +1529,13 @@ Do not import the anythink, They are already imported.
         return llm
 
 
+
+
+class UpsonicOnPrem(Upsonic_On_Prem):
+    pass
+
+
+
 def Tiger():
     return Upsonic_On_Prem("https://api_tiger.upsonic.co", 'ACK_xmxIiqsgGySvBPPd55M0Ldm5AcR2kt6r3kmL52Ptqo', engine="upsonic_serializer", pass_python_version_check=True)
 
