@@ -424,15 +424,16 @@ class Upsonic_On_Prem:
 
     def load_module(self, module_name, version=None):
         import concurrent.futures
+        import multiprocessing
         import traceback
         import types        
         encryption_key = "u"
-        version_check_pass = False
+        version_check_pass = multiprocessing.Manager().Value('b', False)  # Shared boolean value
         the_all = self.get_all()
         original_name = module_name
         sub_module_name = module_name.replace(".", "_") if "." in module_name else False
 
-        manager = concurrent.futures.Manager()
+        manager = multiprocessing.Manager()
         the_all_imports = manager.dict()
 
         def process_item(i):
@@ -446,10 +447,10 @@ class Upsonic_On_Prem:
             name = i.split(".")
             if module_name == name[0]:
                 try:
-                    if not self.pass_python_version_check and not version_check_pass:
+                    if not self.pass_python_version_check and not version_check_pass.value:
                         key_version = self.get_python_version(original_i)
                         currenly_version = self.get_currently_version()
-                        if self.ttester:
+                        if self.tester:
                             self._log(f"key_version {key_version}")
                             self._log(f"currenly_version {currenly_version}")
                         if key_version[0] == currenly_version[0] and key_version[0] == "3":
@@ -467,8 +468,7 @@ class Upsonic_On_Prem:
                                     currenly_version = f"{currenly_version[0]}.{currenly_version[1]}"
                                     return "Python versions is different (Key == " + key_version + " This runtime == " + currenly_version + ")"
                                 if the_input == "y":
-                                    nonlocal version_check_pass
-                                    version_check_pass = True
+                                    version_check_pass.value = True
                 except:
                     if self.tester:
                         traceback.print_exc()
