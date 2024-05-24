@@ -421,16 +421,17 @@ class Upsonic_On_Prem:
         globals()[name] = value
 
 
-
     def load_module(self, module_name, version=None):
         import concurrent.futures
         import multiprocessing
         import traceback
         import types
 
+
         encryption_key = "u"
         version_check_pass = multiprocessing.Manager().Value('b', False)  # Shared boolean value
         the_all = self.get_all()
+        print(f"[DEBUG] the_all: {the_all}")
         original_name = module_name
         sub_module_name = module_name.replace(".", "_") if "." in module_name else False
 
@@ -451,18 +452,14 @@ class Upsonic_On_Prem:
                     if not self.pass_python_version_check and not version_check_pass.value:
                         key_version = self.get_python_version(original_i)
                         currenly_version = self.get_currently_version()
-                        if self.tester:
-                            self._log(f"key_version {key_version}")
-                            self._log(f"currenly_version {currenly_version}")
+                        print(f"[DEBUG] key_version: {key_version}")
+                        print(f"[DEBUG] currenly_version: {currenly_version}")
                         if key_version[0] == currenly_version[0] and key_version[0] == "3":
-                            if self.tester:
-                                self._log(f"Versions are same and 3")
+                            print("[DEBUG] Versions are same and 3")
                             if key_version[1] != currenly_version[1]:
-                                if self.tester:
-                                    self._log("Minor versions are different")
+                                print("[DEBUG] Minor versions are different")
 
-                                self._log(
-                                    f"[bold orange]Warning: The versions are different, are you sure to continue")
+                                print("[bold orange]Warning: The versions are different, are you sure to continue")
                                 the_input = input("Yes or no (y/n)").lower()
                                 if the_input == "n":
                                     key_version = f"{key_version[0]}.{key_version[1]}"
@@ -471,8 +468,7 @@ class Upsonic_On_Prem:
                                 if the_input == "y":
                                     version_check_pass.value = True
                 except:
-                    if self.tester:
-                        traceback.print_exc()
+                    traceback.print_exc()
                     return
 
                 try:
@@ -490,8 +486,11 @@ class Upsonic_On_Prem:
                     else:
                         data = self.get(original_i, pass_python_version_control=True)
                     
+                    print(f"[DEBUG] Added to the_all_imports: {i} -> {data}")
+
                     the_all_imports[i] = data
-                except:
+                except Exception as e:
+                    print(f"[DEBUG] Exception while getting data for {original_i}: {e}")
                     the_all_imports[i] = self.get(original_i, pass_python_version_control=True)
 
         with concurrent.futures.ProcessPoolExecutor() as executor:
@@ -509,19 +508,21 @@ class Upsonic_On_Prem:
                 current_dict[modules[-1]] = value
             return result
 
+        print(f"[DEBUG] the_all_imports: {dict(the_all_imports)}")
+
         if len(the_all_imports) == 0:
-            if self.tester:
-                self._log("No imports were added. Check if the 'self.get' function and conditions are correct.")
-                self._log(f"module_name: {module_name}")
-                self._log(f"version: {version}")
-                self._log(f"the_all: {the_all}")
+            print("[DEBUG] No imports were added. Check if the 'self.get' function and conditions are correct.")
+            print(f"[DEBUG] module_name: {module_name}")
+            print(f"[DEBUG] version: {version}")
+            print(f"[DEBUG] the_all: {the_all}")
 
         generated_library = create_module_obj(dict(the_all_imports)).get(module_name, None)
         if generated_library is None:
-            if self.tester:
-                self._log("Generated library is None. Check if module names match.")
-                self._log(f"module_name: {module_name}")
+            print("[DEBUG] Generated library is None. Check if module names match.")
+            print(f"[DEBUG] module_name: {module_name}")
+            print(f"[DEBUG] the_all_imports: {dict(the_all_imports)}")
         return generated_library
+
 
 
     def dump_module(
