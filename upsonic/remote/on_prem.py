@@ -470,7 +470,7 @@ class Upsonic_On_Prem:
                 except:
                     if self.tester:
                         traceback.print_exc()
-                def gather():
+                def gather(the_all_imports):
                     if version != None:
                         version_list_response = self.get_version_history(original_i)
                         version_list = []
@@ -496,7 +496,7 @@ class Upsonic_On_Prem:
                             the_threads.remove(each)
                     time.sleep(0.1)
                 
-                the_thread = threading.Thread(target=gather)
+                the_thread = threading.Thread(target=gather, args=(the_all_imports,))
                 the_thread.start()
                 the_threads.append(the_thread)
 
@@ -504,7 +504,7 @@ class Upsonic_On_Prem:
         for each in the_threads:
             each.join()
 
-            
+
 
         import types
 
