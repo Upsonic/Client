@@ -432,6 +432,9 @@ class Upsonic_On_Prem:
             sub_module_name = module_name.replace(".", "_")
             module_name = sub_module_name
 
+        the_threads = []
+
+
         the_all_imports = {}
         for i in the_all:
             original_i = i
@@ -467,25 +470,41 @@ class Upsonic_On_Prem:
                 except:
                     if self.tester:
                         traceback.print_exc()
+                def gather():
+                    if version != None:
+                        version_list_response = self.get_version_history(original_i)
+                        version_list = []
+                        for each_v in version_list_response:
+                            version_list.append(each_v.replace(original_i+":", ""))
 
-                if version != None:
-                    version_list_response = self.get_version_history(original_i)
-                    version_list = []
-                    for each_v in version_list_response:
-                        version_list.append(each_v.replace(original_i+":", ""))
+
+                        if version in version_list:
+                            try:
+                                the_all_imports[i] = self.get(
+                                    original_i,
+                                    version,
+                                    pass_python_version_control=True
+                                )
+                            except:
+                                the_all_imports[i] = self.get(original_i, pass_python_version_control=True)
+                    else:
+                        the_all_imports[i] = self.get(original_i, pass_python_version_control=True)
+
+                while len(the_threads) >= self.thread_number:
+                    for each in the_threads:
+                        if not each.is_alive():
+                            the_threads.remove(each)
+                    time.sleep(0.1)
+                
+                the_thread = threading.Thread(target=gather)
+                the_thread.start()
+                the_threads.append(the_thread)
 
 
-                    if version in version_list:
-                        try:
-                            the_all_imports[i] = self.get(
-                                original_i,
-                                version,
-                                pass_python_version_control=True
-                            )
-                        except:
-                            the_all_imports[i] = self.get(original_i, pass_python_version_control=True)
-                else:
-                    the_all_imports[i] = self.get(original_i, pass_python_version_control=True)
+        for each in the_threads:
+            each.join()
+
+            
 
         import types
 
