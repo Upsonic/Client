@@ -1124,8 +1124,15 @@ class Upsonic_On_Prem:
             result = dill.source.getsource(value)
         return result
 
-
     def auto_dump(self, value, ask=True, check_idea=True, print_prompts=False, model=None):
+
+        
+        if model == None:
+            model = self.get_default_ai_model()
+
+        if model == "llama3-8b":
+            check_idea = False
+
         if check_idea:
             check = self.check_idea(value, print_prompts=print_prompts, model=model)
             if check != True:
@@ -1149,6 +1156,9 @@ Currenlty Index of Library:
 ```
 {all_scopes}
 ```
+
+Your answer should be just the suggested position. Dont say any other think.
+
 
 Suggested Position:
 
@@ -1186,6 +1196,8 @@ Suggested Position:
         else:
             self.set(ai_answer, value)
             print("\nDumped")
+
+
 
 
     def get_code(self, scope):
