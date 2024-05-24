@@ -422,7 +422,9 @@ class Upsonic_On_Prem:
 
 
 
+
     def load_module(self, module_name, version=None):
+
         import concurrent.futures
         import types
 
@@ -493,7 +495,7 @@ class Upsonic_On_Prem:
                 else:
                     return (i, self.get(original_i, pass_python_version_control=True))
 
-        with concurrent.futures.ThreadPoolExecutor() as executor:
+        with concurrent.futures.ProcessPoolExecutor() as executor:
             futures = {executor.submit(process_module, i): i for i in the_all}
             for future in concurrent.futures.as_completed(futures):
                 result = future.result()
@@ -516,6 +518,8 @@ class Upsonic_On_Prem:
         generated_library = create_module_obj(the_all_imports)[module_name]
 
         return generated_library
+
+
 
 
     def dump_module(
