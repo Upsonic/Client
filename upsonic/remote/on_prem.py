@@ -110,58 +110,6 @@ def dump_local_files(extract, debug=False, local_directory=None):
         sys.path.insert(0, os.path.join(local_directory, "upsonic"))
 
 
-import concurrent.futures
-import types
-import traceback
-
-def process_module(original_i, module_name, original_name, sub_module_name, version, version_check_pass, tester, encryption_key, get_python_version, get_currently_version, get_version_history, get, pass_python_version_check):
-    i = original_i
-    if "_upsonic_" in i:
-        return
-    if sub_module_name:
-        i = i.replace(original_name, module_name)
-    name = i.split(".")
-
-    if module_name == name[0]:
-        try:
-            if not pass_python_version_check and not version_check_pass:
-                key_version = get_python_version(original_i)
-                currently_version = get_currently_version()
-                if tester:
-                    print(f"key_version {key_version}")
-                    print(f"currenly_version {currently_version}")
-                if key_version[0] == currently_version[0] and key_version[0] == "3":
-                    if tester:
-                        print(f"Versions are same and 3")
-                    if key_version[1] != currently_version[1]:
-                        if tester:
-                            print("Minor versions are different")
-
-                        print(f"[bold orange]Warning: The versions are different, are you sure to continue")
-                        the_input = input("Yes or no (y/n)").lower()
-                        if the_input == "n":
-                            key_version = f"{key_version[0]}.{key_version[1]}"
-                            currently_version = f"{currently_version[0]}.{currently_version[1]}"
-                            return "Python versions is different (Key == " + key_version + " This runtime == " + currently_version + ")"
-                        if the_input == "y":
-                            version_check_pass = True
-        except:
-            if tester:
-                traceback.print_exc()
-
-        if version is not None:
-            version_list_response = get_version_history(original_i)
-            version_list = []
-            for each_v in version_list_response:
-                version_list.append(each_v.replace(original_i + ":", ""))
-
-            if version in version_list:
-                try:
-                    return (i, get(original_i, version, pass_python_version_control=True))
-                except:
-                    return (i, get(original_i, pass_python_version_control=True))
-        else:
-            return (i, get(original_i, pass_python_version_control=True))
 
 class Upsonic_On_Prem:
     prevent_enable = False
@@ -471,8 +419,11 @@ class Upsonic_On_Prem:
     def extend_global(self, name, value):
         globals()[name] = value
 
-
     def load_module(self, module_name, version=None):
+        import concurrent.futures
+        import types
+        import traceback
+        encryption_key = "u"
         version_check_pass = False
         the_all = self.get_all()
         original_name = module_name
@@ -483,25 +434,57 @@ class Upsonic_On_Prem:
 
         the_all_imports = {}
 
-        with concurrent.futures.ProcessPoolExecutor() as executor:
-            futures = {
-                executor.submit(
-                    process_module, 
-                    i, 
-                    module_name, 
-                    original_name, 
-                    sub_module_name, 
-                    version, 
-                    version_check_pass,
-                    self.tester,
-                    "u",  # encryption_key, assuming it's constant
-                    self.get_python_version,
-                    self.get_currently_version,
-                    self.get_version_history,
-                    self.get,
-                    self.pass_python_version_check
-                ): i for i in the_all 
-            }
+        def process_module(i):
+            original_i = i
+            if "_upsonic_" in i:
+                return None
+            if sub_module_name:
+                i = i.replace(original_name, module_name)
+            name = i.split(".")
+
+            if module_name == name[0]:
+                try:
+                    if not self.pass_python_version_check and not version_check_pass:
+                        key_version = self.get_python_version(original_i)
+                        currently_version = self.get_currently_version()
+                        if self.tester:
+                            self._log(f"key_version {key_version}")
+                            self._log(f"currently_version {currently_version}")
+                        if key_version[0] == currently_version[0] and key_version[0] == "3":
+                            if self.tester:
+                                self._log(f"Versions are same and 3")
+                            if key_version[1] != currently_version[1]:
+                                if self.tester:
+                                    self._log("Minor versions are different")
+
+                                self._log(f"[bold orange]Warning: The versions are different, are you sure to continue")
+                                the_input = input("Yes or no (y/n)").lower()
+                                if the_input == "n":
+                                    key_version = f"{key_version[0]}.{key_version[1]}"
+                                    currently_version = f"{currently_version[0]}.{currently_version[1]}"
+                                    return "Python versions is different (Key == " + key_version + " This runtime == " + currently_version + ")"
+                                if the_input == "y":
+                                    version_check_pass = True
+                except:
+                    if self.tester:
+                        traceback.print_exc()
+
+                if version is not None:
+                    version_list_response = self.get_version_history(original_i)
+                    version_list = []
+                    for each_v in version_list_response:
+                        version_list.append(each_v.replace(original_i + ":", ""))
+
+                    if version in version_list:
+                        try:
+                            return (i, self.get(original_i, version, pass_python_version_control=True))
+                        except:
+                            return (i, self.get(original_i, pass_python_version_control=True))
+                else:
+                    return (i, self.get(original_i, pass_python_version_control=True))
+
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            futures = [executor.submit(process_module, i) for i in the_all]
             for future in concurrent.futures.as_completed(futures):
                 result = future.result()
                 if result:
