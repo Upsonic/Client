@@ -421,24 +421,29 @@ class Upsonic_On_Prem:
         globals()[name] = value
 
 
-    def load_module(self, module_name, version=None):
-        encryption_key = "u"
 
+    def load_module(self, module_name, version=None):
+        import concurrent.futures
+        import threading
+        import types
+        import traceback    
+        encryption_key = "u"
         version_check_pass = False
         the_all = self.get_all()
         original_name = module_name
-        sub_module_name = False
-        if "." in module_name:
-            sub_module_name = module_name.replace(".", "_")
-            module_name = sub_module_name
+        sub_module_name = module_name.replace(".", "_") if "." in module_name else False
 
         the_all_imports = {}
-        for i in the_all:
+        the_all_imports_lock = threading.Lock()
+
+        def process_item(i):
             original_i = i
             if "_upsonic_" in i:
-                continue
-            if sub_module_name != False:
+                return
+
+            if sub_module_name:
                 i = i.replace(original_name, module_name)
+
             name = i.split(".")
             if module_name == name[0]:
                 try:
@@ -452,42 +457,45 @@ class Upsonic_On_Prem:
                             if self.tester:
                                 self._log(f"Versions are same and 3")
                             if key_version[1] != currenly_version[1]:
-                                        if self.tester:
-                                            self._log("Minor versions are different")
+                                if self.tester:
+                                    self._log("Minor versions are different")
 
-                                        self._log(
-                                            f"[bold orange]Warning: The versions are different, are you sure to continue")
-                                        the_input = input("Yes or no (y/n)").lower()
-                                        if the_input == "n":
-                                            key_version = f"{key_version[0]}.{key_version[1]}"
-                                            currenly_version = f"{currenly_version[0]}.{currenly_version[1]}"
-                                            return "Python versions is different (Key == " + key_version + " This runtime == " + currenly_version + ")"
-                                        if the_input == "y":
-                                            version_check_pass = True
+                                self._log(f"[bold orange]Warning: The versions are different, are you sure to continue")
+                                the_input = input("Yes or no (y/n)").lower()
+                                if the_input == "n":
+                                    key_version = f"{key_version[0]}.{key_version[1]}"
+                                    currenly_version = f"{currenly_version[0]}.{currenly_version[1]}"
+                                    return "Python versions is different (Key == " + key_version + " This runtime == " + currenly_version + ")"
+                                if the_input == "y":
+                                    version_check_pass = True
                 except:
                     if self.tester:
                         traceback.print_exc()
+                    return
 
-                if version != None:
-                    version_list_response = self.get_version_history(original_i)
-                    version_list = []
-                    for each_v in version_list_response:
-                        version_list.append(each_v.replace(original_i+":", ""))
+                try:
+                    if version is not None:
+                        version_list_response = self.get_version_history(original_i)
+                        version_list = [each_v.replace(original_i + ":", "") for each_v in version_list_response]
+                        
+                        if version in version_list:
+                            try:
+                                data = self.get(original_i, version, pass_python_version_control=True)
+                            except:
+                                data = self.get(original_i, pass_python_version_control=True)
+                        else:
+                            data = self.get(original_i, pass_python_version_control=True)
+                    else:
+                        data = self.get(original_i, pass_python_version_control=True)
+                    
+                    with the_all_imports_lock:
+                        the_all_imports[i] = data
+                except:
+                    with the_all_imports_lock:
+                        the_all_imports[i] = self.get(original_i, pass_python_version_control=True)
 
-
-                    if version in version_list:
-                        try:
-                            the_all_imports[i] = self.get(
-                                original_i,
-                                version,
-                                pass_python_version_control=True
-                            )
-                        except:
-                            the_all_imports[i] = self.get(original_i, pass_python_version_control=True)
-                else:
-                    the_all_imports[i] = self.get(original_i, pass_python_version_control=True)
-
-        import types
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            executor.map(process_item, the_all)
 
         def create_module_obj(dictionary):
             result = {}
@@ -499,12 +507,11 @@ class Upsonic_On_Prem:
                         current_dict[module] = types.ModuleType(module)
                     current_dict = vars(current_dict[module])
                 current_dict[modules[-1]] = value
-
             return result
 
-        generated_library = create_module_obj(the_all_imports)[module_name]
-
+        generated_library = create_module_obj(the_all_imports).get(module_name, None)
         return generated_library
+
 
     def dump_module(
             self,
