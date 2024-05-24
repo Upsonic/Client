@@ -1116,17 +1116,17 @@ class Upsonic_On_Prem:
             result = dill.source.getsource(value)
         return result
 
-    def auto_dump(self, value, ask=True, check_idea=True, print_prompts=False, model=None):
+    def auto_dump(self, value, ask=True, check_function=True, print_prompts=False, model=None):
 
         
         if model == None:
             model = self.get_default_ai_model()
 
         if model == "llama3-8b":
-            check_idea = False
+            check_function = False
 
-        if check_idea:
-            check = self.check_idea(value, print_prompts=print_prompts, model=model)
+        if check_function:
+            check = self.check_function(value, print_prompts=print_prompts, model=model)
             if check != True:
                 print("Check:", check)
                 return
@@ -1203,7 +1203,7 @@ Suggested Position:
         return self._send_request("POST", "/get_document_of_scope", data)
 
 
-    def check_idea(self, value, print_prompts=False, model=None):
+    def check_function(self, value, print_prompts=False, model=None):
         code = textwrap.dedent(self.extract_source(value))
 
 
