@@ -426,7 +426,8 @@ class Upsonic_On_Prem:
         import concurrent.futures
         import multiprocessing
         import traceback
-        import types        
+        import types
+
         encryption_key = "u"
         version_check_pass = multiprocessing.Manager().Value('b', False)  # Shared boolean value
         the_all = self.get_all()
@@ -508,9 +509,19 @@ class Upsonic_On_Prem:
                 current_dict[modules[-1]] = value
             return result
 
-        generated_library = create_module_obj(the_all_imports).get(module_name, None)
-        return generated_library
+        if len(the_all_imports) == 0:
+            if self.tester:
+                self._log("No imports were added. Check if the 'self.get' function and conditions are correct.")
+                self._log(f"module_name: {module_name}")
+                self._log(f"version: {version}")
+                self._log(f"the_all: {the_all}")
 
+        generated_library = create_module_obj(dict(the_all_imports)).get(module_name, None)
+        if generated_library is None:
+            if self.tester:
+                self._log("Generated library is None. Check if module names match.")
+                self._log(f"module_name: {module_name}")
+        return generated_library
 
 
     def dump_module(
