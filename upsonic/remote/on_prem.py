@@ -697,26 +697,20 @@ class Upsonic_On_Prem:
             pass
 
 
+
+
         the_type = type(value).__name__
         if the_type == "type":
             the_type = "class"
 
         encryption_key = "u"
 
-        data = {
-            "scope": key,
-            "code": textwrap.dedent(self.extract_source(value)),
-        }
-
-        self._send_request("POST", "/dump_code", data)
+        the_code = textwrap.dedent(self.extract_source(value))
 
 
 
 
 
-        data = {"scope": key, "type": the_type}
-
-        self._send_request("POST", "/dump_type", data)
 
 
         the_requirements = Upsonic_On_Prem.export_requirement()
@@ -757,21 +751,11 @@ class Upsonic_On_Prem:
 
         if self.tester:
             self._log(f"the_original_requirements {the_original_requirements}")
-        data = {
-            "scope": key,
-            "requirements": the_original_requirements,
-        }
-
-        self._send_request("POST", "/dump_requirements", data)
 
 
+        the_version = f"{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}"
 
-        data = {
-            "scope": key,
-            "python_version": f"{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}",
-        }
 
-        self._send_request("POST", "/dump_python_version", data)
 
         fernet_key = base64.urlsafe_b64encode(hashlib.sha256(encryption_key.encode()).digest())
         fernet = Fernet(fernet_key)
@@ -809,6 +793,8 @@ class Upsonic_On_Prem:
                 self._log(f"Error on extract_source while dumping {key}")
                 traceback.print_exc()
 
+
+
         if extracted_needed_libraries != None:
             the_engine_reports["extract_needed_libraries"] = fernet.encrypt(pickle.dumps(extracted_needed_libraries, protocol=1))
 
@@ -820,16 +806,22 @@ class Upsonic_On_Prem:
 
         data = {
             "scope": key,
+            "code": the_code,
+            "type": the_type,
+            "requirements": the_original_requirements,
+            "python_version": the_version,
             "data": fernet.encrypt(dumped),
             "commit_message": message
         }
 
-        response = self._send_request("POST", "/dump", data)
+        response = self._send_request("POST", "/dump_together", data)
 
         if response != [None]:
             return True
         else:
             return False
+
+
 
     def print_code(self, key, version=None):
         print(self.get(key, version=version, extract_source=True))
