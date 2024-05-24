@@ -114,8 +114,8 @@ import concurrent.futures
 import types
 import traceback
 
-def process_module(wrapper, i, module_name, original_name, sub_module_name, version, version_check_pass):
-    original_i = i
+def process_module(original_i, module_name, original_name, sub_module_name, version, version_check_pass, tester, encryption_key, get_python_version, get_currently_version, get_version_history, get, pass_python_version_check):
+    i = original_i
     if "_upsonic_" in i:
         return
     if sub_module_name:
@@ -124,54 +124,44 @@ def process_module(wrapper, i, module_name, original_name, sub_module_name, vers
 
     if module_name == name[0]:
         try:
-            if not wrapper.pass_python_version_check and not version_check_pass:
-                key_version = wrapper.get_python_version(original_i)
-                currenly_version = wrapper.get_currently_version()
-                if wrapper.tester:
-                    wrapper._log(f"key_version {key_version}")
-                    wrapper._log(f"currenly_version {currenly_version}")
-                if key_version[0] == currenly_version[0] and key_version[0] == "3":
-                    if wrapper.tester:
-                        wrapper._log(f"Versions are same and 3")
-                    if key_version[1] != currenly_version[1]:
-                        if wrapper.tester:
-                            wrapper._log("Minor versions are different")
+            if not pass_python_version_check and not version_check_pass:
+                key_version = get_python_version(original_i)
+                currently_version = get_currently_version()
+                if tester:
+                    print(f"key_version {key_version}")
+                    print(f"currenly_version {currently_version}")
+                if key_version[0] == currently_version[0] and key_version[0] == "3":
+                    if tester:
+                        print(f"Versions are same and 3")
+                    if key_version[1] != currently_version[1]:
+                        if tester:
+                            print("Minor versions are different")
 
-                        wrapper._log(
-                            f"[bold orange]Warning: The versions are different, are you sure to continue")
+                        print(f"[bold orange]Warning: The versions are different, are you sure to continue")
                         the_input = input("Yes or no (y/n)").lower()
                         if the_input == "n":
                             key_version = f"{key_version[0]}.{key_version[1]}"
-                            currenly_version = f"{currenly_version[0]}.{currenly_version[1]}"
-                            return "Python versions is different (Key == " + key_version + " This runtime == " + currenly_version + ")"
+                            currently_version = f"{currently_version[0]}.{currently_version[1]}"
+                            return "Python versions is different (Key == " + key_version + " This runtime == " + currently_version + ")"
                         if the_input == "y":
                             version_check_pass = True
         except:
-            if wrapper.tester:
+            if tester:
                 traceback.print_exc()
 
         if version is not None:
-            version_list_response = wrapper.get_version_history(original_i)
+            version_list_response = get_version_history(original_i)
             version_list = []
             for each_v in version_list_response:
                 version_list.append(each_v.replace(original_i + ":", ""))
 
             if version in version_list:
                 try:
-                    return i, wrapper.get(
-                        original_i,
-                        version,
-                        pass_python_version_control=True
-                    )
+                    return (i, get(original_i, version, pass_python_version_control=True))
                 except:
-                    return i, wrapper.get(original_i, pass_python_version_control=True)
+                    return (i, get(original_i, pass_python_version_control=True))
         else:
-            return i, wrapper.get(original_i, pass_python_version_control=True)
-
-
-
-
-
+            return (i, get(original_i, pass_python_version_control=True))
 
 class Upsonic_On_Prem:
     prevent_enable = False
@@ -483,7 +473,6 @@ class Upsonic_On_Prem:
 
 
     def load_module(self, module_name, version=None):
-        encryption_key = "u"
         version_check_pass = False
         the_all = self.get_all()
         original_name = module_name
@@ -495,7 +484,24 @@ class Upsonic_On_Prem:
         the_all_imports = {}
 
         with concurrent.futures.ProcessPoolExecutor() as executor:
-            futures = {executor.submit(process_module, self, i, module_name, original_name, sub_module_name, version, version_check_pass): i for i in the_all}
+            futures = {
+                executor.submit(
+                    process_module, 
+                    i, 
+                    module_name, 
+                    original_name, 
+                    sub_module_name, 
+                    version, 
+                    version_check_pass,
+                    self.tester,
+                    "u",  # encryption_key, assuming it's constant
+                    self.get_python_version,
+                    self.get_currently_version,
+                    self.get_version_history,
+                    self.get,
+                    self.pass_python_version_check
+                ): i for i in the_all 
+            }
             for future in concurrent.futures.as_completed(futures):
                 result = future.result()
                 if result:
@@ -517,7 +523,6 @@ class Upsonic_On_Prem:
         generated_library = create_module_obj(the_all_imports)[module_name]
 
         return generated_library
-
 
 
 
