@@ -6,7 +6,7 @@ import ast
 from functools import wraps
 from hashlib import sha256
 
-
+import types
 import pickle
 import os
 import re
