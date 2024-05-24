@@ -428,6 +428,7 @@ class Upsonic_On_Prem:
         import traceback
         import types
 
+
         encryption_key = "u"
         version_check_pass = multiprocessing.Manager().Value('b', False)
         the_all = self.get_all()
@@ -485,13 +486,18 @@ class Upsonic_On_Prem:
                         if version in version_list:
                             try:
                                 data = self.get(original_i, version, pass_python_version_control=True)
+                                print(f"[DEBUG] Fetched data with version {version} for {original_i}: {data}")
                             except Exception as e:
                                 print(f"[DEBUG] Exception during versioned data fetch for {original_i}: {e}")
+                                traceback.print_exc()
                                 data = self.get(original_i, pass_python_version_control=True)
+                                print(f"[DEBUG] Fetched fallback data for {original_i}: {data}")
                         else:
                             data = self.get(original_i, pass_python_version_control=True)
+                            print(f"[DEBUG] Fetched data without version for {original_i}: {data}")
                     else:
                         data = self.get(original_i, pass_python_version_control=True)
+                        print(f"[DEBUG] Fetched data for {original_i}: {data}")
                     
                     if self.tester:
                         print(f"[DEBUG] Adding to the_all_imports: {i} -> {data}")
@@ -501,6 +507,7 @@ class Upsonic_On_Prem:
                     print(f"[DEBUG] Exception while getting data for {original_i}: {e}")
                     traceback.print_exc()
                     the_all_imports[i] = self.get(original_i, pass_python_version_control=True)
+                    print(f"[DEBUG] Added fallback data to the_all_imports: {i} -> {the_all_imports[i]}")
 
         with concurrent.futures.ProcessPoolExecutor() as executor:
             executor.map(process_item, the_all)
