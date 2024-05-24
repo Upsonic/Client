@@ -425,11 +425,9 @@ class Upsonic_On_Prem:
         import concurrent.futures
         import multiprocessing
         import traceback
-        import types
-
-
+        import types        
         encryption_key = "u"
-        version_check_pass = multiprocessing.Manager().Value('b', False)  # Shared boolean value
+        version_check_pass = multiprocessing.Manager().Value('b', False)
         the_all = self.get_all()
         print(f"[DEBUG] the_all: {the_all}")
         original_name = module_name
@@ -441,10 +439,12 @@ class Upsonic_On_Prem:
         def process_item(i):
             original_i = i
             if "_upsonic_" in i:
+                print(f"[DEBUG] Skipping {i}")
                 return
 
             if sub_module_name:
                 i = i.replace(original_name, module_name)
+                print(f"[DEBUG] Replaced {original_name} with {module_name} in {i}")
 
             name = i.split(".")
             if module_name == name[0]:
@@ -458,7 +458,6 @@ class Upsonic_On_Prem:
                             print("[DEBUG] Versions are same and 3")
                             if key_version[1] != currenly_version[1]:
                                 print("[DEBUG] Minor versions are different")
-
                                 print("[bold orange]Warning: The versions are different, are you sure to continue")
                                 the_input = input("Yes or no (y/n)").lower()
                                 if the_input == "n":
@@ -467,7 +466,8 @@ class Upsonic_On_Prem:
                                     return "Python versions is different (Key == " + key_version + " This runtime == " + currenly_version + ")"
                                 if the_input == "y":
                                     version_check_pass.value = True
-                except:
+                except Exception as e:
+                    print(f"[DEBUG] Exception during version check: {e}")
                     traceback.print_exc()
                     return
 
@@ -475,22 +475,26 @@ class Upsonic_On_Prem:
                     if version is not None:
                         version_list_response = self.get_version_history(original_i)
                         version_list = [each_v.replace(original_i + ":", "") for each_v in version_list_response]
-                        
+                        print(f"[DEBUG] version_list: {version_list}")
+
                         if version in version_list:
                             try:
                                 data = self.get(original_i, version, pass_python_version_control=True)
-                            except:
+                            except Exception as e:
+                                print(f"[DEBUG] Exception getting versioned data: {e}")
                                 data = self.get(original_i, pass_python_version_control=True)
                         else:
                             data = self.get(original_i, pass_python_version_control=True)
                     else:
                         data = self.get(original_i, pass_python_version_control=True)
                     
-                    print(f"[DEBUG] Added to the_all_imports: {i} -> {data}")
+                    if self.tester:
+                        print(f"[DEBUG] Added to the_all_imports: {i} -> {data}")
 
                     the_all_imports[i] = data
                 except Exception as e:
                     print(f"[DEBUG] Exception while getting data for {original_i}: {e}")
+                    traceback.print_exc()
                     the_all_imports[i] = self.get(original_i, pass_python_version_control=True)
 
         with concurrent.futures.ProcessPoolExecutor() as executor:
