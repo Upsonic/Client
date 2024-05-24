@@ -421,11 +421,13 @@ class Upsonic_On_Prem:
         globals()[name] = value
 
 
+
     def load_module(self, module_name, version=None):
         import concurrent.futures
         import multiprocessing
         import traceback
-        import types        
+        import types
+
         encryption_key = "u"
         version_check_pass = multiprocessing.Manager().Value('b', False)
         the_all = self.get_all()
@@ -438,13 +440,15 @@ class Upsonic_On_Prem:
 
         def process_item(i):
             original_i = i
-            if "_upsonic_" in i:
-                print(f"[DEBUG] Skipping {i}")
-                return
+            print(f"[DEBUG] Processing item: {i}")
 
+            if "_upsonic_" in i:
+                print(f"[DEBUG] Skipping {i} due to '_upsonic_' in name")
+                return
+            
             if sub_module_name:
                 i = i.replace(original_name, module_name)
-                print(f"[DEBUG] Replaced {original_name} with {module_name} in {i}")
+                print(f"[DEBUG] Replacing '{original_name}' with '{module_name}' in {i}")
 
             name = i.split(".")
             if module_name == name[0]:
@@ -455,19 +459,20 @@ class Upsonic_On_Prem:
                         print(f"[DEBUG] key_version: {key_version}")
                         print(f"[DEBUG] currenly_version: {currenly_version}")
                         if key_version[0] == currenly_version[0] and key_version[0] == "3":
-                            print("[DEBUG] Versions are same and 3")
+                            print("[DEBUG] Versions are the same and both are major version 3")
                             if key_version[1] != currenly_version[1]:
                                 print("[DEBUG] Minor versions are different")
-                                print("[bold orange]Warning: The versions are different, are you sure to continue")
+                                print("[bold orange]Warning: The versions are different. Are you sure you want to continue? (y/n)")
                                 the_input = input("Yes or no (y/n)").lower()
                                 if the_input == "n":
                                     key_version = f"{key_version[0]}.{key_version[1]}"
                                     currenly_version = f"{currenly_version[0]}.{currenly_version[1]}"
-                                    return "Python versions is different (Key == " + key_version + " This runtime == " + currenly_version + ")"
+                                    print("[DEBUG] Version mismatch, aborting.")
+                                    return f"Python versions differ (Key == {key_version}, Runtime == {currenly_version})"
                                 if the_input == "y":
                                     version_check_pass.value = True
                 except Exception as e:
-                    print(f"[DEBUG] Exception during version check: {e}")
+                    print(f"[DEBUG] Exception during version check for {original_i}: {e}")
                     traceback.print_exc()
                     return
 
@@ -475,13 +480,13 @@ class Upsonic_On_Prem:
                     if version is not None:
                         version_list_response = self.get_version_history(original_i)
                         version_list = [each_v.replace(original_i + ":", "") for each_v in version_list_response]
-                        print(f"[DEBUG] version_list: {version_list}")
+                        print(f"[DEBUG] version_list for {original_i}: {version_list}")
 
                         if version in version_list:
                             try:
                                 data = self.get(original_i, version, pass_python_version_control=True)
                             except Exception as e:
-                                print(f"[DEBUG] Exception getting versioned data: {e}")
+                                print(f"[DEBUG] Exception during versioned data fetch for {original_i}: {e}")
                                 data = self.get(original_i, pass_python_version_control=True)
                         else:
                             data = self.get(original_i, pass_python_version_control=True)
@@ -489,7 +494,7 @@ class Upsonic_On_Prem:
                         data = self.get(original_i, pass_python_version_control=True)
                     
                     if self.tester:
-                        print(f"[DEBUG] Added to the_all_imports: {i} -> {data}")
+                        print(f"[DEBUG] Adding to the_all_imports: {i} -> {data}")
 
                     the_all_imports[i] = data
                 except Exception as e:
@@ -526,6 +531,7 @@ class Upsonic_On_Prem:
             print(f"[DEBUG] module_name: {module_name}")
             print(f"[DEBUG] the_all_imports: {dict(the_all_imports)}")
         return generated_library
+
 
 
 
