@@ -1534,6 +1534,65 @@ Do not import the anythink, They are already imported.
 
 
 
+    def check_idea(self, idea):
+        search_result = self.search(idea)
+        if len(search_result) == 0:
+            return True
+        
+        # Get the first result of check and as ai to check the similarity
+        first_result = search_result[0]
+
+        # Get the document of the first result
+        first_result_document = self.get_document(first_result) 
+
+        # get the code of the first result
+        first_result_code = self.get_code(first_result)
+
+        # Ask to AI to check the similarity
+        prompt = f"""
+        The user planning to write a function about this: {idea}
+
+        Currently function: {first_result}
+        Currently function Document: {first_result_document}
+        Currently function Code: {first_result_code}
+
+        Is the idea making same thing with the first result (Y/N)?
+        """
+
+
+        ai_answer = self.ai_completion(prompt)
+        ai_answer = ai_answer.replace("`", "").replace("\n", "")
+        ai_answer = ai_answer.split(",")[0]
+        ai_answer = ai_answer.replace("ASSISTANT: ", "")
+
+        is_not_similar = False
+
+
+        if ai_answer == "N" or ai_answer == "NO" or ai_answer == "No":
+            is_not_similar = True
+
+        if not is_not_similar:
+            #Ask ai to explain similarity in one sentence
+            prompt = f"""
+            Current Idea: {idea}
+            First Result: {first_result}
+            First Result Document: {first_result_document}
+            First Result Code: {first_result_code}
+
+            Explain the similarity in one sentence. If you need to refer to First Result please use {first_result}.
+            """
+
+            ai_answer = self.ai_completion(prompt)
+            ai_answer = ai_answer.replace("`", "").replace("\n", "")
+            ai_answer = ai_answer.split(",")[0]
+            ai_answer = ai_answer.replace("ASSISTANT: ", "")
+
+            return "Fail: "+ ai_answer
+        else:
+            return "Pass: There is no same functionality in the library"
+
+
+
 
 class UpsonicOnPrem(Upsonic_On_Prem):
     pass
