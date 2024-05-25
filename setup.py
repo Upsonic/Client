@@ -7,7 +7,7 @@ with open('requirements.txt') as fp:
     install_requires = fp.read()
 setup(
     name="upsonic",
-    version="0.26.0",
+    version="0.27.0",
     description="""Magic Cloud Layer""",
     long_description="".join(open("README.md", encoding="utf-8").readlines()),
     long_description_content_type="text/markdown",
