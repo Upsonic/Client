@@ -882,7 +882,7 @@ class Upsonic_On_Prem:
 
         the_requirements_path = None
 
-        if self.enable_auto_requirements
+        if self.enable_auto_requirements:
             try:
                     the_requirements = self.extract_the_requirements(key)
 
