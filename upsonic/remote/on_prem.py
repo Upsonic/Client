@@ -155,7 +155,7 @@ class Upsonic_On_Prem:
         return decrypt
 
 
-    def __init__(self, api_url, access_key, engine="cloudpickle,dill", enable_usage_analyses=True, enable_local_files=True, enable_elastic_dependency=False, cache_dir=None, pass_python_version_check=False, byref=True, recurse=True, protocol=pickle.DEFAULT_PROTOCOL, source=True, builtin=True, tester=False):
+    def __init__(self, api_url, access_key, engine="cloudpickle,dill", enable_usage_analyses=True, enable_local_files=True, enable_auto_requirements=False, enable_elastic_dependency=False, cache_dir=None, pass_python_version_check=False, byref=True, recurse=True, protocol=pickle.DEFAULT_PROTOCOL, source=True, builtin=True, tester=False):
         import requests
         from requests.auth import HTTPBasicAuth
 
@@ -176,6 +176,7 @@ class Upsonic_On_Prem:
         self.protocol = protocol
         self.source = source
         self.builtin = builtin
+        self.enable_auto_requirements = enable_auto_requirements
         self.enable_elastic_dependency = enable_elastic_dependency
         self.enable_usage_analyses = enable_usage_analyses
         self.enable_local_files = enable_local_files
@@ -876,20 +877,24 @@ class Upsonic_On_Prem:
         except:
             if self.tester:
                 traceback.print_exc()
+
+
+
         the_requirements_path = None
 
-        try:
-                the_requirements = self.extract_the_requirements(key)
+        if self.enable_auto_requirements
+            try:
+                    the_requirements = self.extract_the_requirements(key)
 
-                self.install_the_requirements(the_requirements)
-                if self.tester:
-                    self._log(f"the_requirements {the_requirements}")
-                if self.enable_elastic_dependency:
-                    the_requirements_path = self.set_the_library_specific_locations(the_requirements)
-        except:
-                if self.tester:
-                    self._log(f"Error on requirements while dumping {key}")
-                    traceback.print_exc()
+                    self.install_the_requirements(the_requirements)
+                    if self.tester:
+                        self._log(f"the_requirements {the_requirements}")
+                    if self.enable_elastic_dependency:
+                        the_requirements_path = self.set_the_library_specific_locations(the_requirements)
+            except:
+                    if self.tester:
+                        self._log(f"Error on requirements while dumping {key}")
+                        traceback.print_exc()
 
         if response is None:
             if version != None:
