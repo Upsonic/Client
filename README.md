@@ -87,7 +87,7 @@ For any questions or if you encounter an issue, please reach out to our support 
 
 
 
-## Advisors
+## Supporters
 
 
 
