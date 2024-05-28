@@ -50,6 +50,8 @@ from remote.localimport import localimport
 from remote.interface import encrypt
 from remote.interface import decrypt
 
+import platform
+
 
 def extract_needed_libraries(func, debug=False):
     result = {}
@@ -960,6 +962,17 @@ class Upsonic_On_Prem:
 
         return response
 
+    def os_name(self):
+        system_name = platform.system()
+        if system_name == 'Windows':
+            return 'Windows'
+        elif system_name == 'Darwin':
+            return 'macOS'
+        elif system_name == 'Linux':
+            return 'Linux'
+        else:
+            return 'Unknown OS'
+
     def add_run_history(self, key, version, cpu_usage_one_core, memory_usage, elapsed_time, type, params):
         data = {
             "scope": key,
@@ -968,7 +981,9 @@ class Upsonic_On_Prem:
             "memory_usage": memory_usage,
             "elapsed_time": elapsed_time,
             "type": type,
-            "params":params
+            "python_version":self.get_currently_version(),
+            "os_name": self.os_name(),
+            "params":json.dumps(params)
         }
 
         self._send_request("POST", "/dump_run", data)
