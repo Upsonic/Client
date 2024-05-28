@@ -977,7 +977,7 @@ class Upsonic_On_Prem:
             "memory_usage": memory_usage,
             "elapsed_time": elapsed_time,
             "type": type,
-            "python_version":self.get_currently_version(),
+            "python_version":f"{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}",
             "os_name": self.os_name(),
             "params":json.dumps(params)
         }
