@@ -960,14 +960,15 @@ class Upsonic_On_Prem:
 
         return response
 
-    def add_run_history(self, key, version, cpu_usage_one_core, memory_usage, elapsed_time, type):
+    def add_run_history(self, key, version, cpu_usage_one_core, memory_usage, elapsed_time, type, params):
         data = {
             "scope": key,
             "version": version,
             "cpu_usage": cpu_usage_one_core,
             "memory_usage": memory_usage,
             "elapsed_time": elapsed_time,
-            "type": type
+            "type": type,
+            "params":params
         }
 
         self._send_request("POST", "/dump_run", data)
@@ -999,16 +1000,37 @@ class Upsonic_On_Prem:
             memory_used = end_memory - start_memory
             # Calculate the total CPU time available
             total_time = time_used
-            # Calculate the CPU usage of the function
-            total_cpu_count = os.cpu_count()
+
             cpu_usage_for_one_core = time_used * 100
-            cpu_usage_total = cpu_usage_for_one_core / os.cpu_count()
-            # print CPU and memory usage
-            #print(f'CPU used by one core: {cpu_usage_for_one_core}%')
-            #print(f'CPU used by total cores ({total_cpu_count}): {cpu_usage_total}%')
-            #print(f'Memory used: {memory_used} MiB')
-            #print(f'Time consuming by second: {total_time}')
-            # Return the function output
+
+            def is_basic_type(value):
+                """Check if the value is of a basic type (int, float, str, list, dict)."""
+                if isinstance(value, (int, float, str)):
+                    return True
+                elif isinstance(value, list):
+                    return all(is_basic_type(item) for item in value)
+                elif isinstance(value, dict):
+                    return all(is_basic_type(k) and is_basic_type(v) for k, v in value.items())
+                return False
+
+            def normalize_params(*args, **kwargs):
+                """Normalize *args and **kwargs into a dictionary with only basic types."""
+                normalized = {}
+                
+                # Normalize args
+                for i, arg in enumerate(args):
+                    if is_basic_type(arg):
+                        normalized[f'arg_{i}'] = arg
+
+                # Normalize kwargs
+                for key, value in kwargs.items():
+                    if is_basic_type(value):
+                        normalized[key] = value
+                
+                return normalized
+
+            the_params = normalize_params(*args, **kwargs)
+
             the_version = None
             if version == None:
                 latest_commit = commit
@@ -1017,7 +1039,7 @@ class Upsonic_On_Prem:
                 the_version = version
             the_type = "Succed" if succed else "Failed"
             try:
-                self.add_run_history(key, the_version, cpu_usage_for_one_core, memory_used, total_time, the_type)
+                self.add_run_history(key, the_version, cpu_usage_for_one_core, memory_used, total_time, the_type, the_params)
             except:
                 self._log(f"Error on adding run history, for server not supported. {key}")
             return output
