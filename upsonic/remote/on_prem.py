@@ -973,7 +973,7 @@ class Upsonic_On_Prem:
         else:
             return 'Unknown OS'
 
-    def add_run_history(self, key, version, cpu_usage_one_core, memory_usage, elapsed_time, type, params):
+    def add_run_history(self, key, version, cpu_usage_one_core, memory_usage, elapsed_time, type, params, exception_log):
         data = {
             "scope": key,
             "version": version,
@@ -983,7 +983,8 @@ class Upsonic_On_Prem:
             "type": type,
             "python_version":f"{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}",
             "os_name": self.os_name(),
-            "params":json.dumps(params)
+            "params":json.dumps(params),
+            "exception_log":exception_log,
         }
 
         self._send_request("POST", "/dump_run", data)
@@ -1053,8 +1054,11 @@ class Upsonic_On_Prem:
             else:
                 the_version = version
             the_type = "Succed" if succed else "Failed"
+            exception_log = None
+            if not succed:
+                exception_log = output
             try:
-                self.add_run_history(key, the_version, cpu_usage_for_one_core, memory_used, total_time, the_type, the_params)
+                self.add_run_history(key, the_version, cpu_usage_for_one_core, memory_used, total_time, the_type, the_params, exception_log)
             except:
                 self._log(f"Error on adding run history, for server not supported. {key}")
             return output
