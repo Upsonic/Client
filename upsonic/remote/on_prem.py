@@ -312,6 +312,13 @@ class Upsonic_On_Prem:
         installed_requirements = self.export_requirement()
         if self.tester:
             self._log(f"installed_requirements {installed_requirements}")
+
+        try:
+            installed_requirements = installed_requirements.lower()
+        except:
+            pass
+        
+
         for each in the_requirements:
             try:
                 if each not in installed_requirements or self.enable_elastic_dependency:
