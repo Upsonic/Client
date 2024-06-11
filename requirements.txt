@@ -3,6 +3,7 @@ mgzip==0.2.1
 rich>=13.5.2
 cryptography==41.0.3
 dill==0.3.8
+requests
 python-dotenv==1.0.0
 cloudpickle==3.0.0
 memory-profiler==0.61.0
