@@ -205,7 +205,7 @@ class Upsonic_On_Prem:
 
         self.thread_number = 5
 
-    def _send_request(self, method, endpoint, data=None, make_json=True):
+    def _send_request(self, method, endpoint, data=None, make_json=True, include_status=False):
         try:
             response = self.requests.request(
                 method,
@@ -225,7 +225,7 @@ class Upsonic_On_Prem:
                             f"[bold red]Error: {endpoint}",
                         )
                     else:
-                        result = result["result"]
+                        result = result["result"] if not include_status else result
 
                 return result
             except:  # pragma: no cover
@@ -826,10 +826,15 @@ class Upsonic_On_Prem:
             "commit_message": message
         }
 
-        response = self._send_request("POST", "/dump_together", data)
+        response = self._send_request("POST", "/dump_together", data, include_status=True)
+
 
         if response != [None]:
-            return True
+            if response["status"] is False:
+                return response["result"]
+
+            if response["status"] is True:
+                return True
         else:
             return False
 
