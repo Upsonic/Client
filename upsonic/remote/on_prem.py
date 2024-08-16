@@ -4,7 +4,6 @@
 import json
 import ast
 from functools import wraps
-from hashlib import sha256
 
 
 import pickle
@@ -29,16 +28,13 @@ import sys
 
 from rich.progress import Progress
 
-import textwrap
 import dill
-import sys
 
 from pip._internal.operations import freeze
 
 import traceback
-import os, hashlib, shutil
+import shutil
 from memory_profiler import memory_usage
-
 
 
 from rich.console import Console
@@ -71,6 +67,8 @@ def extract_source(obj, debug=False):
         my_source += each
 
     return my_source
+
+
 def extract_local_files(obj, debug=False, local_directory=None):
     if local_directory == None:
         local_directory = os.getcwd()
@@ -112,8 +110,6 @@ def dump_local_files(extract, debug=False, local_directory=None):
         sys.path.insert(0, os.path.join(local_directory, "upsonic"))
 
 
-
-
 class Upsonic_On_Prem:
     prevent_enable = False
     quiet_startup = False
@@ -135,29 +131,40 @@ class Upsonic_On_Prem:
     def __exit__(self, exc_type, exc_val, exc_tb):
         pass  # pragma: no cover
 
-
     @property
     def console(self):
-
         return console
 
     @property
     def localimport(self):
-
         return localimport
 
     @property
     def encrypt(self):
-
         return encrypt
 
     @property
     def decrypt(self):
-
         return decrypt
 
-
-    def __init__(self, api_url, access_key, engine="cloudpickle,dill", enable_usage_analyses=True, enable_local_files=True, enable_auto_requirements=False, enable_elastic_dependency=False, cache_dir=None, pass_python_version_check=False, byref=True, recurse=True, protocol=pickle.DEFAULT_PROTOCOL, source=True, builtin=True, tester=False):
+    def __init__(
+        self,
+        api_url,
+        access_key,
+        engine="cloudpickle,dill",
+        enable_usage_analyses=True,
+        enable_local_files=True,
+        enable_auto_requirements=False,
+        enable_elastic_dependency=False,
+        cache_dir=None,
+        pass_python_version_check=False,
+        byref=True,
+        recurse=True,
+        protocol=pickle.DEFAULT_PROTOCOL,
+        source=True,
+        builtin=True,
+        tester=False,
+    ):
         import requests
         from requests.auth import HTTPBasicAuth
 
@@ -165,16 +172,14 @@ class Upsonic_On_Prem:
 
         requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
-
-
         self.requests = requests
         self.HTTPBasicAuth = HTTPBasicAuth
 
         self.api_url = api_url
         self.password = access_key
-        self.engine=engine
-        self.byref=byref
-        self.recurse=recurse
+        self.engine = engine
+        self.byref = byref
+        self.recurse = recurse
         self.protocol = protocol
         self.source = source
         self.builtin = builtin
@@ -188,24 +193,28 @@ class Upsonic_On_Prem:
 
         self.enable_active = False
 
-        self.cache_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), "upsonic_cache") if cache_dir == None else cache_dir
+        self.cache_dir = (
+            os.path.join(os.path.dirname(os.path.realpath(__file__)), "upsonic_cache")
+            if cache_dir == None
+            else cache_dir
+        )
         if not os.path.exists(self.cache_dir):
             os.mkdir(self.cache_dir)
 
-
         if self.status == True:
             self._log(
-                f"[bold green]Upsonic[bold green] active",
+                "[bold green]Upsonic[bold green] active",
             )
         else:
             self._log(
-                f"[bold red]Upsonic[bold red] is down",
+                "[bold red]Upsonic[bold red] is down",
             )
-
 
         self.thread_number = 5
 
-    def _send_request(self, method, endpoint, data=None, make_json=True, include_status=False):
+    def _send_request(
+        self, method, endpoint, data=None, make_json=True, include_status=False
+    ):
         try:
             response = self.requests.request(
                 method,
@@ -229,7 +238,9 @@ class Upsonic_On_Prem:
 
                 return result
             except:  # pragma: no cover
-                print(f"Error on '{self.api_url + endpoint}': ", response.text) if self.tester else None
+                print(
+                    f"Error on '{self.api_url + endpoint}': ", response.text
+                ) if self.tester else None
                 return [None]  # pragma: no cover
         except:
             print("Error: Remote is down")
@@ -242,9 +253,7 @@ class Upsonic_On_Prem:
     def get_specific_version(self, package):
         package_name = package.split("==")[0]
         package_version = (
-            package.split("==")[1]
-            if len(package.split("==")) > 1
-            else "Latest"
+            package.split("==")[1] if len(package.split("==")) > 1 else "Latest"
         )
         backup_sys_path = sys.path
         backup_sys_modules = sys.modules
@@ -256,7 +265,6 @@ class Upsonic_On_Prem:
             return importlib.import_module(package_name)
 
     def generate_the_globals(self, needed_libraries, key):
-
         requirements = self.extract_the_requirements(key)
 
         total = {}
@@ -270,8 +278,6 @@ class Upsonic_On_Prem:
         return total
 
     def generate_the_true_requirements(self, requirements, needed_libraries, key):
-
-
         total = {}
         for each, value in needed_libraries.items():
             the_needed = None
@@ -282,22 +288,18 @@ class Upsonic_On_Prem:
 
         return total
 
-
     def install_package(self, package):
         from pip._internal import main as pip
 
         package_name = package.split("==")[0]
         package_version = (
-            package.split("==")[1]
-            if len(package.split("==")) > 1
-            else "Latest"
+            package.split("==")[1] if len(package.split("==")) > 1 else "Latest"
         )
 
         the_dir = os.path.abspath(
             os.path.join(self.cache_dir, package_name, package_version)
         )
         if not os.path.exists(the_dir) or not self.enable_elastic_dependency:
-
             if self.enable_elastic_dependency:
                 os.makedirs(the_dir)
                 if self.tester:
@@ -325,7 +327,7 @@ class Upsonic_On_Prem:
             installed_requirements = installed_requirements.lower()
         except:
             pass
-        
+
         for each in the_requirements:
             try:
                 if each not in installed_requirements or self.enable_elastic_dependency:
@@ -341,9 +343,7 @@ class Upsonic_On_Prem:
     def delete_cache(self):
         shutil.rmtree(self.cache_dir)
 
-
     def set_the_library_specific_locations(self, the_requirements):
-
         the_all_dirs = []
         the_all_string = ""
 
@@ -354,9 +354,7 @@ class Upsonic_On_Prem:
         for package in ordered_list:
             package_name = package.split("==")[0]
             package_version = (
-                package.split("==")[1]
-                if len(package.split("==")) > 1
-                else "Latest"
+                package.split("==")[1] if len(package.split("==")) > 1 else "Latest"
             )
             the_all_string += package
 
@@ -369,7 +367,7 @@ class Upsonic_On_Prem:
             self._log(f"the_all_string {the_all_string}")
 
         # Create folder with sha256 of the_all_string
-        sha256_string = hashlib.sha256(the_all_string.encode('utf-8')).hexdigest()
+        sha256_string = hashlib.sha256(the_all_string.encode("utf-8")).hexdigest()
         sha256_dir = os.path.join(self.cache_dir, sha256_string)
         already_exist = os.path.exists(sha256_dir)
         os.makedirs(sha256_dir, exist_ok=True)
@@ -382,7 +380,7 @@ class Upsonic_On_Prem:
                         # construct full file path
                         full_file_name = os.path.join(root, file)
                         # construct destination path
-                        dest_file_name = sha256_dir + full_file_name[len(dir_path):]
+                        dest_file_name = sha256_dir + full_file_name[len(dir_path) :]
                         # create directories if not present in destination
                         os.makedirs(os.path.dirname(dest_file_name), exist_ok=True)
                         # copy file
@@ -391,22 +389,16 @@ class Upsonic_On_Prem:
         if self.tester:
             self._log(f"the sha256 of new directory {already_exist} {sha256_dir}")
 
-
         return sha256_dir
-
-
 
     def unset_the_library_specific_locations(self):
         sys.path = self.sys_path_backup
-
 
     @contextmanager
     def import_package(self, package):
         package_name = package.split("==")[0]
         package_version = (
-            package.split("==")[1]
-            if len(package.split("==")) > 1
-            else "Latest"
+            package.split("==")[1] if len(package.split("==")) > 1 else "Latest"
         )
 
         the_dir = os.path.abspath(
@@ -427,7 +419,6 @@ class Upsonic_On_Prem:
 
     def extend_global(self, name, value):
         globals()[name] = value
-
 
     def load_module(self, module_name, version=None):
         encryption_key = "u"
@@ -456,22 +447,34 @@ class Upsonic_On_Prem:
                         if self.tester:
                             self._log(f"key_version {key_version}")
                             self._log(f"currenly_version {currenly_version}")
-                        if key_version[0] == currenly_version[0] and key_version[0] == "3":
+                        if (
+                            key_version[0] == currenly_version[0]
+                            and key_version[0] == "3"
+                        ):
                             if self.tester:
-                                self._log(f"Versions are same and 3")
+                                self._log("Versions are same and 3")
                             if key_version[1] != currenly_version[1]:
-                                        if self.tester:
-                                            self._log("Minor versions are different")
+                                if self.tester:
+                                    self._log("Minor versions are different")
 
-                                        self._log(
-                                            f"[bold orange]Warning: The versions are different, are you sure to continue")
-                                        the_input = input("Yes or no (y/n)").lower()
-                                        if the_input == "n":
-                                            key_version = f"{key_version[0]}.{key_version[1]}"
-                                            currenly_version = f"{currenly_version[0]}.{currenly_version[1]}"
-                                            return "Python versions is different (Key == " + key_version + " This runtime == " + currenly_version + ")"
-                                        if the_input == "y":
-                                            version_check_pass = True
+                                self._log(
+                                    "[bold orange]Warning: The versions are different, are you sure to continue"
+                                )
+                                the_input = input("Yes or no (y/n)").lower()
+                                if the_input == "n":
+                                    key_version = f"{key_version[0]}.{key_version[1]}"
+                                    currenly_version = (
+                                        f"{currenly_version[0]}.{currenly_version[1]}"
+                                    )
+                                    return (
+                                        "Python versions is different (Key == "
+                                        + key_version
+                                        + " This runtime == "
+                                        + currenly_version
+                                        + ")"
+                                    )
+                                if the_input == "y":
+                                    version_check_pass = True
                 except:
                     if self.tester:
                         traceback.print_exc()
@@ -480,20 +483,21 @@ class Upsonic_On_Prem:
                     version_list_response = self.get_version_history(original_i)
                     version_list = []
                     for each_v in version_list_response:
-                        version_list.append(each_v.replace(original_i+":", ""))
-
+                        version_list.append(each_v.replace(original_i + ":", ""))
 
                     if version in version_list:
                         try:
                             the_all_imports[i] = self.get(
-                                original_i,
-                                version,
-                                pass_python_version_control=True
+                                original_i, version, pass_python_version_control=True
                             )
                         except:
-                            the_all_imports[i] = self.get(original_i, pass_python_version_control=True)
+                            the_all_imports[i] = self.get(
+                                original_i, pass_python_version_control=True
+                            )
                 else:
-                    the_all_imports[i] = self.get(original_i, pass_python_version_control=True)
+                    the_all_imports[i] = self.get(
+                        original_i, pass_python_version_control=True
+                    )
 
         import types
 
@@ -515,10 +519,9 @@ class Upsonic_On_Prem:
         return generated_library
 
     def dump_module(
-            self,
-            module_name,
-            module,
-
+        self,
+        module_name,
+        module,
     ):
         encryption_key = "u"
         top_module = module
@@ -527,15 +530,12 @@ class Upsonic_On_Prem:
 
         sub_modules = []
         if hasattr(top_module, "__path__"):
-
             for importer, modname, ispkg in pkgutil.walk_packages(
-                    path=top_module.__path__,
-                    prefix=top_module.__name__ + ".",
-                    onerror=lambda x: None,
+                path=top_module.__path__,
+                prefix=top_module.__name__ + ".",
+                onerror=lambda x: None,
             ):
-                sub_modules.append(
-                    importer.find_module(modname).load_module(modname)
-                )
+                sub_modules.append(importer.find_module(modname).load_module(modname))
         else:
             sub_modules.append(top_module)
 
@@ -544,20 +544,13 @@ class Upsonic_On_Prem:
         the_list = []
 
         for sub_module in sub_modules:
-            [
-                the_list.append(obj)
-                for name, obj in inspect.getmembers(sub_module)
-            ]
+            [the_list.append(obj) for name, obj in inspect.getmembers(sub_module)]
 
         # Extract just functions and classes
-        the_list = [
-            i for i in the_list if inspect.isfunction(i) or inspect.isclass(i)
-        ]
+        the_list = [i for i in the_list if inspect.isfunction(i) or inspect.isclass(i)]
         # If the __module__ is not equal to module_name, remove it from the list
 
-        the_list = [
-            i for i in the_list if i.__module__.split(".")[0] == module_name
-        ]
+        the_list = [i for i in the_list if i.__module__.split(".")[0] == module_name]
 
         my_list = []
         for element in copy.copy(the_list):
@@ -567,16 +560,15 @@ class Upsonic_On_Prem:
             elif inspect.isclass(element):
                 name = element.__module__ + "." + element.__name__
             if (
-                    not "upsonic.remote" in name
-                    and not "upsonic_updater" in name
-                    and name != f"{module.__name__}.threading.Thread"
+                "upsonic.remote" not in name
+                and "upsonic_updater" not in name
+                and name != f"{module.__name__}.threading.Thread"
             ):
                 my_list.append(element)
 
         the_list = my_list
 
         with Progress() as progress:
-
             task1 = progress.add_task(
                 "           [red]Job Started...", total=len(the_list)
             )
@@ -628,30 +620,15 @@ class Upsonic_On_Prem:
                 each.join()
 
     def dump(
-            self,
-            key,
-            value,
-            message=None,
-
+        self,
+        key,
+        value,
+        message=None,
     ):
+        return self.set(key, value, message=message)
 
-        return self.set(
-            key,
-            value,
-            message=message
-        )
-
-    def load(
-            self,
-            key,
-            version=None
-    ):
-        return self.get(
-            key,
-            version=version,
-            print_exc=True
-        )
-
+    def load(self, key, version=None):
+        return self.get(key, version=version, print_exc=True)
 
     def get_currently_version(self):
         total = sys.version_info
@@ -675,13 +652,7 @@ class Upsonic_On_Prem:
         lock = self._send_request("POST", "/get_lock_of_scope", data)
         return lock
 
-    def set(
-            self,
-            key,
-            value,
-            message=None
-    ):
-
+    def set(self, key, value, message=None):
         if key.startswith("."):
             self._log("Error: The key can not start with '.'")
             return False
@@ -698,8 +669,6 @@ class Upsonic_On_Prem:
             self._log("Error: The key can not include multiple dot one after one'..'")
             return False
 
-
-
         try:
             the_lock = self.get_lock(key)
             if the_lock and the_lock != [None]:
@@ -708,9 +677,6 @@ class Upsonic_On_Prem:
         except:
             pass
 
-
-
-
         the_type = type(value).__name__
         if the_type == "type":
             the_type = "class"
@@ -718,12 +684,6 @@ class Upsonic_On_Prem:
         encryption_key = "u"
 
         the_code = textwrap.dedent(self.extract_source(value))
-
-
-
-
-
-
 
         the_requirements = Upsonic_On_Prem.export_requirement()
         the_original_requirements = ""
@@ -742,9 +702,13 @@ class Upsonic_On_Prem:
         try:
             extracted_needed_libraries = extract_needed_libraries(value, self.tester)
             try:
-                the_original_requirements = self.generate_the_true_requirements(the_requirements, extracted_needed_libraries, key)
+                the_original_requirements = self.generate_the_true_requirements(
+                    the_requirements, extracted_needed_libraries, key
+                )
                 if self.tester:
-                    self._log(f"the_original_requirements in_generation {the_original_requirements}")
+                    self._log(
+                        f"the_original_requirements in_generation {the_original_requirements}"
+                    )
                 the_text = ""
                 for each, value_ in the_original_requirements.items():
                     the_text += value_ + ", "
@@ -752,32 +716,39 @@ class Upsonic_On_Prem:
 
             except:
                 if self.tester:
-                    self._log(f"Error on generate_the_true_requirements while dumping {key}")
+                    self._log(
+                        f"Error on generate_the_true_requirements while dumping {key}"
+                    )
                     traceback.print_exc()
         except:
             if self.tester:
                 self._log(f"Error on extract_needed_libraries while dumping {key}")
                 traceback.print_exc()
 
-
-
         if self.tester:
             self._log(f"the_original_requirements {the_original_requirements}")
 
-
         the_version = f"{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}"
 
-
-
-        fernet_key = base64.urlsafe_b64encode(hashlib.sha256(encryption_key.encode()).digest())
+        fernet_key = base64.urlsafe_b64encode(
+            hashlib.sha256(encryption_key.encode()).digest()
+        )
         fernet = Fernet(fernet_key)
-
 
         engine_reports_exceptions = []
         the_engine_reports = {}
         for engine in self.engine.split(","):
             try:
-                the_engine_reports[engine] = self.encrypt(encryption_key, value, engine, self.byref, self.recurse, self.protocol, self.source, self.builtin)
+                the_engine_reports[engine] = self.encrypt(
+                    encryption_key,
+                    value,
+                    engine,
+                    self.byref,
+                    self.recurse,
+                    self.protocol,
+                    self.source,
+                    self.builtin,
+                )
             except:
                 if self.tester:
                     self._log(f"Error on {engine} while dumping {key}")
@@ -785,36 +756,37 @@ class Upsonic_On_Prem:
                 else:
                     engine_reports_exceptions.append(traceback.format_exc())
 
-
         if len(the_engine_reports) == 0 and not self.tester:
             self._log("[red] Error: No engine is able to dump the object")
             for error in engine_reports_exceptions:
                 print(error)
 
         try:
-            the_engine_reports["extracted_local_files"] = fernet.encrypt(pickle.dumps(extract_local_files(value, self.tester), protocol=1))
+            the_engine_reports["extracted_local_files"] = fernet.encrypt(
+                pickle.dumps(extract_local_files(value, self.tester), protocol=1)
+            )
         except:
             if self.tester:
                 self._log(f"Error on extracted_local_files while dumping {key}")
                 traceback.print_exc()
 
         try:
-            the_engine_reports["extract_source"] = fernet.encrypt(pickle.dumps(extract_source(value, self.tester), protocol=1))
+            the_engine_reports["extract_source"] = fernet.encrypt(
+                pickle.dumps(extract_source(value, self.tester), protocol=1)
+            )
         except:
             if self.tester:
                 self._log(f"Error on extract_source while dumping {key}")
                 traceback.print_exc()
 
-
-
         if extracted_needed_libraries != None:
-            the_engine_reports["extract_needed_libraries"] = fernet.encrypt(pickle.dumps(extracted_needed_libraries, protocol=1))
-
+            the_engine_reports["extract_needed_libraries"] = fernet.encrypt(
+                pickle.dumps(extracted_needed_libraries, protocol=1)
+            )
 
         if self.tester:
             self._log(f"the_engine_reports {the_engine_reports}")
         dumped = pickle.dumps(the_engine_reports, protocol=1)
-
 
         data = {
             "scope": key,
@@ -823,11 +795,12 @@ class Upsonic_On_Prem:
             "requirements": the_original_requirements,
             "python_version": the_version,
             "data": fernet.encrypt(dumped),
-            "commit_message": message
+            "commit_message": message,
         }
 
-        response = self._send_request("POST", "/dump_together", data, include_status=True)
-
+        response = self._send_request(
+            "POST", "/dump_together", data, include_status=True
+        )
 
         if response != [None]:
             if response["status"] is False:
@@ -838,20 +811,18 @@ class Upsonic_On_Prem:
         else:
             return False
 
-
     def print_code(self, key, version=None):
         print(self.get(key, version=version, extract_source=True))
 
     def get(
-            self,
-            key,
-            version=None,
-            print_exc=True,
-            pass_python_version_control=False,
-            pass_usage_analyses=False,
-            try_to_extract_importable=False,
-            extract_source=False
-
+        self,
+        key,
+        version=None,
+        print_exc=True,
+        pass_python_version_control=False,
+        pass_usage_analyses=False,
+        try_to_extract_importable=False,
+        extract_source=False,
     ):
         if self.tester:
             self._log(f"Process started for {key}")
@@ -873,40 +844,53 @@ class Upsonic_On_Prem:
                     self._log(f"currenly_version {currenly_version}")
                 if key_version[0] == currenly_version[0] and key_version[0] == 3:
                     if self.tester:
-                        self._log(f"Versions are same and 3")
+                        self._log("Versions are same and 3")
                     if key_version[1] != currenly_version[1]:
                         if self.tester:
                             self._log("Minor versions are different")
                         if int(currenly_version[1]) >= 11 or int(key_version[1]) >= 11:
-                            if int(currenly_version[1]) < 11 or int(key_version[1]) < 11:
+                            if (
+                                int(currenly_version[1]) < 11
+                                or int(key_version[1]) < 11
+                            ):
                                 versions_are_different = True
-                                self._log(f"[bold orange]Warning: The versions are different, are you sure to continue")
+                                self._log(
+                                    "[bold orange]Warning: The versions are different, are you sure to continue"
+                                )
                                 the_input = input("Yes or no (y/n)").lower()
                                 if the_input == "n":
                                     key_version = f"{key_version[0]}.{key_version[1]}"
-                                    currenly_version = f"{currenly_version[0]}.{currenly_version[1]}"
-                                    return "Python versions is different (Key == " + key_version + " This runtime == " + currenly_version + ")"
+                                    currenly_version = (
+                                        f"{currenly_version[0]}.{currenly_version[1]}"
+                                    )
+                                    return (
+                                        "Python versions is different (Key == "
+                                        + key_version
+                                        + " This runtime == "
+                                        + currenly_version
+                                        + ")"
+                                    )
         except:
             if self.tester:
                 traceback.print_exc()
-
-
 
         the_requirements_path = None
 
         if self.enable_auto_requirements:
             try:
-                    the_requirements = self.extract_the_requirements(key)
+                the_requirements = self.extract_the_requirements(key)
 
-                    self.install_the_requirements(the_requirements)
-                    if self.tester:
-                        self._log(f"the_requirements {the_requirements}")
-                    if self.enable_elastic_dependency:
-                        the_requirements_path = self.set_the_library_specific_locations(the_requirements)
+                self.install_the_requirements(the_requirements)
+                if self.tester:
+                    self._log(f"the_requirements {the_requirements}")
+                if self.enable_elastic_dependency:
+                    the_requirements_path = self.set_the_library_specific_locations(
+                        the_requirements
+                    )
             except:
-                    if self.tester:
-                        self._log(f"Error on requirements while dumping {key}")
-                        traceback.print_exc()
+                if self.tester:
+                    self._log(f"Error on requirements while dumping {key}")
+                    traceback.print_exc()
 
         if response is None:
             if version != None:
@@ -914,7 +898,9 @@ class Upsonic_On_Prem:
             else:
                 response = self._send_request("POST", "/load", data)
         try:
-            fernet_key = base64.urlsafe_b64encode(hashlib.sha256(encryption_key.encode()).digest())
+            fernet_key = base64.urlsafe_b64encode(
+                hashlib.sha256(encryption_key.encode()).digest()
+            )
             fernet = Fernet(fernet_key)
             response = pickle.loads(fernet.decrypt(response))
             if self.tester:
@@ -922,10 +908,15 @@ class Upsonic_On_Prem:
             if "extracted_local_files" in response:
                 try:
                     if self.enable_local_files:
-                        dump_local_files(pickle.loads(fernet.decrypt(response["extracted_local_files"])), self.tester)
+                        dump_local_files(
+                            pickle.loads(
+                                fernet.decrypt(response["extracted_local_files"])
+                            ),
+                            self.tester,
+                        )
                     else:
                         if self.tester:
-                            self._log(f"Local files are not enabled")
+                            self._log("Local files are not enabled")
                 except:
                     if self.tester:
                         self._log(f"Error on extracted_local_files while loading {key}")
@@ -937,17 +928,28 @@ class Upsonic_On_Prem:
                 response.pop("extract_source")
             needed_libraries = None
             if "extract_needed_libraries" in response:
-                needed_libraries = pickle.loads(fernet.decrypt(response["extract_needed_libraries"]))
+                needed_libraries = pickle.loads(
+                    fernet.decrypt(response["extract_needed_libraries"])
+                )
                 response.pop("extract_needed_libraries")
             for engine, value in response.items():
-
                 try:
                     if the_requirements_path is not None:
                         with self.localimport(the_requirements_path) as _importer:
-                            response = self.decrypt(encryption_key, value, engine, try_to_extract_importable=try_to_extract_importable)
+                            response = self.decrypt(
+                                encryption_key,
+                                value,
+                                engine,
+                                try_to_extract_importable=try_to_extract_importable,
+                            )
                             break
                     else:
-                        response = self.decrypt(encryption_key, value, engine, try_to_extract_importable=try_to_extract_importable)
+                        response = self.decrypt(
+                            encryption_key,
+                            value,
+                            engine,
+                            try_to_extract_importable=try_to_extract_importable,
+                        )
                         break
                 except:
                     response = "Error"
@@ -960,8 +962,7 @@ class Upsonic_On_Prem:
             else:
                 pass
 
-
-        #Run anayses
+        # Run anayses
         if self.enable_usage_analyses and not pass_usage_analyses:
             if inspect.isfunction(response) and self.is_usage_analyses_true(key):
                 commit = None
@@ -969,21 +970,30 @@ class Upsonic_On_Prem:
                     commit = self.get_dump_history(key)[0].split(":")[1]
                 response = self.profile_function(key, version, commit, response)
 
-
         return response
 
     def os_name(self):
         system_name = platform.system()
-        if system_name == 'Windows':
-            return 'Windows'
-        elif system_name == 'Darwin':
-            return 'macOS'
-        elif system_name == 'Linux':
-            return 'Linux'
+        if system_name == "Windows":
+            return "Windows"
+        elif system_name == "Darwin":
+            return "macOS"
+        elif system_name == "Linux":
+            return "Linux"
         else:
-            return 'Unknown OS'
+            return "Unknown OS"
 
-    def add_run_history(self, key, version, cpu_usage_one_core, memory_usage, elapsed_time, type, params, exception_log):
+    def add_run_history(
+        self,
+        key,
+        version,
+        cpu_usage_one_core,
+        memory_usage,
+        elapsed_time,
+        type,
+        params,
+        exception_log,
+    ):
         data = {
             "scope": key,
             "version": version,
@@ -991,14 +1001,13 @@ class Upsonic_On_Prem:
             "memory_usage": memory_usage,
             "elapsed_time": elapsed_time,
             "type": type,
-            "python_version":f"{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}",
+            "python_version": f"{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}",
             "os_name": self.os_name(),
-            "params":json.dumps(params),
-            "exception_log":exception_log,
+            "params": json.dumps(params),
+            "exception_log": exception_log,
         }
 
         self._send_request("POST", "/dump_run", data)
-
 
     def get_dump_history(self, key):
         data = {"scope": key}
@@ -1016,7 +1025,7 @@ class Upsonic_On_Prem:
                 output = func(*args, **kwargs)
             except:
                 traceback.print_exc()
-                succed=False
+                succed = False
                 output = traceback.format_exc()
             # Get process time and memory usage after function execution
             end_time = time.process_time()
@@ -1036,23 +1045,25 @@ class Upsonic_On_Prem:
                 elif isinstance(value, list):
                     return all(is_basic_type(item) for item in value)
                 elif isinstance(value, dict):
-                    return all(is_basic_type(k) and is_basic_type(v) for k, v in value.items())
+                    return all(
+                        is_basic_type(k) and is_basic_type(v) for k, v in value.items()
+                    )
                 return False
 
             def normalize_params(*args, **kwargs):
                 """Normalize *args and **kwargs into a dictionary with only basic types."""
                 normalized = {}
-                
+
                 # Normalize args
                 for i, arg in enumerate(args):
                     if is_basic_type(arg):
-                        normalized[f'arg_{i}'] = arg
+                        normalized[f"arg_{i}"] = arg
 
                 # Normalize kwargs
                 for key, value in kwargs.items():
                     if is_basic_type(value):
                         normalized[key] = value
-                
+
                 return normalized
 
             the_params = normalize_params(*args, **kwargs)
@@ -1068,9 +1079,20 @@ class Upsonic_On_Prem:
             if not succed:
                 exception_log = output
             try:
-                self.add_run_history(key, the_version, cpu_usage_for_one_core, memory_used, total_time, the_type, the_params, exception_log)
+                self.add_run_history(
+                    key,
+                    the_version,
+                    cpu_usage_for_one_core,
+                    memory_used,
+                    total_time,
+                    the_type,
+                    the_params,
+                    exception_log,
+                )
             except:
-                self._log(f"Error on adding run history, for server not supported. {key}")
+                self._log(
+                    f"Error on adding run history, for server not supported. {key}"
+                )
             return output
 
         return wrapper_function
@@ -1089,25 +1111,22 @@ class Upsonic_On_Prem:
                 try:
                     cpu_usage_analyses = settings["usage_analyses"].lower() == "true"
                 except:
-
                     cpu_usage_analyses = None
 
         return cpu_usage_analyses
 
-
     def active(
-            self,
-            value=None,
-
+        self,
+        value=None,
     ):
         encryption_key = "u"
 
         def decorate(value):
             key = value.__name__
             if (
-                    value.__module__ != "__main__"
-                    and value.__module__ != None
-                    and not just_name
+                value.__module__ != "__main__"
+                and value.__module__ != None
+                and not just_name
             ):
                 key = value.__module__ + "." + key
             self.set(
@@ -1121,7 +1140,9 @@ class Upsonic_On_Prem:
             decorate(value)
             return value
 
-    def get_all(self, ):
+    def get_all(
+        self,
+    ):
         encryption_key = "u"
 
         datas = self._send_request("GET", "/get_all_scopes_user")
@@ -1155,7 +1176,6 @@ class Upsonic_On_Prem:
     def database_delete_all(self):
         return self._send_request("GET", "/database/delete_all")
 
-
     def ai_completion(self, message, model=None):
         data = {"message": message}
         if model != None:
@@ -1165,7 +1185,6 @@ class Upsonic_On_Prem:
     def get_all_scopes_user(self):
         return self._send_request("GET", "/get_all_scopes_user")
 
-
     def extract_source(self, value):
         result = ""
         try:
@@ -1174,10 +1193,9 @@ class Upsonic_On_Prem:
             result = dill.source.getsource(value)
         return result
 
-
-    def auto_dump(self, value, ask=True, check_function=True, print_prompts=False, model=None):
-
-        
+    def auto_dump(
+        self, value, ask=True, check_function=True, print_prompts=False, model=None
+    ):
         if model == None:
             model = self.get_default_ai_model()
 
@@ -1217,16 +1235,23 @@ Suggested Position:
 
         ai_answer = self.ai_completion(prompt, model=model)
         ai_answer = ai_answer.replace("`", "").replace("\n", "")
-        ai_answer = '.'.join(ai_answer.split('.')[:-1])
+        ai_answer = ".".join(ai_answer.split(".")[:-1])
         ai_answer = ai_answer + "." + dill.source.getname(value)
         prompt = prompt + f"\nASSISTANT: {ai_answer}\n"
 
-        prompt = prompt + f"\nQUESTION: Extract and just answer with the suggested position"
+        prompt = (
+            prompt + "\nQUESTION: Extract and just answer with the suggested position"
+        )
         if print_prompts:
-            print("Prompt", prompt.replace(code, "CODE").replace(all_scopes, "ALL SCOPES"))
+            print(
+                "Prompt", prompt.replace(code, "CODE").replace(all_scopes, "ALL SCOPES")
+            )
         ai_answer = self.ai_completion(prompt, model=model)
         if print_prompts:
-            print("AI answer", ai_answer.replace(code, "CODE").replace(all_scopes, "ALL SCOPES"))
+            print(
+                "AI answer",
+                ai_answer.replace(code, "CODE").replace(all_scopes, "ALL SCOPES"),
+            )
         ai_answer = ai_answer.replace("`", "").replace("\n", "")
         ai_answer = ai_answer.replace("ASSISTANT: ", "")
         if ai_answer in all_scopes:
@@ -1248,7 +1273,6 @@ Suggested Position:
             self.set(ai_answer, value)
             print("\nDumped")
 
-
     def get_code(self, scope):
         data = {"scope": scope}
         return self._send_request("POST", "/get_code_of_scope", data)
@@ -1259,11 +1283,8 @@ Suggested Position:
             data["version"] = version
         return self._send_request("POST", "/get_document_of_scope", data)
 
-
     def check_function(self, value, print_prompts=False, model=None):
-
         code = textwrap.dedent(self.extract_source(value))
-
 
         all_scopes_ = self.get_all_scopes_user()
         all_scopes = ""
@@ -1295,31 +1316,37 @@ Which one is the most similar ?
 
         ai_answer = ai_answer.replace("`", "").replace("\n", "")
 
-
         similarity_explanation = ai_answer
 
         prompt = prompt + f"\nASSISTANT: {ai_answer}\n"
 
-        prompt = prompt + f"\nQUESTION: Is there any duplication risk (Y/N)?"
-
+        prompt = prompt + "\nQUESTION: Is there any duplication risk (Y/N)?"
 
         if print_prompts:
-            print("Prompt", prompt.replace(code, "CODE").replace(all_scopes, "ALL SCOPES"))
+            print(
+                "Prompt", prompt.replace(code, "CODE").replace(all_scopes, "ALL SCOPES")
+            )
         ai_answer = self.ai_completion(prompt, model=model)
         ai_answer = ai_answer.replace("`", "").replace("\n", "")
         ai_answer = ai_answer.split(",")[0]
         ai_answer = ai_answer.replace("ASSISTANT: ", "")
         if print_prompts:
-            print("AI answer", ai_answer.replace(code, "CODE").replace(all_scopes, "ALL SCOPES"))
+            print(
+                "AI answer",
+                ai_answer.replace(code, "CODE").replace(all_scopes, "ALL SCOPES"),
+            )
         if ai_answer == "Y" or ai_answer == "YES" or ai_answer == "Yes":
             prompt = prompt + f"\nASSISTANT: {ai_answer}\n"
 
-            prompt = prompt + f"\nQUESTION: Extract and just answer with the suggested position"
+            prompt = (
+                prompt
+                + "\nQUESTION: Extract and just answer with the suggested position"
+            )
             ai_answer = self.ai_completion(prompt, model=model)
             ai_answer = ai_answer.replace("`", "").replace("\n", "")
             ai_answer = ai_answer.split(",")[0]
             ai_answer = ai_answer.replace("ASSISTANT: ", "")
-            return "similarity: "+ai_answer + " - " + similarity_explanation
+            return "similarity: " + ai_answer + " - " + similarity_explanation
         if ai_answer == "N" or ai_answer == "NO" or ai_answer == "No":
             return True
         return similarity_explanation
@@ -1335,10 +1362,8 @@ Which one is the most similar ?
     def search(self, question):
         return self.search_by_documentation(question)
 
-
     def get_default_ai_model(self):
         return self._send_request("GET", "/get_default_ai_model")
-
 
     def get_version_history(self, key):
         data = {"scope": key}
@@ -1349,32 +1374,26 @@ Which one is the most similar ?
         data = {"top_library": key}
         return self._send_request("POST", "/get_module_version_history", data)
 
-
     def delete_version(self, key, version):
-        data = {"version": key+":"+version}
+        data = {"version": key + ":" + version}
         return self._send_request("POST", "/delete_version", data)
 
     def delete_module_version(self, module_name, version):
-        data = {"top_library":module_name ,"version": version}
+        data = {"top_library": module_name, "version": version}
         return self._send_request("POST", "/delete_version_prefix", data)
 
     def create_version(self, key, version):
-        data = {"scope":key ,"version": version}
+        data = {"scope": key, "version": version}
         return self._send_request("POST", "/create_version", data)
 
-
     def create_module_version(self, module_name, version):
-        data = {"top_library":module_name ,"version": version}
+        data = {"top_library": module_name, "version": version}
         return self._send_request("POST", "/create_version_prefix", data)
 
-
-
-
     def get_version_data(self, key, version):
-        data = {"version": key+":"+version}
+        data = {"version": key + ":" + version}
         return self._send_request("POST", "/load_specific_version", data)
-    
-    
+
     def get_requirements(self, key):
         data = {"scope": key}
         return self._send_request("POST", "/get_requirements_of_scope", data)
@@ -1413,10 +1432,9 @@ Which one is the most similar ?
             data["version"] = version
         return self._send_request("POST", "/get_code_of_scope", data)
 
-
     def langchain(self, prefix=None, version=None):
-        from langchain.pydantic_v1 import BaseModel, Field
-        from langchain.tools import BaseTool, StructuredTool, tool
+        from langchain.tools import tool
+
         all_functions = []
         for each in self.get_all():
             if each.endswith("__user"):
@@ -1436,17 +1454,18 @@ Which one is the most similar ?
                         the_tool = tool(the_function)
                         original_name = the_tool.name
                         the_tool.name = the_true_name
-                        the_tool.description = the_tool.description.replace(original_name, the_true_name)[:1000]
+                        the_tool.description = the_tool.description.replace(
+                            original_name, the_true_name
+                        )[:1000]
                         all_functions.append(the_tool)
                     except:
                         traceback.print_exc()
                         pass
         return all_functions
-
-
 
     def crewai(self, prefix=None, version=None):
         from crewai_tools import tool
+
         all_functions = []
         for each in self.get_all():
             if each.endswith("__user"):
@@ -1466,16 +1485,18 @@ Which one is the most similar ?
                         the_tool = tool(the_function)
                         original_name = the_tool.name
                         the_tool.name = the_true_name
-                        the_tool.description = the_tool.description.replace(original_name, the_true_name)[:1000]
+                        the_tool.description = the_tool.description.replace(
+                            original_name, the_true_name
+                        )[:1000]
                         all_functions.append(the_tool)
                     except:
                         traceback.print_exc()
                         pass
         return all_functions
 
-
     def autogen(self, caller, executor, prefix=None, version=None):
         import autogen
+
         for each in self.get_all():
             if each.endswith("__user"):
                 continue
@@ -1491,26 +1512,32 @@ Which one is the most similar ?
                     the_document = self.get_document(each, version=version) or " "
                     the_function.__doc__ = the_document
                     try:
-                        the_document = the_document.replace(each, the_true_name).replace(each.split(".")[-1], the_true_name)[:1000]
+                        the_document = the_document.replace(
+                            each, the_true_name
+                        ).replace(each.split(".")[-1], the_true_name)[:1000]
                         autogen.agentchat.register_function(
                             the_function,
                             caller=caller,
                             executor=executor,
                             description=the_document,
-                            name=the_true_name
+                            name=the_true_name,
                         )
                     except:
                         traceback.print_exc()
                         pass
 
-
     def openinterpreter(self, agent, prefix=None, version=None):
         def replace_function_name(input_string, new_function_name):
-            result = re.sub(r"^(def )(\w+)", f"\g<1>{new_function_name}", input_string, flags=re.MULTILINE)
+            result = re.sub(
+                r"^(def )(\w+)",
+                f"\g<1>{new_function_name}",
+                input_string,
+                flags=re.MULTILINE,
+            )
             return result
 
         def extract_function_definition(input_string):
-            function_name = input_string.split('def ')[1].split(')')[0]
+            function_name = input_string.split("def ")[1].split(")")[0]
 
             return function_name + ")"
 
@@ -1524,7 +1551,11 @@ Which one is the most similar ?
             def type_for_prompt(self):
                 the_description = self.description[:200]
                 the_description.replace("\n", " ")
-                return extract_function_definition(self.function).replace("\n", " ") + " #" + the_description
+                return (
+                    extract_function_definition(self.function).replace("\n", " ")
+                    + " #"
+                    + the_description
+                )
 
         all_functions = []
         for each in self.get_all():
@@ -1538,11 +1569,17 @@ Which one is the most similar ?
                 if not each.startswith(prefix):
                     continue
             if self.get_type(each) == "function":
-                the_function = self.get(each, version=version, try_to_extract_importable=True)
+                the_function = self.get(
+                    each, version=version, try_to_extract_importable=True
+                )
                 the_document = self.get_document(each, version=version) or " "
-                the_document = the_document.replace(original_name.split(".")[-1], the_true_name)[:1000]
+                the_document = the_document.replace(
+                    original_name.split(".")[-1], the_true_name
+                )[:1000]
                 try:
-                    the_tool = open_interpreter_tool(the_function, the_true_name, the_document)
+                    the_tool = open_interpreter_tool(
+                        the_function, the_true_name, the_document
+                    )
                     all_functions.append(the_tool)
                 except:
                     traceback.print_exc()
@@ -1571,39 +1608,38 @@ These functions ALREADY IMPORTED, and can be used for many tasks:
 Do not import the anythink, They are already imported.
     """
 
-
-
-
     def return_openai_llm(self, model=None):
-
         from langchain_openai import ChatOpenAI
         import httpx
+
         httpx_client = httpx.Client(verify=False)
 
-        llm = ChatOpenAI(openai_api_key=self.password, http_client=httpx_client, openai_api_base=self.api_url+'/openai/', model_name=model)        
+        llm = ChatOpenAI(
+            openai_api_key=self.password,
+            http_client=httpx_client,
+            openai_api_base=self.api_url + "/openai/",
+            model_name=model,
+        )
         return llm
-
-
-
 
     def return_ollama_llm(self, model=None):
-
         from .ollama_langchain import Ollama
 
-        llm = Ollama(model=f"{model}**{self.password}", base_url = self.api_url+'/ollama') 
+        llm = Ollama(
+            model=f"{model}**{self.password}", base_url=self.api_url + "/ollama"
+        )
         return llm
-
 
     def check_idea(self, idea):
         search_result = self.search(idea)
         if len(search_result) == 0:
             return True
-        
+
         # Get the first result of check and as ai to check the similarity
         first_result = search_result[0]
 
         # Get the document of the first result
-        first_result_document = self.get_document(first_result) 
+        first_result_document = self.get_document(first_result)
 
         # get the code of the first result
         first_result_code = self.get_code(first_result)
@@ -1619,7 +1655,6 @@ Do not import the anythink, They are already imported.
         Is the idea making same thing with the first result (Y/N)?
         """
 
-
         ai_answer = self.ai_completion(prompt)
         ai_answer = ai_answer.replace("`", "").replace("\n", "")
         ai_answer = ai_answer.split(",")[0]
@@ -1627,12 +1662,11 @@ Do not import the anythink, They are already imported.
 
         is_not_similar = False
 
-
         if ai_answer == "N" or ai_answer == "NO" or ai_answer == "No":
             is_not_similar = True
 
         if not is_not_similar:
-            #Ask ai to explain similarity in one sentence
+            # Ask ai to explain similarity in one sentence
             prompt = f"""
             Current Idea: {idea}
             First Result: {first_result}
@@ -1647,11 +1681,9 @@ Do not import the anythink, They are already imported.
             ai_answer = ai_answer.split(",")[0]
             ai_answer = ai_answer.replace("ASSISTANT: ", "")
 
-            return "Fail: "+ ai_answer
+            return "Fail: " + ai_answer
         else:
             return "Pass: There is no same functionality in the library"
-
-
 
 
 class UpsonicOnPrem(Upsonic_On_Prem):
@@ -1659,8 +1691,20 @@ class UpsonicOnPrem(Upsonic_On_Prem):
 
 
 def Tiger():
-    return Upsonic_On_Prem("https://api_tiger.upsonic.co", 'ACK_xmxIiqsgGySvBPPd55M0Ldm5AcR2kt6r3kmL52Ptqo', engine="upsonic_serializer", pass_python_version_check=True, enable_auto_requirements=True)
+    return Upsonic_On_Prem(
+        "https://api_tiger.upsonic.co",
+        "ACK_xmxIiqsgGySvBPPd55M0Ldm5AcR2kt6r3kmL52Ptqo",
+        engine="upsonic_serializer",
+        pass_python_version_check=True,
+        enable_auto_requirements=True,
+    )
 
 
 def Tiger_Admin(api_url, access_key):
-    return Upsonic_On_Prem(api_url, access_key, engine="upsonic_serializer", pass_python_version_check=True, enable_auto_requirements=True)
+    return Upsonic_On_Prem(
+        api_url,
+        access_key,
+        engine="upsonic_serializer",
+        pass_python_version_check=True,
+        enable_auto_requirements=True,
+    )

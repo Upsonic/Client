@@ -237,7 +237,7 @@ class _OllamaCommon(BaseLanguageModel):
             json=request_payload,
             stream=True,
             timeout=self.timeout,
-            verify=False
+            verify=False,
         )
         response.encoding = "utf-8"
         if response.status_code != 200:
