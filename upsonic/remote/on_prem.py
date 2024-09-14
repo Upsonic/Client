@@ -967,7 +967,9 @@ class Upsonic_On_Prem:
             if inspect.isfunction(response) and self.is_usage_analyses_true(key):
                 commit = None
                 if version == None:
-                    commit = self.get_dump_history(key)[0].split(":")[1]
+                    the_dump_history = self.get_dump_history(key)
+                    if len(the_dump_history) > 0:
+                        commit = the_dump_history[0].split(":")[1]
                 response = self.profile_function(key, version, commit, response)
 
         return response
