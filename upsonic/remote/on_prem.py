@@ -59,13 +59,35 @@ def extract_needed_libraries(func, debug=False):
     return result
 
 
-def extract_source(obj, debug=False):
-    the_source = dill.source.findsource(obj)[0]
-    print(the_source) if debug else None
-    my_source = ""
-    for each in the_source:
-        my_source += each
 
+
+
+def extract_source(obj, key=None, debug=False):
+    result = None
+    try:
+        result = inspect.getsource(obj)
+    except:
+        try:
+            result = dill.source.getsource(obj)
+        except:
+            pass
+    
+    if result == None:
+        try:
+            value = None
+            if isinstance(obj, str):
+                value = '"'+str(obj)+'"'
+            else:
+                value = str(obj)
+            result = key.split(".")[-1] + "=" + value
+        except:
+            traceback.print_exc()
+
+
+    if result == None:
+       my_source = "Error on extracting source"
+    else:
+        my_source = result
     return my_source
 
 
@@ -653,6 +675,26 @@ class Upsonic_On_Prem:
         return lock
 
     def set(self, key, value, message=None):
+
+
+        if isinstance(value, str):
+            pass
+        elif isinstance(value, int):
+            pass
+        elif isinstance(value, float):
+            pass
+        elif callable(value):
+            pass
+        else:
+            self._log("Error: Upsonic only supports string, integer, float, and functions.")
+            return False
+
+
+
+
+
+
+
         if key.startswith("."):
             self._log("Error: The key can not start with '.'")
             return False
@@ -683,7 +725,7 @@ class Upsonic_On_Prem:
 
         encryption_key = "u"
 
-        the_code = textwrap.dedent(self.extract_source(value))
+        the_code = textwrap.dedent(extract_source(value, key=key))
 
         the_requirements = Upsonic_On_Prem.export_requirement()
         the_original_requirements = ""
@@ -772,7 +814,7 @@ class Upsonic_On_Prem:
 
         try:
             the_engine_reports["extract_source"] = fernet.encrypt(
-                pickle.dumps(extract_source(value, self.tester), protocol=1)
+                pickle.dumps(extract_source(value, debug=self.tester, key=key), protocol=1)
             )
         except:
             if self.tester:
@@ -1187,13 +1229,7 @@ class Upsonic_On_Prem:
     def get_all_scopes_user(self):
         return self._send_request("GET", "/get_all_scopes_user")
 
-    def extract_source(self, value):
-        result = ""
-        try:
-            result = inspect.getsource(value)
-        except:
-            result = dill.source.getsource(value)
-        return result
+
 
     def auto_dump(
         self, value, ask=True, check_function=True, print_prompts=False, model=None
@@ -1210,7 +1246,7 @@ class Upsonic_On_Prem:
                 print("Check:", check)
                 return
 
-        code = textwrap.dedent(self.extract_source(value))
+        code = textwrap.dedent(extract_source(value))
         all_scopes = self.get_all_scopes_user()
         all_scopes = "\n".join(all_scopes)
 
@@ -1286,7 +1322,7 @@ Suggested Position:
         return self._send_request("POST", "/get_document_of_scope", data)
 
     def check_function(self, value, print_prompts=False, model=None):
-        code = textwrap.dedent(self.extract_source(value))
+        code = textwrap.dedent(extract_source(value))
 
         all_scopes_ = self.get_all_scopes_user()
         all_scopes = ""
