@@ -2,7 +2,7 @@ name: Release Generator
 
 on:
   workflow_run:
-    workflows: ["Release"]
+    workflows: ["Release", "Sync"]
     types:
       - completed
 
