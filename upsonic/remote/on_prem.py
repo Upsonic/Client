@@ -6,6 +6,7 @@ import ast
 from functools import wraps
 
 
+
 import pickle
 import os
 import re
@@ -36,6 +37,18 @@ import traceback
 import shutil
 from memory_profiler import memory_usage
 
+
+
+from termcolor import colored
+
+
+
+import platform
+
+# Initialize colorama for Windows
+if platform.system() == "Windows":
+    from colorama import init
+    init()
 
 
 
@@ -144,8 +157,18 @@ class Upsonic_On_Prem:
             the_string += item + ", "
         return the_string[:-2]
 
-    def _log(self, message):
-        print(message)
+    def _log(self, message, color=None, bold=False):
+
+
+        if bold:
+            attrs = ['bold']
+            background = 'on_white'
+            message = f" {message} "
+        else:
+            attrs = []
+            background = None
+
+        print(colored(message, color, background, attrs=attrs))
 
     def __enter__(self):
         return self  # pragma: no cover
@@ -221,11 +244,11 @@ class Upsonic_On_Prem:
 
         if self.status == True:
             self._log(
-                "[bold green]Upsonic[bold green] active",
+                "Upsonic active", color="green", bold=True,
             )
         else:
             self._log(
-                "[bold red]Upsonic[bold red] is down",
+                "Upsonic is down", color="red", bold=True,
             )
 
         self.thread_number = 5
@@ -249,7 +272,7 @@ class Upsonic_On_Prem:
                     result = json.loads(response.text)
                     if result["status"] == False:
                         self._log(
-                            f"[bold red]Error: {endpoint}",
+                            f"Error: {endpoint}", color="red", bold=False,
                         )
                     else:
                         result = result["result"] if not include_status else result
@@ -476,7 +499,7 @@ class Upsonic_On_Prem:
                                     self._log("Minor versions are different")
 
                                 self._log(
-                                    "[bold orange]Warning: The versions are different, are you sure to continue"
+                                    "Warning: The versions are different, are you sure to continue", bold=True,
                                 )
                                 the_input = input("Yes or no (y/n)").lower()
                                 if the_input == "n":
@@ -882,7 +905,7 @@ class Upsonic_On_Prem:
                             ):
                                 versions_are_different = True
                                 self._log(
-                                    "[bold orange]Warning: The versions are different, are you sure to continue"
+                                    "Warning: The versions are different, are you sure to continue", bold=True,
                                 )
                                 the_input = input("Yes or no (y/n)").lower()
                                 if the_input == "n":
