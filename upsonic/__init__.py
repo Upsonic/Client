@@ -10,14 +10,7 @@ except:
     pass
 
 from .remote import localimport
-from .remote import Upsonic_Remote
 from .remote import Upsonic_On_Prem, Tiger, Tiger_Admin, UpsonicOnPrem
-from .remote import Upsonic_Cloud_Free
-from .remote import Upsonic_Cloud_Pro
-from .remote import Upsonic_Cloud_Premium
-from .remote import Upsonic_Cloud_Startup
-from .remote import Upsonic_Cloud_Readonly
-from .remote import Upsonic_Cloud_Generic
 from .remote import no_exception
 from .remote import requires
 from .remote import encrypt
