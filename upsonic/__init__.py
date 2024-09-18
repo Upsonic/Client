@@ -1,5 +1,14 @@
 import traceback
 
+
+
+import warnings
+# Suppress the deprecation warning from the cryptography module.
+with warnings.catch_warnings():
+    warnings.simplefilter("ignore")
+    import cryptography
+
+
 try:
     from .core import Upsonic
     from .core import start_location
