@@ -20,6 +20,6 @@ setup(
     entry_points={
         "console_scripts": ["upsonic=upsonic.remote.interface:Upsonic_CLI"],
     },
-    python_requires=">= 3",
+    python_requires=">=3.6",
     zip_safe=False,
 )
