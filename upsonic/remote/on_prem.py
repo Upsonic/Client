@@ -26,7 +26,7 @@ from contextlib import contextmanager
 
 import sys
 
-from rich.progress import Progress
+
 
 import dill
 
@@ -37,9 +37,9 @@ import shutil
 from memory_profiler import memory_usage
 
 
-from rich.console import Console
 
-console = Console()
+
+
 
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 from remote.localimport import localimport
@@ -145,17 +145,13 @@ class Upsonic_On_Prem:
         return the_string[:-2]
 
     def _log(self, message):
-        self.console.log(message)
+        print(message)
 
     def __enter__(self):
         return self  # pragma: no cover
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         pass  # pragma: no cover
-
-    @property
-    def console(self):
-        return console
 
     @property
     def localimport(self):
@@ -589,57 +585,46 @@ class Upsonic_On_Prem:
                 my_list.append(element)
 
         the_list = my_list
+        for element in the_list:
+            time.sleep(0.1)
+            if inspect.isfunction(element):
+                name = element.__module__ + "." + element.__name__
 
-        with Progress() as progress:
-            task1 = progress.add_task(
-                "           [red]Job Started...", total=len(the_list)
-            )
-            task2 = progress.add_task(
-                "           [green]Job Complated...", total=len(the_list)
-            )
+            elif inspect.isclass(element):
+                name = element.__module__ + "." + element.__name__
+            else:
+                continue
 
-            for element in the_list:
-                time.sleep(0.1)
-                if inspect.isfunction(element):
-                    name = element.__module__ + "." + element.__name__
+            first_element = name.split(".")[0]
 
-                elif inspect.isclass(element):
-                    name = element.__module__ + "." + element.__name__
-                else:
-                    continue
+            if first_element != module_name:
+                continue
 
-                first_element = name.split(".")[0]
+            try:
+                while len(threads) >= self.thread_number:
+                    for each in threads:
+                        if not each.is_alive():
+                            threads.remove(each)
+                    time.sleep(0.1)
 
-                if first_element != module_name:
-                    continue
+                the_thread = threading.Thread(
+                    target=self.set,
+                    args=(name, element),
+                )
+                the_thread.start()
 
-                try:
-                    while len(threads) >= self.thread_number:
-                        for each in threads:
-                            if not each.is_alive():
-                                threads.remove(each)
-                        time.sleep(0.1)
+                thread = the_thread
+                threads.append(thread)
 
-                    the_thread = threading.Thread(
-                        target=self.set,
-                        args=(name, element),
-                    )
-                    the_thread.start()
+            except:
+                import traceback
 
-                    thread = the_thread
-                    threads.append(thread)
-                    progress.update(task1, advance=1)
+                traceback.print_exc()
+                self._log(f"[bold red]Error on '{name}'")
+                self.delete(name)
 
-                except:
-                    import traceback
-
-                    traceback.print_exc()
-                    self._log(f"[bold red]Error on '{name}'")
-                    self.delete(name)
-
-            for each in threads:
-                progress.update(task2, advance=1)
-                each.join()
+        for each in threads:
+            each.join()
 
     def dump(
         self,
