@@ -1012,7 +1012,7 @@ class Upsonic_On_Prem:
             else:
                 pass
 
-        # Run anayses
+        # Run analyses
         if self.enable_usage_analyses and not pass_usage_analyses:
             if inspect.isfunction(response) and self.is_usage_analyses_true(key):
                 commit = None
