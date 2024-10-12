@@ -289,7 +289,7 @@ class Upsonic_On_Prem:
 
     @property
     def status(self):
-        return self._send_request("GET", "/status")
+        return self._send_request(method = "GET",endpoint =  "/status")
 
     def get_specific_version(self, package):
         package_name = package.split("==")[0]
@@ -329,7 +329,7 @@ class Upsonic_On_Prem:
 
         return total
 
-    def install_package(self, package):
+    def install_package(self, package:str):
         from pip._internal import main as pip
 
         package_name = package.split("==")[0]
