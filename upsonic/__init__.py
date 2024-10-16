@@ -30,4 +30,4 @@ from .remote import interface
 
 open_databases = {}
 
-__version__ = '0.34.0'  # fmt: skip
+__version__ = '0.34.1'  # fmt: skip
