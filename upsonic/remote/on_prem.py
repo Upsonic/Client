@@ -28,7 +28,7 @@ from contextlib import contextmanager
 import sys
 
 
-
+from typing import List, Union, Optional
 import dill
 
 from pip._internal.operations import freeze
@@ -684,7 +684,7 @@ class Upsonic_On_Prem:
         lock = self._send_request("POST", "/get_lock_of_scope", data)
         return lock
 
-    def print_current_datetime():
+    def print_current_datetime(self):
         current_datetime = datetime.now()
         print("Current date and time:", current_datetime.strftime("%Y-%m-%d %H:%M:%S"))
 
@@ -1331,11 +1331,11 @@ Suggested Position:
             self.set(ai_answer, value)
             print("\nDumped")
 
-    def get_code(self, scope:str)-> Any:
+    def get_code(self, scope:str)-> any:
         data = {"scope": scope}
         return self._send_request("POST", "/get_code_of_scope", data)
 
-    def get_document(self, scope:str,version: Optional[str] = None) -> Any:
+    def get_document(self, scope:str,version: Optional[str] = None) -> any:
         data = {"scope": scope}
         if version != None:
             data["version"] = version
@@ -1666,7 +1666,7 @@ These functions ALREADY IMPORTED, and can be used for many tasks:
 Do not import the anythink, They are already imported.
     """
 
-    def return_openai_llm(self, model: str = None) -> ChatOpenAI:
+    def return_openai_llm(self, model: str = None):
         from langchain_openai import ChatOpenAI
         import httpx
 
@@ -1680,7 +1680,7 @@ Do not import the anythink, They are already imported.
         )
         return llm
 
-    def return_ollama_llm(self,model: str = None) -> ollama:
+    def return_ollama_llm(self,model: str = None):
         from .ollama_langchain import Ollama
 
         llm = Ollama(
