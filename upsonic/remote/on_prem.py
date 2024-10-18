@@ -686,7 +686,7 @@ class Upsonic_On_Prem:
 
     def print_current_datetime():
         current_datetime = datetime.now()
-        print("Mevcut tarih ve saat:", current_datetime.strftime("%Y-%m-%d %H:%M:%S"))
+        print("Current date and time:", current_datetime.strftime("%Y-%m-%d %H:%M:%S"))
 
     def set(self, key:str, value, message:str=None) -> bool:
 
