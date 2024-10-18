@@ -38,7 +38,7 @@ import shutil
 from memory_profiler import memory_usage
 
 
-
+from datetime import datetime
 from termcolor import colored
 
 
@@ -64,7 +64,7 @@ from typing import Optional
 import platform
 
 
-def extract_needed_libraries(func, debug=False):
+def extract_needed_libraries(func, debug=False)-> dict:
     result = {}
     the_globals = dill.detect.globalvars(func)
     for each in the_globals:
@@ -206,7 +206,7 @@ class Upsonic_On_Prem:
         protocol=pickle.DEFAULT_PROTOCOL,
         source=True,
         builtin=True,
-        tester=False,
+        tester=True,
     ):
         import requests
         from requests.auth import HTTPBasicAuth
@@ -256,7 +256,7 @@ class Upsonic_On_Prem:
         self.thread_number = 5
 
     def _send_request(
-        self, method, endpoint, data=None, make_json=True, include_status=False
+        self, method:str, endpoint:str, data=None, make_json=True, include_status=False
     ):
         try:
             response = self.requests.request(
@@ -293,7 +293,7 @@ class Upsonic_On_Prem:
     def status(self):
         return self._send_request(method = "GET",endpoint =  "/status")
 
-    def get_specific_version(self, package:str):
+    def get_specific_version(self, package: str) -> int:
         package_name = package.split("==")[0]
         package_version = (
             package.split("==")[1] if len(package.split("==")) > 1 else "Latest"
@@ -307,7 +307,7 @@ class Upsonic_On_Prem:
         with self.localimport(the_dir) as _importer:
             return importlib.import_module(package_name)
 
-    def generate_the_globals(self, needed_libraries:dict, key:str):
+    def generate_the_globals(self, needed_libraries:dict, key:str) ->dict :
         requirements = self.extract_the_requirements(key)
 
         total = {}
@@ -320,7 +320,7 @@ class Upsonic_On_Prem:
 
         return total
 
-    def generate_the_true_requirements(self, requirements:list, needed_libraries:dict, key:str):
+    def generate_the_true_requirements(self, requirements:list, needed_libraries:dict, key:str) -> dict:
         total = {}
         for each, value in needed_libraries.items():
             the_needed = None
@@ -331,7 +331,7 @@ class Upsonic_On_Prem:
 
         return total
 
-    def install_package(self, package:str):
+    def install_package(self, package:str) -> None:
         from pip._internal import main as pip
 
         package_name = package.split("==")[0]
@@ -353,7 +353,7 @@ class Upsonic_On_Prem:
                     self._log(f"Installing {package} to default_dir")
                 pip(["install", package])
 
-    def extract_the_requirements(self, key:str):
+    def extract_the_requirements(self, key:str)-> list[str]:
         the_requirements = self.get_requirements(key)
         elements = []
         for each in the_requirements.split(","):
@@ -362,7 +362,7 @@ class Upsonic_On_Prem:
                 elements.append(the_requirement)
         return elements
 
-    def install_the_requirements(self, the_requirements:list):
+    def install_the_requirements(self, the_requirements:list) -> None:
         installed_requirements = self.export_requirement()
         if self.tester:
             self._log(f"installed_requirements {installed_requirements}")
@@ -383,10 +383,10 @@ class Upsonic_On_Prem:
                     self._log(f"Error on {each}")
                     traceback.print_exc()
 
-    def delete_cache(self):
+    def delete_cache(self) -> None:
         shutil.rmtree(self.cache_dir)
 
-    def set_the_library_specific_locations(self, the_requirements:list):
+    def set_the_library_specific_locations(self, the_requirements:list) -> str:
         the_all_dirs = []
         the_all_string = ""
 
@@ -434,11 +434,11 @@ class Upsonic_On_Prem:
 
         return sha256_dir
 
-    def unset_the_library_specific_locations(self):
+    def unset_the_library_specific_locations(self)-> None:
         sys.path = self.sys_path_backup
 
     @contextmanager
-    def import_package(self, package:str):
+    def import_package(self, package:str) -> None:
         package_name = package.split("==")[0]
         package_version = (
             package.split("==")[1] if len(package.split("==")) > 1 else "Latest"
@@ -460,10 +460,10 @@ class Upsonic_On_Prem:
         finally:
             sys.path = sys_path_backup
 
-    def extend_global(self, name:str, value):
+    def extend_global(self, name:str, value)-> None:
         globals()[name] = value
 
-    def load_module(self, module_name:str, version:str =None):
+    def load_module(self, module_name:str, version:str =None) -> dict:
         encryption_key = "u"
 
         version_check_pass = False
@@ -544,7 +544,7 @@ class Upsonic_On_Prem:
 
         import types
 
-        def create_module_obj(dictionary:dict):
+        def create_module_obj(dictionary:dict) -> dict:
             result = {}
             for key, value in dictionary.items():
                 modules = key.split(".")
@@ -565,7 +565,7 @@ class Upsonic_On_Prem:
         self,
         module_name:str,
         module,
-    ):
+    ) -> None:
         encryption_key = "u"
         top_module = module
 
@@ -656,13 +656,13 @@ class Upsonic_On_Prem:
         key:str,
         value,
         message:str =None,
-    ):
+    ) -> None:
         return self.set(key, value, message=message)
 
-    def load(self, key:str, version:str=None):
+    def load(self, key:str, version:str=None) -> any:
         return self.get(key, version=version, print_exc=True)
 
-    def get_currently_version(self):
+    def get_currently_version(self)-> list[int]:
         total = sys.version_info
         the_version = []
         the_version.append(total.major)
@@ -679,13 +679,19 @@ class Upsonic_On_Prem:
         the_version.append(int(total.split(".")[2]))
         return the_version
 
-    def get_lock(self, key:str):
+    def get_lock(self, key:str) -> any:
         data = {"scope": key}
         lock = self._send_request("POST", "/get_lock_of_scope", data)
         return lock
 
-    def set(self, key:str, value, message:str=None):
+    def print_current_datetime():
+        current_datetime = datetime.now()
+        print("Current date and time:", current_datetime.strftime("%Y-%m-%d %H:%M:%S"))
 
+    def set(self, key:str, value, message:str=None) -> bool:
+
+        if self.tester:
+            self.print_current_datetime()
 
         if isinstance(value, str):
             pass
@@ -694,7 +700,7 @@ class Upsonic_On_Prem:
         elif isinstance(value, float):
             pass
         elif callable(value):
-            pass
+            pass 
         else:
             self._log("Error: Upsonic only supports string, integer, float, and functions.")
             return False
@@ -854,16 +860,20 @@ class Upsonic_On_Prem:
             "POST", "/dump_together", data, include_status=True
         )
 
+        if self.tester:
+            self.print_current_datetime()
         if response != [None]:
             if response["status"] is False:
                 return response["result"]
 
             if response["status"] is True:
+                if self.tester:
+                    self.print_current_datetime()
                 return True
         else:
             return False
 
-    def print_code(self, key:str, version:str=None):
+    def print_code(self, key:str, version:str=None) -> None:
         print(self.get(key, version=version, extract_source=True))
 
     def get(
@@ -875,7 +885,7 @@ class Upsonic_On_Prem:
         pass_usage_analyses:bool=False,
         try_to_extract_importable:bool=False,
         extract_source:bool=False,
-    ):
+    )-> any:
         if self.tester:
             self._log(f"Process started for {key}")
         response = None
@@ -1026,7 +1036,7 @@ class Upsonic_On_Prem:
 
         return response
 
-    def os_name(self):
+    def os_name(self) -> str:
         system_name = platform.system()
         if system_name == "Windows":
             return "Windows"
@@ -1047,7 +1057,7 @@ class Upsonic_On_Prem:
         type:str,
         params:dict,
         exception_log:str,
-    ):
+    ) -> None:
         data = {
             "scope": key,
             "version": version,
@@ -1063,11 +1073,11 @@ class Upsonic_On_Prem:
 
         self._send_request("POST", "/dump_run", data)
 
-    def get_dump_history(self, key):
+    def get_dump_history(self, key) -> dict:
         data = {"scope": key}
         return self._send_request("POST", "/get_dump_history", data)
 
-    def profile_function(self, key:str, version:str, commit:str, func):
+    def profile_function(self, key:str, version:str, commit:str, func:callable) -> callable:
         @wraps(func)
         def wrapper_function(*args, **kwargs):
             # Get current process time and memory usage before function execution
@@ -1092,7 +1102,7 @@ class Upsonic_On_Prem:
 
             cpu_usage_for_one_core = time_used * 100
 
-            def is_basic_type(value):
+            def is_basic_type(value) -> bool:
                 """Check if the value is of a basic type (int, float, str, list, dict)."""
                 if isinstance(value, (int, float, str)):
                     return True
@@ -1104,7 +1114,7 @@ class Upsonic_On_Prem:
                     )
                 return False
 
-            def normalize_params(*args, **kwargs):
+            def normalize_params(*args, **kwargs) -> dict:
                 """Normalize *args and **kwargs into a dictionary with only basic types."""
                 normalized = {}
 
@@ -1151,11 +1161,11 @@ class Upsonic_On_Prem:
 
         return wrapper_function
 
-    def get_settings(self, key:str):
+    def get_settings(self, key:str)-> dict:
         data = {"scope": key}
         return self._send_request("POST", "/get_settings_of_scope", data)
 
-    def is_usage_analyses_true(self, key:str):
+    def is_usage_analyses_true(self, key:str)-> Optional[bool]:
         settings = self.get_settings(key)
 
         if settings == None or settings == [None]:
@@ -1171,11 +1181,11 @@ class Upsonic_On_Prem:
 
     def active(
         self,
-        value=None,
-    ):
+        value: Optional[callable] = None
+    )-> Optional[callable]:
         encryption_key = "u"
 
-        def decorate(value):
+        def decorate(value) -> None:
             key = value.__name__
             if (
                 value.__module__ != "__main__"
@@ -1196,54 +1206,54 @@ class Upsonic_On_Prem:
 
     def get_all(
         self,
-    ):
+    ) -> dict:
         encryption_key = "u"
 
         datas = self._send_request("GET", "/get_all_scopes_user")
         return datas
 
-    def delete(self, scope:str):
+    def delete(self, scope:str) -> dict:
         data = {"scope": scope}
         return self._send_request("POST", "/delete_scope", data)
 
-    def database_list(self):
+    def database_list(self) -> list:
         return ast.literal_eval(self._send_request("GET", "/database/list"))
 
-    def database_rename(self, database_name:str, new_database_name:str):
+    def database_rename(self, database_name:str, new_database_name:str) -> dict:
         data = {
             "database_name": database_name,
             "new_database_name": new_database_name,
         }
         return self._send_request("POST", "/database/rename", data)
 
-    def database_pop(self, database_name:str):
+    def database_pop(self, database_name:str) -> dict:
         data = {"database_name": database_name}
         return self._send_request("POST", "/database/pop", data)
 
-    def database_pop_all(self):
+    def database_pop_all(self) -> dict:
         return self._send_request("GET", "/database/pop_all")
 
-    def database_delete(self, database_name:str):
+    def database_delete(self, database_name:str) -> dict:
         data = {"database_name": database_name}
         return self._send_request("POST", "/database/delete", data)
 
-    def database_delete_all(self):
+    def database_delete_all(self) -> dict:  
         return self._send_request("GET", "/database/delete_all")
 
-    def ai_completion(self, message:str, model: Optional[str] = None):
+    def ai_completion(self, message:str, model: Optional[str] = None) -> dict:
         data = {"message": message}
         if model != None:
             data["model"] = model
         return self._send_request("POST", "/ai_completion", data)
 
-    def get_all_scopes_user(self):
+    def get_all_scopes_user(self)-> dict:
         return self._send_request("GET", "/get_all_scopes_user")
 
 
 
     def auto_dump(
         self, value, ask=True, check_function=True, print_prompts=False, model:Optional[str] = None
-    ):
+    ) -> None:
         if model == None:
             model = self.get_default_ai_model()
 
@@ -1321,17 +1331,17 @@ Suggested Position:
             self.set(ai_answer, value)
             print("\nDumped")
 
-    def get_code(self, scope:str):
+    def get_code(self, scope:str)-> Any:
         data = {"scope": scope}
         return self._send_request("POST", "/get_code_of_scope", data)
 
-    def get_document(self, scope:str,version: Optional[str] = None):
+    def get_document(self, scope:str,version: Optional[str] = None) -> Any:
         data = {"scope": scope}
         if version != None:
             data["version"] = version
         return self._send_request("POST", "/get_document_of_scope", data)
 
-    def check_function(self, value, print_prompts=False,model: Optional[str] = None):
+    def check_function(self, value, print_prompts=False,model: Optional[str] = None) -> Union[bool, str]:
         code = textwrap.dedent(extract_source(value))
 
         all_scopes_ = self.get_all_scopes_user()
@@ -1399,7 +1409,7 @@ Which one is the most similar ?
             return True
         return similarity_explanation
 
-    def search_by_documentation(self, question:str):
+    def search_by_documentation(self, question:str) -> list[str]:
         data = {"question": question}
         response = self._send_request("POST", "/search_by_documentation", data)
         result = []
@@ -1407,46 +1417,46 @@ Which one is the most similar ?
             result.append(i[0])
         return result
 
-    def search(self, question:str):
+    def search(self, question:str) -> list[str]:
         return self.search_by_documentation(question)
 
-    def get_default_ai_model(self):
+    def get_default_ai_model(self) -> str:
         return self._send_request("GET", "/get_default_ai_model")
 
-    def get_version_history(self, key:str):
+    def get_version_history(self, key:str)-> any:
         data = {"scope": key}
         version = self._send_request("POST", "/get_version_history", data)
         return version
 
-    def get_module_version_history(self, key:str):
+    def get_module_version_history(self, key:str)-> any:
         data = {"top_library": key}
         return self._send_request("POST", "/get_module_version_history", data)
 
-    def delete_version(self, key:str, version:str):
+    def delete_version(self, key:str, version:str)-> any:
         data = {"version": key + ":" + version}
         return self._send_request("POST", "/delete_version", data)
 
-    def delete_module_version(self, module_name:str, version:str):
+    def delete_module_version(self, module_name:str, version:str)-> any:
         data = {"top_library": module_name, "version": version}
         return self._send_request("POST", "/delete_version_prefix", data)
 
-    def create_version(self, key:str, version:str):
+    def create_version(self, key:str, version:str)-> any:
         data = {"scope": key, "version": version}
         return self._send_request("POST", "/create_version", data)
 
-    def create_module_version(self, module_name:str, version:str):
+    def create_module_version(self, module_name:str, version:str)-> any:
         data = {"top_library": module_name, "version": version}
         return self._send_request("POST", "/create_version_prefix", data)
 
-    def get_version_data(self, key:str, version:str):
+    def get_version_data(self, key:str, version:str)-> any:
         data = {"version": key + ":" + version}
         return self._send_request("POST", "/load_specific_version", data)
 
-    def get_requirements(self, key:str):
+    def get_requirements(self, key:str)-> any:
         data = {"scope": key}
         return self._send_request("POST", "/get_requirements_of_scope", data)
 
-    def add_requirement(self, key:str, requirement:str):
+    def add_requirement(self, key:str, requirement:str)-> any:
         currently_requirements = self.get_requirements(key)
         if currently_requirements == None:
             currently_requirements = ""
@@ -1461,14 +1471,14 @@ Which one is the most similar ?
         }
         return self._send_request("POST", "/dump_requirements", data)
 
-    def clear_requirements(self, key:str):
+    def clear_requirements(self, key:str)-> any:
         data = {
             "scope": key,
             "requirements": "",
         }
         return self._send_request("POST", "/dump_requirements", data)
 
-    def get_type(self, key:str, version:str =None):
+    def get_type(self, key:str, version:str =None)-> any:
         data = {"scope": key}
         if version != None:
             data["version"] = version
@@ -1480,7 +1490,7 @@ Which one is the most similar ?
             data["version"] = version
         return self._send_request("POST", "/get_code_of_scope", data)
 
-    def langchain(self, prefix:str=None, version:str=None):
+    def langchain(self, prefix:str=None, version:str=None)-> list[any]:
         from langchain.tools import tool
 
         all_functions = []
@@ -1511,7 +1521,7 @@ Which one is the most similar ?
                         pass
         return all_functions
 
-    def crewai(self, prefix: Optional[str] = None, version: Optional[str] = None):
+    def crewai(self, prefix: Optional[str] = None, version: Optional[str] = None)-> list:
         from crewai_tools import tool
 
         all_functions = []
@@ -1542,7 +1552,7 @@ Which one is the most similar ?
                         pass
         return all_functions
 
-    def autogen(self, caller, executor, prefix: Optional[str] = None, version:Optional[str] = None):
+    def autogen(self, caller, executor, prefix: Optional[str] = None, version:Optional[str] = None)-> None:
         import autogen
 
         for each in self.get_all():
@@ -1574,8 +1584,8 @@ Which one is the most similar ?
                         traceback.print_exc()
                         pass
 
-    def openinterpreter(self, agent, prefix: Optional[str] = None,version: Optional[str] = None):
-        def replace_function_name(input_string, new_function_name):
+    def openinterpreter(self, agent, prefix: Optional[str] = None,version: Optional[str] = None) -> None:
+        def replace_function_name(input_string, new_function_name) -> str:
             result = re.sub(
                 r"^(def )(\w+)",
                 f"\g<1>{new_function_name}",
@@ -1584,7 +1594,7 @@ Which one is the most similar ?
             )
             return result
 
-        def extract_function_definition(input_string:str):
+        def extract_function_definition(input_string:str)-> str:
             function_name = input_string.split("def ")[1].split(")")[0]
 
             return function_name + ")"
@@ -1596,7 +1606,7 @@ Which one is the most similar ?
                 self.function = replace_function_name(function, name)
 
             @property
-            def type_for_prompt(self):
+            def type_for_prompt(self) -> str:
                 the_description = self.description[:200]
                 the_description.replace("\n", " ")
                 return (
@@ -1656,7 +1666,7 @@ These functions ALREADY IMPORTED, and can be used for many tasks:
 Do not import the anythink, They are already imported.
     """
 
-    def return_openai_llm(self, model: str = None):
+    def return_openai_llm(self, model: str = None) -> ChatOpenAI:
         from langchain_openai import ChatOpenAI
         import httpx
 
@@ -1670,7 +1680,7 @@ Do not import the anythink, They are already imported.
         )
         return llm
 
-    def return_ollama_llm(self,model: str = None):
+    def return_ollama_llm(self,model: str = None) -> ollama:
         from .ollama_langchain import Ollama
 
         llm = Ollama(
@@ -1678,7 +1688,7 @@ Do not import the anythink, They are already imported.
         )
         return llm
 
-    def check_idea(self, idea:str):
+    def check_idea(self, idea:str)-> str:
         search_result = self.search(idea)
         if len(search_result) == 0:
             return True
