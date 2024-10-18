@@ -38,7 +38,7 @@ import shutil
 from memory_profiler import memory_usage
 
 
-
+from datetime import datetime
 from termcolor import colored
 
 
@@ -206,7 +206,7 @@ class Upsonic_On_Prem:
         protocol=pickle.DEFAULT_PROTOCOL,
         source=True,
         builtin=True,
-        tester=False,
+        tester=True,
     ):
         import requests
         from requests.auth import HTTPBasicAuth
@@ -684,8 +684,14 @@ class Upsonic_On_Prem:
         lock = self._send_request("POST", "/get_lock_of_scope", data)
         return lock
 
+    def print_current_datetime():
+        current_datetime = datetime.now()
+        print("Mevcut tarih ve saat:", current_datetime.strftime("%Y-%m-%d %H:%M:%S"))
+
     def set(self, key:str, value, message:str=None) -> bool:
 
+        if self.tester:
+            self.print_current_datetime()
 
         if isinstance(value, str):
             pass
@@ -694,7 +700,7 @@ class Upsonic_On_Prem:
         elif isinstance(value, float):
             pass
         elif callable(value):
-            pass
+            pass 
         else:
             self._log("Error: Upsonic only supports string, integer, float, and functions.")
             return False
@@ -854,11 +860,15 @@ class Upsonic_On_Prem:
             "POST", "/dump_together", data, include_status=True
         )
 
+        if self.tester:
+            self.print_current_datetime()
         if response != [None]:
             if response["status"] is False:
                 return response["result"]
 
             if response["status"] is True:
+                if self.tester:
+                    self.print_current_datetime()
                 return True
         else:
             return False
