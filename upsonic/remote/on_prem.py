@@ -869,7 +869,7 @@ class Upsonic_On_Prem:
             if response["status"] is True:
                 if self.tester:
                     self.print_current_datetime()
-                    print("Dumped.")
+                print("Dumped.")
                 return True
         else:
             return False
