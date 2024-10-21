@@ -206,7 +206,7 @@ class Upsonic_On_Prem:
         protocol=pickle.DEFAULT_PROTOCOL,
         source=True,
         builtin=True,
-        tester=True,
+        tester=False,
     ):
         import requests
         from requests.auth import HTTPBasicAuth
@@ -734,7 +734,8 @@ class Upsonic_On_Prem:
                 return False
         except:
             pass
-
+            
+        # Type Checking and Creation of Encryption Key
         the_type = type(value).__name__
         if the_type == "type":
             the_type = "class"
@@ -743,6 +744,7 @@ class Upsonic_On_Prem:
 
         the_code = textwrap.dedent(extract_source(value, key=key))
 
+        # Preparation of Requirements
         the_requirements = Upsonic_On_Prem.export_requirement()
         the_original_requirements = ""
         if self.tester:
@@ -756,6 +758,7 @@ class Upsonic_On_Prem:
         if self.tester:
             self._log(f"the_requirements {the_requirements}")
 
+        # Extracting Necessary Libraries
         extracted_needed_libraries = None
         try:
             extracted_needed_libraries = extract_needed_libraries(value, self.tester)
@@ -786,6 +789,7 @@ class Upsonic_On_Prem:
         if self.tester:
             self._log(f"the_original_requirements {the_original_requirements}")
 
+        # Python Version Information and Encryption
         the_version = f"{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}"
 
         fernet_key = base64.urlsafe_b64encode(
@@ -793,6 +797,7 @@ class Upsonic_On_Prem:
         )
         fernet = Fernet(fernet_key)
 
+        # Preparation and Encoding of Engine Reports
         engine_reports_exceptions = []
         the_engine_reports = {}
         for engine in self.engine.split(","):
@@ -819,6 +824,7 @@ class Upsonic_On_Prem:
             for error in engine_reports_exceptions:
                 print(error)
 
+        # Extracting Local Files and Source Code
         try:
             the_engine_reports["extracted_local_files"] = fernet.encrypt(
                 pickle.dumps(extract_local_files(value, self.tester), protocol=1)
@@ -837,6 +843,7 @@ class Upsonic_On_Prem:
                 self._log(f"Error on extract_source while dumping {key}")
                 traceback.print_exc()
 
+        # Encryption and Logging of Requirements
         if extracted_needed_libraries != None:
             the_engine_reports["extract_needed_libraries"] = fernet.encrypt(
                 pickle.dumps(extracted_needed_libraries, protocol=1)
@@ -844,6 +851,8 @@ class Upsonic_On_Prem:
 
         if self.tester:
             self._log(f"the_engine_reports {the_engine_reports}")
+
+        # Data Preparation and Request Submission
         dumped = pickle.dumps(the_engine_reports, protocol=1)
 
         data = {
@@ -860,6 +869,7 @@ class Upsonic_On_Prem:
             "POST", "/dump_together", data, include_status=True
         )
 
+        # Response Processing and Output
         if self.tester:
             self.print_current_datetime()
         if response != [None]:
