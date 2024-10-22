@@ -903,6 +903,7 @@ class Upsonic_On_Prem:
 
         encryption_key = "u"
 
+        # Logging the process start if tester mode is enabled
         data = {"scope": key}
 
         versions_are_different = False
@@ -947,6 +948,7 @@ class Upsonic_On_Prem:
             if self.tester:
                 traceback.print_exc()
 
+    #Requirements Management and Installation
         the_requirements_path = None
 
         if self.enable_auto_requirements:
@@ -965,6 +967,7 @@ class Upsonic_On_Prem:
                     self._log(f"Error on requirements while dumping {key}")
                     traceback.print_exc()
 
+        # Data Uploading and Encrypting
         if response is None:
             if version != None:
                 response = self.get_version_data(key, version)
@@ -1035,7 +1038,7 @@ class Upsonic_On_Prem:
             else:
                 pass
 
-        # Run analyses
+        # Usage Analysis and Conversion
         if self.enable_usage_analyses and not pass_usage_analyses:
             if inspect.isfunction(response) and self.is_usage_analyses_true(key):
                 commit = None
