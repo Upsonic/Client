@@ -566,11 +566,13 @@ class Upsonic_On_Prem:
         module_name:str,
         module,
     ) -> None:
+        # Getting Started and Encryption Preparation
         encryption_key = "u"
         top_module = module
 
         cloudpickle.register_pickle_by_value(top_module)
-
+        
+        # Collection of Sub-Modules
         sub_modules = []
         if hasattr(top_module, "__path__"):
             for importer, modname, ispkg in pkgutil.walk_packages(
@@ -582,6 +584,7 @@ class Upsonic_On_Prem:
         else:
             sub_modules.append(top_module)
 
+        # Collecting object in Submodules
         threads = []
 
         the_list = []
@@ -595,6 +598,7 @@ class Upsonic_On_Prem:
 
         the_list = [i for i in the_list if i.__module__.split(".")[0] == module_name]
 
+        # Filtering Unwanted Objects
         my_list = []
         for element in copy.copy(the_list):
             if inspect.isfunction(element):
@@ -610,6 +614,8 @@ class Upsonic_On_Prem:
                 my_list.append(element)
 
         the_list = my_list
+
+        # Processing Objects with Multiple Threads
         for element in the_list:
             time.sleep(0.1)
             if inspect.isfunction(element):
@@ -648,6 +654,7 @@ class Upsonic_On_Prem:
                 self._log(f"[bold red]Error on '{name}'")
                 self.delete(name)
 
+        # Waiting for All Threads to Complate
         for each in threads:
             each.join()
 
