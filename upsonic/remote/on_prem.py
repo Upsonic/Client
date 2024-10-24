@@ -679,7 +679,7 @@ class Upsonic_On_Prem:
     def load(self, key:str, version:str=None) -> any:
         return self.get(key, version=version, print_exc=True)
 
-    def get_currently_version(self)-> list[int]:
+    def get_currently_version(self)-> List[int]:
         total = sys.version_info
         the_version = []
         the_version.append(total.major)
