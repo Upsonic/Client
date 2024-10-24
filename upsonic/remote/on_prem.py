@@ -297,7 +297,11 @@ class Upsonic_On_Prem:
         return self._send_request(method = "GET",endpoint =  "/status")
 
     def get_username(self):
-        return self._send_request(method = "GET",endpoint =  "/my/username")
+        try:
+            response = self._send_request(method="GET", endpoint="/my/username")
+            return response
+        except Exception as e:
+            return "to Upsonic"
     
     def get_specific_version(self, package: str) -> int:
         package_name = package.split("==")[0]
