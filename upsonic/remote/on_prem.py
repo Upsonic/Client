@@ -5,7 +5,7 @@ import json
 import ast
 from functools import wraps
 
-
+from typing import List
 
 import pickle
 import os
@@ -363,7 +363,7 @@ class Upsonic_On_Prem:
                     self._log(f"Installing {package} to default_dir")
                 pip(["install", package])
 
-    def extract_the_requirements(self, key:str)-> list[str]:
+    def extract_the_requirements(self, key:str)-> List[str]:
         the_requirements = self.get_requirements(key)
         elements = []
         for each in the_requirements.split(","):
@@ -1437,7 +1437,7 @@ Which one is the most similar ?
             return True
         return similarity_explanation
 
-    def search_by_documentation(self, question:str) -> list[str]:
+    def search_by_documentation(self, question:str) -> List[str]:
         data = {"question": question}
         response = self._send_request("POST", "/search_by_documentation", data)
         result = []
@@ -1445,7 +1445,7 @@ Which one is the most similar ?
             result.append(i[0])
         return result
 
-    def search(self, question:str) -> list[str]:
+    def search(self, question:str) -> List[str]:
         return self.search_by_documentation(question)
 
     def get_default_ai_model(self) -> str:
