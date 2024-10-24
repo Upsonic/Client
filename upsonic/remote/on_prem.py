@@ -1518,7 +1518,7 @@ Which one is the most similar ?
             data["version"] = version
         return self._send_request("POST", "/get_code_of_scope", data)
 
-    def langchain(self, prefix:str=None, version:str=None)-> list[any]:
+    def langchain(self, prefix:str=None, version:str=None)-> List[any]:
         from langchain.tools import tool
 
         all_functions = []
