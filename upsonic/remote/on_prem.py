@@ -248,6 +248,9 @@ class Upsonic_On_Prem:
             self._log(
                 "Upsonic active", color="green", bold=True,
             )
+            self._log(
+                f"Welcome {self.get_username()}" , color="white", bold=False, 
+            )
         else:
             self._log(
                 "Upsonic is down", color="red", bold=True,
@@ -293,6 +296,13 @@ class Upsonic_On_Prem:
     def status(self):
         return self._send_request(method = "GET",endpoint =  "/status")
 
+    def get_username(self):
+        try:
+            response = self._send_request(method="GET", endpoint="/my/username")
+            return response
+        except Exception as e:
+            return "to Upsonic"
+    
     def get_specific_version(self, package: str) -> int:
         package_name = package.split("==")[0]
         package_version = (
