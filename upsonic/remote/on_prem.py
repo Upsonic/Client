@@ -1784,6 +1784,11 @@ Do not import the anythink, They are already imported.
             return "Pass: There is no same functionality in the library"
 
 
+    def get_client_version(self):
+        from .. import __version__
+        return __version__
+
+
 class UpsonicOnPrem(Upsonic_On_Prem):
     pass
 
