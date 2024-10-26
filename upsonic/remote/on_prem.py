@@ -23,6 +23,8 @@ import textwrap
 import importlib.util
 import cloudpickle
 
+import psutil
+
 from contextlib import contextmanager
 
 import sys
@@ -303,6 +305,16 @@ class Upsonic_On_Prem:
         except Exception as e:
             return "to Upsonic"
     
+    def system_diagnostic(self):
+        diagnostic_data = {
+            "System Type": platform.system(),
+            "User Name": self.get_username(),
+            "Uptime (seconds)": round(time.time() - psutil.boot_time(), 2),
+            "CPU Usage (%)": psutil.cpu_percent(interval=1),
+            "RAM Usage (%)": psutil.virtual_memory().percent,
+        }
+        return json.dumps(diagnostic_data, indent=4)
+
     def get_specific_version(self, package: str) -> int:
         package_name = package.split("==")[0]
         package_version = (
