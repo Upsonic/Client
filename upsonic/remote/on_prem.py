@@ -685,8 +685,9 @@ class Upsonic_On_Prem:
         key:str,
         value,
         message:str =None,
+        code:str =None,
     ) -> None:
-        return self.set(key, value, message=message)
+        return self.set(key, value, message=message, code=code)
 
     def load(self, key:str, version:str=None) -> any:
         return self.get(key, version=version, print_exc=True)
@@ -717,7 +718,7 @@ class Upsonic_On_Prem:
         current_datetime = datetime.now()
         print("Current date and time:", current_datetime.strftime("%Y-%m-%d %H:%M:%S"))
 
-    def set(self, key:str, value, message:str=None) -> bool:
+    def set(self, key:str, value, message:str=None, code:str=None) -> bool:
 
         if self.tester:
             self.print_current_datetime()
@@ -771,7 +772,7 @@ class Upsonic_On_Prem:
 
         encryption_key = "u"
 
-        the_code = textwrap.dedent(extract_source(value, key=key))
+        the_code = textwrap.dedent(extract_source(value, key=key)) if code == None else code
 
         # Preparation of Requirements
         the_requirements = Upsonic_On_Prem.export_requirement()
@@ -1289,10 +1290,31 @@ class Upsonic_On_Prem:
     def get_all_scopes_user(self)-> dict:
         return self._send_request("GET", "/get_all_scopes_user")
 
+    def get_name(self, value):
+        # Try to use dill to get the name
+        name = dill.source.getname(value)
+        if name is not None:
+            return name
 
+        # For functions, methods, and classes
+        if inspect.isfunction(value) or inspect.isclass(value) or inspect.ismethod(value):
+            return value.__name__
+        
+        # For instances of a class
+        elif hasattr(value, '__class__'):
+            return value.__class__.__name__
+        
+        # For variables in the current scope (using globals)
+        globals_dict = globals()
+        for name, val in globals_dict.items():
+            if val is value:
+                return name
+        
+        # If none of the above work
+        return None
 
     def auto_dump(
-        self, value, ask=True, check_function=True, print_prompts=False, model:Optional[str] = None
+        self, value, ask=True, suggestion_only=False, check_function=True, print_prompts=False, model:Optional[str] = None
     ) -> None:
         if model == None:
             model = self.get_default_ai_model()
@@ -1308,7 +1330,10 @@ class Upsonic_On_Prem:
 
         code = textwrap.dedent(extract_source(value))
         all_scopes = self.get_all_scopes_user()
-        all_scopes = "\n".join(all_scopes)
+        try:
+            all_scopes = "\n".join(all_scopes)
+        except:
+            all_scopes = ""
 
         prompt = f"""
 You are an helpful software engineer. Help to organize library elements in a short and clear manner.
@@ -1327,6 +1352,15 @@ Currenlty Index of Library:
 Your answer should be just the suggested position. Dont say any other think.
 
 
+Categories include (but are not limited to):
+- database.connections (e.g., database.connections.postgre, database.connections.mysql)
+- data.processing (e.g., data.processing.cleaning, data.processing.transformation)
+- api.integration (e.g., api.integration.rest, api.integration.graphql)
+- utils.helpers (e.g., utils.helpers.date, utils.helpers.string)
+- machine_learning.models (e.g., machine_learning.models.classification, machine_learning.models.regression)
+- visualization.charts (e.g., visualization.charts.bar, visualization.charts.line)
+
+
 Suggested Position:
 
 """
@@ -1334,7 +1368,7 @@ Suggested Position:
         ai_answer = self.ai_completion(prompt, model=model)
         ai_answer = ai_answer.replace("`", "").replace("\n", "")
         ai_answer = ".".join(ai_answer.split(".")[:-1])
-        ai_answer = ai_answer + "." + dill.source.getname(value)
+        ai_answer = ai_answer + "." + self.get_name(value)
         prompt = prompt + f"\nASSISTANT: {ai_answer}\n"
 
         prompt = (
@@ -1352,9 +1386,14 @@ Suggested Position:
             )
         ai_answer = ai_answer.replace("`", "").replace("\n", "")
         ai_answer = ai_answer.replace("ASSISTANT: ", "")
+        if suggestion_only:
+            print("Suggestion:", ai_answer)
+            return ai_answer
+
         if ai_answer in all_scopes:
             print(f"Check: similarity with the {ai_answer} is detected")
             return
+       
         if ask:
             print("Commands:\n(Y)es/(N)o\n")
             while True:
