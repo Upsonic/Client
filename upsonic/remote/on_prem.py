@@ -312,7 +312,8 @@ class Upsonic_On_Prem:
             "Uptime (seconds)": round(time.time() - psutil.boot_time(), 2),
             "CPU Usage (%)": psutil.cpu_percent(interval=1),
             "RAM Usage (%)": psutil.virtual_memory().percent,
-            "Client Version":self.get_client_version()
+            "Client Version":self.get_client_version(),
+            "version": self.get_version(),
         }
         return json.dumps(diagnostic_data, indent=4)
 
