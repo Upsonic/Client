@@ -2,6 +2,8 @@ Upsonic-*/
 upsonic_cache/
 .vscode
 
+KOT-*
+
 test.py
 test.ipynb
 
